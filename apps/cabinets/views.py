@@ -10,10 +10,13 @@ from mayan.apps.documents.permissions import permission_document_view
 from mayan.apps.documents.views.document_views import DocumentListView
 from mayan.apps.views.generics import (
     MultipleObjectFormActionView, SingleObjectCreateView,
-    SingleObjectDeleteView, SingleObjectEditView, SingleObjectListView
+    SingleObjectDeleteView, SingleObjectEditView, SingleObjectListView,AddRemoveView
 )
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
-
+from mayan.apps.user_management.icons import (
+   icon_group_user_list,icon_group_list
+)
+from mayan.apps.user_management.querysets import get_user_queryset
 from .forms import CabinetListForm
 from .icons import (
     icon_cabinet, icon_cabinet_child_add, icon_cabinet_create,
@@ -31,6 +34,11 @@ from .permissions import (
     permission_cabinet_view, permission_cabinet_remove_document
 )
 from .widgets import jstree_data
+
+from mayan.apps.user_management.permissions import (
+   permission_user_edit,
+)
+
 
 logger = logging.getLogger(name=__name__)
 
@@ -98,9 +106,15 @@ class CabinetDetailView(ExternalObjectViewMixin, DocumentListView):
     view_icon = icon_cabinet_detail
 
     def get_document_queryset(self):
-        return self.external_object.get_documents(
-            permission=permission_document_view, user=self.request.user
-        )
+       if self.request.user.is_superuser:
+           return self.external_object.get_documents(
+               permission=permission_document_view, user=self.request.user
+           )
+       else:
+           cabinets = Cabinet.objects.filter(users=self.request.user)
+           return self.external_object.get_documents(
+               permission=permission_document_view, user=self.request.user
+           ).filter(cabinets__in=cabinets)
 
     def get_extra_context(self, **kwargs):
         context = super().get_extra_context(**kwargs)
@@ -341,3 +355,36 @@ class DocumentCabinetRemoveView(MultipleObjectFormActionView):
             cabinet.document_remove(
                 document=instance, user=self.request.user
             )
+
+
+class CabinetUserAddRemoveView(AddRemoveView):
+   list_available_title = _('Available users')
+   list_added_title = _('Assigned users')
+   main_object_method_add_name = 'users_add'
+   main_object_method_remove_name = 'users_remove'
+   main_object_model = Cabinet
+   main_object_permission = permission_cabinet_edit
+   main_object_pk_url_kwarg = 'cabinet_id'
+   secondary_object_permission = permission_user_edit
+   view_icon = icon_group_list
+
+
+   def get_actions_extra_kwargs(self):
+       return {'user': self.request.user}
+
+
+   def get_extra_context(self):
+       return {
+           'object': self.main_object,
+           'title': _('Users of cabinet: %s') % self.main_object
+       }
+
+
+   def get_list_added_queryset(self):
+       return self.main_object.get_users(
+           permission=permission_user_edit, user=self.request.user
+       )
+
+
+   def get_secondary_object_source_queryset(self):
+       return get_user_queryset(user=self.request.user)

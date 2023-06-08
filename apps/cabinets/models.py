@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
-
+from django.conf import settings
 from mayan.apps.databases.model_mixins import ExtraDataModelMixin
 from mayan.apps.documents.models.document_models import Document
 from mayan.apps.events.classes import EventManagerMethodAfter, EventManagerSave
@@ -37,6 +37,8 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
         blank=True, related_name='cabinets', to=Document,
         verbose_name=_('Documents')
     )
+
+    users = models.ManyToManyField(related_name='user_cabinets',to=settings.AUTH_USER_MODEL, verbose_name=_('Users'))
 
     class MPTTMeta:
         order_insertion_by = ('label',)

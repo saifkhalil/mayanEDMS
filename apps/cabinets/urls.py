@@ -8,7 +8,7 @@ from .api_views import (
 from .views import (
     DocumentCabinetAddView, DocumentCabinetListView,
     DocumentCabinetRemoveView, CabinetChildAddView, CabinetCreateView,
-    CabinetDeleteView, CabinetDetailView, CabinetEditView, CabinetListView,
+    CabinetDeleteView, CabinetDetailView, CabinetEditView, CabinetListView,CabinetUserAddRemoveView
 )
 
 urlpatterns_cabinets = [
@@ -35,7 +35,12 @@ urlpatterns_cabinets = [
     url(
         regex=r'^cabinets/(?P<cabinet_id>\d+)/edit/$', name='cabinet_edit',
         view=CabinetEditView.as_view()
-    )
+    ),
+       url(
+       regex=r'^cabinets/(?P<cabinet_id>\d+)/users/$',
+       name='cabinet_user_add', view=CabinetUserAddRemoveView.as_view()
+   )
+
 ]
 
 urlpatterns_documents_cabinets = [

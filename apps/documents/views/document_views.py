@@ -4,13 +4,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _, ungettext
-
 from mayan.apps.databases.classes import ModelQueryFields
 from mayan.apps.views.generics import (
     MultipleObjectFormActionView, SingleObjectDetailView,
     SingleObjectEditView, SingleObjectListView
 )
-
+from mayan.apps.cabinets.models import Cabinet
 from ..events import event_document_viewed
 from ..forms.document_forms import DocumentForm, DocumentPropertiesForm
 from ..forms.document_type_forms import DocumentTypeFilteredSelectForm
@@ -54,7 +53,11 @@ class DocumentListView(SingleObjectListView):
             return super().get_context_data(**kwargs)
 
     def get_document_queryset(self):
-        return Document.valid.all()
+       if self.request.user.is_superuser:
+           return Document.valid.all()
+       else:
+           cabinets = Cabinet.objects.filter(users=self.request.user)
+           return Document.valid.all().filter(cabinets__in=cabinets)
 
     def get_extra_context(self):
         return {

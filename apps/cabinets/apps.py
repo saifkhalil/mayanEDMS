@@ -28,10 +28,11 @@ from .links import (
     link_document_multiple_cabinet_add, link_cabinet_child_add,
     link_cabinet_create, link_cabinet_delete, link_cabinet_edit,
     link_cabinet_view, link_custom_acl_list,
-    link_multiple_document_cabinet_remove
+    link_multiple_document_cabinet_remove,
+    link_cabinet_users
 )
 from .menus import menu_cabinets
-from .methods import method_document_get_cabinets
+from .methods import method_document_get_cabinets,method_cabinet_get_users,method_cabinet_users_add,method_cabinet_users_remove
 from .permissions import (
     permission_cabinet_add_document, permission_cabinet_create,
     permission_cabinet_delete, permission_cabinet_edit,
@@ -79,6 +80,15 @@ class CabinetsApp(MayanAppConfig):
         # effect.
         Document.add_to_class(
             name='get_cabinets', value=method_document_get_cabinets
+        )
+        Cabinet.add_to_class(
+            name='get_users', value=method_cabinet_get_users
+        )
+        Cabinet.add_to_class(
+            name='users_add', value=method_cabinet_users_add
+        )
+        Cabinet.add_to_class(
+            name='users_remove', value=method_cabinet_users_remove
         )
 
         DynamicSerializerField.add_serializer(
@@ -209,7 +219,7 @@ class CabinetsApp(MayanAppConfig):
         menu_object.bind_links(
             exclude=(DocumentCabinet,),
             links=(
-                link_cabinet_delete, link_cabinet_edit, link_cabinet_child_add
+                link_cabinet_delete, link_cabinet_edit, link_cabinet_child_add,link_cabinet_users
             ), sources=(Cabinet,)
         )
         menu_object.unbind_links(

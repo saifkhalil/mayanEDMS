@@ -17,7 +17,9 @@ from .permissions import (
     permission_cabinet_delete, permission_cabinet_edit,
     permission_cabinet_view, permission_cabinet_remove_document
 )
-
+from mayan.apps.user_management.icons import (
+   icon_group_user_list,icon_group_list
+)
 
 def condition_cabinet_is_root(context, resolved_object):
     return context['resolved_object'].is_root_node()
@@ -84,4 +86,9 @@ link_cabinet_view = Link(
     args='object.pk', icon=icon_cabinet_view,
     permissions=(permission_cabinet_view,), text=_('Details'),
     view='cabinets:cabinet_view'
+)
+link_cabinet_users = Link(
+   args='object.pk', icon=icon_group_list,
+   permissions=(permission_cabinet_edit,), text=_('Assigned Users'),
+   view='cabinets:cabinet_user_add'
 )
