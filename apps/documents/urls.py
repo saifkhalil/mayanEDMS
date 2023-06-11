@@ -74,7 +74,7 @@ from .views.document_version_views import (
     DocumentVersionTransformationsCloneView
 )
 from .views.document_views import (
-    DocumentTypeChangeView, DocumentListView, DocumentPreviewView,
+    DocumentTypeChangeView, DocumentListView,MyDocumentListView, DocumentPreviewView,
     DocumentPropertiesEditView, DocumentPropertiesView
 )
 from .views.favorite_document_views import (
@@ -401,6 +401,10 @@ urlpatterns_documents = [
     url(
         regex=r'^documents/$', name='document_list',
         view=DocumentListView.as_view()
+    ),
+    url(
+        regex=r'^mydocuments/$', name='my_document_list',
+        view=MyDocumentListView.as_view()
     ),
     url(
         regex=r'^documents/recently/accessed/$',

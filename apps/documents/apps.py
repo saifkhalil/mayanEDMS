@@ -82,7 +82,7 @@ from .handlers import (
 from .html_widgets import ThumbnailWidget
 from .links.document_links import (
     link_document_type_change, link_document_properties_edit,
-    link_document_list, link_document_recently_accessed_list,
+    link_document_list,link_my_document_list, link_document_recently_accessed_list,
     link_document_recently_created_list, link_document_multiple_type_change,
     link_document_preview, link_document_properties
 )
@@ -740,7 +740,7 @@ class DocumentsApp(MayanAppConfig):
             links=(
                 link_document_recently_accessed_list,
                 link_document_recently_created_list, link_document_favorites_list,
-                link_document_list, link_document_list_deleted
+                link_document_list,link_my_document_list, link_document_list_deleted
             )
         )
 

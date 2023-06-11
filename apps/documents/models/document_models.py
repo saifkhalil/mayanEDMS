@@ -9,7 +9,7 @@ from mayan.apps.databases.model_mixins import ExtraDataModelMixin
 from mayan.apps.common.signals import signal_mayan_pre_save
 from mayan.apps.events.classes import EventManagerSave
 from mayan.apps.events.decorators import method_event
-
+from django.conf import settings
 from ..events import (
     event_document_created, event_document_edited,
     event_document_trashed, event_trashed_document_deleted
@@ -93,6 +93,11 @@ class Document(
         ), verbose_name=_('Is stub?')
     )
 
+    create_by = models.ForeignKey(
+        on_delete=models.CASCADE, related_name='user', to=settings.AUTH_USER_MODEL,blank=True,null=True,
+        verbose_name=_('Created By')
+    )
+
     objects = DocumentManager()
     trash = TrashCanManager()
     valid = ValidDocumentManager()
@@ -160,13 +165,13 @@ class Document(
         signal_mayan_pre_save.send(
             instance=self, sender=Document, user=user
         )
-
+        self.create_by = user
         super().save(*args, **kwargs)
 
         if new_document:
             if user:
                 self.add_as_recent_document_for_user(user=user)
-
+                
 
 class DocumentSearchResult(Document):
     class Meta:
