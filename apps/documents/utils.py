@@ -3,7 +3,7 @@ import logging
 import pycountry
 
 from django.utils.translation import ugettext_lazy as _
-
+from mayan.apps.cabinets.models import Cabinet
 from .settings import setting_language_codes
 
 logger = logging.getLogger(name=__name__)
@@ -18,6 +18,13 @@ def get_language(language_code):
         return _(language)
     else:
         return _('Unknown language "%s"') % language_code
+
+def get_cabinet(user):
+    cabinet = Cabinet.objects.filter(users=user).first()
+    if cabinet:
+        return cabinet
+    else:
+        return _('Unknown Cabinet')
 
 
 def get_language_choices():

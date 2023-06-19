@@ -562,6 +562,10 @@ class DocumentsApp(MayanAppConfig):
             func=lambda context: context['object'].pages.count(),
             label=_('Pages'), include_label=True, order=-8, source=Document
         )
+        SourceColumn(
+            func=lambda context: context['object'].create_by.user_cabinets.first(),
+            label=_('From'), include_label=True, order=-10, source=Document
+        )
 
         # FavoriteDocumentProxy
 

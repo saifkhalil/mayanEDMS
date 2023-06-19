@@ -14,6 +14,7 @@ from ..events import (
     event_document_created, event_document_edited,
     event_document_trashed, event_trashed_document_deleted
 )
+
 from ..literals import DEFAULT_LANGUAGE
 from ..managers import (
     DocumentManager, TrashCanManager, ValidDocumentManager,
@@ -97,6 +98,7 @@ class Document(
         on_delete=models.CASCADE, related_name='user', to=settings.AUTH_USER_MODEL,blank=True,null=True,
         verbose_name=_('Created By')
     )
+    from_cabinet = models.CharField(blank=True, default='', help_text=_('From Cabinet.'), max_length=200, verbose_name=_('Cabinet'))
 
     objects = DocumentManager()
     trash = TrashCanManager()
@@ -166,6 +168,7 @@ class Document(
             instance=self, sender=Document, user=user
         )
         self.create_by = user
+        # self.from_cabinet = user.user_cabinets.first()
         super().save(*args, **kwargs)
 
         if new_document:

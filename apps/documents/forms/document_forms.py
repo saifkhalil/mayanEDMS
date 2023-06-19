@@ -8,7 +8,7 @@ from mayan.apps.views.forms import DetailForm
 
 from ..models.document_models import Document
 from ..settings import setting_language
-from ..utils import get_language, get_language_choices
+from ..utils import get_language, get_language_choices,get_cabinet
 
 logger = logging.getLogger(name=__name__)
 
@@ -108,6 +108,15 @@ class DocumentPropertiesForm(DetailForm):
             },
             {
                 'label': _('UUID'), 'field': 'uuid'
+            },
+            {
+                'label': _('Created By'), 'field': 'create_by'
+            },
+                        {
+                'label': _('From Cabinet'),
+                'func': lambda x: get_cabinet(
+                    user=document.create_by
+                )
             },
             {
                 'label': _('Language'),
