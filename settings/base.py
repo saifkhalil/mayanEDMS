@@ -390,3 +390,4 @@ if not DATABASES:
                 )
             }
         }
+DEBUG = True

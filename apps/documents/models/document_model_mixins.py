@@ -177,6 +177,11 @@ class DocumentBusinessLogicMixin:
 
     get_label.short_description = _('Label')
 
+    def get_user_cabinet(self):
+        return self.create_by.user_cabinets.first() or ugettext('No Cabinet')
+
+    get_user_cabinet.short_description = _('User Cabinet')
+
     @property
     def is_in_trash(self):
         return self.in_trash

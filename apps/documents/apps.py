@@ -562,8 +562,12 @@ class DocumentsApp(MayanAppConfig):
             func=lambda context: context['object'].pages.count(),
             label=_('Pages'), include_label=True, order=-8, source=Document
         )
+        # SourceColumn(
+        #     attribute='get_user_cabinet', include_label=True, is_sortable=True,
+        #     label=_('From'), name='from_cabinet', order=-10, source=Document
+        # )
         SourceColumn(
-            func=lambda context: context['object'].create_by.user_cabinets.first(),
+            func=lambda context: context['object'].from_cabinet,
             label=_('From'), include_label=True, order=-10, source=Document
         )
 
