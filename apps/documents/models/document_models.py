@@ -168,8 +168,11 @@ class Document(
             instance=self, sender=Document, user=user
         )
         self.create_by = user
-        cabinet = user.user_cabinets.first().label if user.user_cabinets.first().label is not None else ''
-        self.from_cabinet = cabinet
+        try:
+            mycabinet = str(user.user_cabinets.first().label)
+            self.from_cabinet = mycabinet
+        except:
+            self.from_cabinet = ''
         super().save(*args, **kwargs)
 
         if new_document:
