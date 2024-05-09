@@ -10,7 +10,7 @@ from mayan.apps.documents.permissions import (
 from mayan.apps.documents.views.document_views import DocumentListView
 from mayan.apps.views.generics import ConfirmView
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
-
+from mayan.apps.cabinets.models import Cabinet
 from .icons import (
     icon_document_duplicates_list, icon_duplicated_document_list,
     icon_duplicated_document_scan
@@ -57,9 +57,15 @@ class DuplicatedDocumentListView(DocumentListView):
     view_icon = icon_duplicated_document_list
 
     def get_document_queryset(self):
-        return DuplicateBackendEntry.objects.get_duplicated_documents(
+        if self.request.user.is_superuser:
+                   return DuplicateBackendEntry.objects.get_duplicated_documents(
             permission=permission_document_view, user=self.request.user
         )
+        else:
+            cabinets = Cabinet.objects.filter(users=self.request.user)
+            return DuplicateBackendEntry.objects.get_duplicated_documents(
+            permission=permission_document_view, user=self.request.user
+        ).filter(cabinets__in=cabinets)
 
     def get_extra_context(self):
         context = super().get_extra_context()

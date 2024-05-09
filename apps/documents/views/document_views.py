@@ -101,7 +101,11 @@ class MyDocumentListView(SingleObjectListView):
             return super().get_context_data(**kwargs)
 
     def get_document_queryset(self):
-        return Document.valid.all().filter(create_by=self.request.user)
+        if self.request.user.is_superuser:
+            return Document.valid.all().filter(create_by=self.request.user)
+        else:
+            cabinets = Cabinet.objects.filter(users=self.request.user)
+            return Document.valid.all().filter(create_by=self.request.user).filter(cabinets__in=cabinets)
 
     def get_extra_context(self):
         return {

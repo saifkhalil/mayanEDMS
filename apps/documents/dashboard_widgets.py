@@ -26,6 +26,7 @@ from .statistics import (
     new_document_pages_this_month, new_documents_this_month
 )
 
+# from mayan.apps.cabinets.models import Cabinet
 
 class DashboardWidgetDocumentFilePagesTotal(DashboardWidgetNumeric):
     icon = icon_dashboard_pages_per_month
@@ -166,7 +167,11 @@ class DashboardWidgetUserRecentlyCreatedDocuments(DashboardWidgetList):
             app_label='documents', model_name='RecentlyCreatedDocument'
         )
 
-        queryset = RecentlyCreatedDocument.valid.all()
+        user = self.request.user
+
+        # cabinets = Cabinet.objects.all()
+        #    return RecentlyCreatedDocument.valid.all().filter(cabinets__in=cabinets)
+        queryset = RecentlyCreatedDocument.valid.all().filter(create_by=self.request.user)
 
         return AccessControlList.objects.restrict_queryset(
             permission=permission_document_view, user=self.request.user,

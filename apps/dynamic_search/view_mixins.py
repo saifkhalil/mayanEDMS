@@ -12,7 +12,7 @@ from .mixins import QuerysetSearchModelMixin
 from .search_backends import SearchBackend
 from .search_models import SearchModel
 from .search_interpreters import SearchInterpreter
-
+from mayan.apps.cabinets.models import Cabinet
 logger = logging.getLogger(name=__name__)
 
 
@@ -167,10 +167,13 @@ class SearchResultViewMixin(SearchQueryViewMixin):
 
         if query_clean and not query_is_empty:
             try:
+                cabinets = Cabinet.objects.filter(users=self.request.user)
                 queryset = SearchBackend.get_instance().search(
                     search_model=self.search_model, query=query_clean,
                     user=self.request.user
                 )
+                queryset = queryset.filter(cabinets__in=cabinets)
+                # queryset = self.search_model.get_queryset().none()
             except DynamicSearchException as exception:
                 if settings.DEBUG or settings.TESTING:
                     raise
