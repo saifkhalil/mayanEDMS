@@ -75,8 +75,14 @@ class DocumentListView(SingleObjectListView):
         }
 
     def get_source_queryset(self):
+        cabinets = Cabinet.objects.filter(users=self.request.user)
         queryset = ModelQueryFields.get(model=Document).get_queryset()
-        return self.get_document_queryset().filter(pk__in=queryset)
+        queryset = self.get_document_queryset().filter(pk__in=queryset)
+        if self.request.user.is_superuser:
+            queryset = queryset
+        else:
+            queryset = queryset.filter(cabinets__in=cabinets)
+        return queryset
 
 class MyDocumentListView(SingleObjectListView):
     object_permission = permission_document_view
@@ -101,11 +107,11 @@ class MyDocumentListView(SingleObjectListView):
             return super().get_context_data(**kwargs)
 
     def get_document_queryset(self):
-        if self.request.user.is_superuser:
-            return Document.valid.all().filter(create_by=self.request.user)
-        else:
-            cabinets = Cabinet.objects.filter(users=self.request.user)
-            return Document.valid.all().filter(create_by=self.request.user).filter(cabinets__in=cabinets)
+        # if self.request.user.is_superuser:
+        return Document.valid.all().filter(create_by=self.request.user)
+        # else:
+        #     cabinets = Cabinet.objects.filter(users=self.request.user)
+        #     return Document.valid.all().filter(create_by=self.request.user).filter(cabinets__in=cabinets)
 
     def get_extra_context(self):
         return {

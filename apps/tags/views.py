@@ -15,7 +15,7 @@ from mayan.apps.views.generics import (
     SingleObjectCreateView, SingleObjectEditView, SingleObjectListView
 )
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
-
+from mayan.apps.cabinets.models import Cabinet
 from .forms import TagForm, TagMultipleSelectionForm
 from .icons import (
     icon_document_tag_list, icon_document_tag_multiple_attach,
@@ -201,6 +201,24 @@ class TagDocumentListView(ExternalObjectViewMixin, DocumentListView):
                 user=self.request.user
             ).values('pk')
         )
+        if self.request.user.is_superuser:
+           return Document.valid.filter(
+            pk__in=self.get_tag().get_documents(
+                permission=permission_document_view,
+                user=self.request.user
+            ).values('pk')
+        )
+        else:
+           cabinets = Cabinet.objects.filter(users=self.request.user)
+           return Document.valid.filter(
+            pk__in=self.get_tag().get_documents(
+                permission=permission_document_view,
+                user=self.request.user,
+                cabinets__in=cabinets
+            ).values('pk')
+        )
+
+        
 
     def get_extra_context(self):
         context = super().get_extra_context()

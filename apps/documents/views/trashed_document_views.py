@@ -9,7 +9,7 @@ from mayan.apps.common.settings import setting_home_view
 from mayan.apps.views.generics import (
     ConfirmView, MultipleObjectConfirmActionView
 )
-
+from mayan.apps.cabinets.models import Cabinet
 from ..icons import (
     icon_document_trash_send, icon_trash_can_empty,
     icon_trashed_document_delete, icon_trashed_document_list,
@@ -133,9 +133,15 @@ class TrashedDocumentListView(DocumentListView):
     view_icon = icon_trashed_document_list
 
     def get_document_queryset(self):
+        if self.request.user.is_superuser:
+            queryset=TrashedDocument.trash.all()
+
+        else:
+            cabinets = Cabinet.objects.filter(users=self.request.user)
+            queryset=TrashedDocument.trash.all().filter(cabinets__in=cabinets)
         return AccessControlList.objects.restrict_queryset(
             permission=permission_document_view,
-            queryset=TrashedDocument.trash.all(),
+            queryset=queryset,
             user=self.request.user
         )
 

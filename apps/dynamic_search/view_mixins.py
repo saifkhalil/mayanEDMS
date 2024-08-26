@@ -172,7 +172,12 @@ class SearchResultViewMixin(SearchQueryViewMixin):
                     search_model=self.search_model, query=query_clean,
                     user=self.request.user
                 )
-                queryset = queryset.filter(cabinets__in=cabinets)
+                my_search_model=self.search_model.full_name
+#                first_doc = queryset[0].document_file.document._meta.get_fields()
+                if my_search_model == 'documents.documentfilepagesearchresult':
+                    queryset = queryset.filter(document_file__document__cabinets__in=cabinets)
+                else:    
+                    queryset = queryset.filter(cabinets__in=cabinets)
                 # queryset = self.search_model.get_queryset().none()
             except DynamicSearchException as exception:
                 if settings.DEBUG or settings.TESTING:
