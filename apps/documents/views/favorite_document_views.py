@@ -1,6 +1,6 @@
 import logging
 
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from mayan.apps.views.exceptions import ActionError
 from mayan.apps.views.generics import MultipleObjectConfirmActionView
@@ -31,11 +31,11 @@ class FavoriteDocumentListView(DocumentListView):
             {
                 'no_results_icon': icon_favorite_document_list,
                 'no_results_text': _(
-                    'Favorited documents will be listed in this view. '
+                    message='Favorited documents will be listed in this view. '
                     'Up to %(count)d documents can be favorited per user. '
                 ) % {'count': setting_favorite_count.value},
-                'no_results_title': _('There are no favorited documents.'),
-                'title': _('Favorites')
+                'no_results_title': _(message='There are no favorited documents.'),
+                'title': _(message='Favorites')
             }
         )
         return context
@@ -46,16 +46,16 @@ class FavoriteAddView(MultipleObjectConfirmActionView):
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message = _(
-        '%(count)d document added to favorites.'
+        message='%(count)d document added to favorites.'
     )
     success_message_plural = _(
-        '%(count)d documents added to favorites.'
+        message='%(count)d documents added to favorites.'
     )
     view_icon = icon_favorite_document_add
 
     def get_extra_context(self):
         context = {
-            'title': ungettext(
+            'title': ngettext(
                 singular='Add the selected document to favorites?',
                 plural='Add the selected documents to favorites?',
                 number=self.object_list.count()
@@ -74,21 +74,21 @@ class FavoriteAddView(MultipleObjectConfirmActionView):
 
 
 class FavoriteRemoveView(MultipleObjectConfirmActionView):
-    error_message = _('Document "%(instance)s" is not in favorites.')
+    error_message = _(message='Document "%(instance)s" is not in favorites.')
     object_permission = permission_document_view
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message = _(
-        '%(count)d document removed from favorites.'
+        message='%(count)d document removed from favorites.'
     )
     success_message_plural = _(
-        '%(count)d documents removed from favorites.'
+        message='%(count)d documents removed from favorites.'
     )
     view_icon = icon_favorite_document_remove
 
     def get_extra_context(self):
         context = {
-            'title': ungettext(
+            'title': ngettext(
                 singular='Remove the selected document from favorites?',
                 plural='Remove the selected documents from favorites?',
                 number=self.object_list.count()

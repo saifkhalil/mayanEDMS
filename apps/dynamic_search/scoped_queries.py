@@ -1,19 +1,18 @@
 import logging
 
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from .exceptions import (
     DynamicSearchBackendException, DynamicSearchScopedQueryError
 )
 from .literals import (
-    ERROR_TEXT_NO_RESULT_SCOPE, SCOPE_DELIMITER,
-    SCOPE_MARKER, SCOPE_OPERATOR_CHOICES, SCOPE_RESULT_MARKER,
-    TERM_MARKER_QUOTE
+    ERROR_TEXT_NO_RESULT_SCOPE, SCOPE_DELIMITER, SCOPE_MARKER,
+    SCOPE_OPERATOR_CHOICES, SCOPE_RESULT_MARKER, TERM_MARKER_QUOTE
 )
 from .search_query_terms import QueryToken
 from .search_query_types import QueryType
-from .settings import setting_query_results_limit, setting_results_limit
+from .settings import setting_query_results_limit
 
 logger = logging.getLogger(name=__name__)
 
@@ -41,13 +40,13 @@ class ScopedQuery:
             )
             if id_list is None:
                 raise DynamicSearchScopedQueryError(
-                    _(ERROR_TEXT_NO_RESULT_SCOPE)
+                    _(message=ERROR_TEXT_NO_RESULT_SCOPE)
                 )
             else:
                 return id_list
         else:
             raise DynamicSearchScopedQueryError(
-                _(ERROR_TEXT_NO_RESULT_SCOPE)
+                _(message=ERROR_TEXT_NO_RESULT_SCOPE)
             )
 
     def do_scope_entry_add(self, scope_entry):
@@ -256,9 +255,7 @@ class ScopedQueryEntryData(ScopedQueryEntry):
             )
 
     def get_template_key_context(self):
-        return {
-            'scope_identifier': self.scope_identifier
-        }
+        return {'scope_identifier': self.scope_identifier}
 
 
 class ScopedQueryEntryDataFilter(ScopedQueryEntryData):
@@ -325,39 +322,38 @@ class ScopedQueryEntryDataFilter(ScopedQueryEntryData):
         )
 
     def do_resolve(self, search_backend):
-        if len(
-            [
-                scope_entry for scope_entry in self.scoped_query.scope_entry_list if isinstance(
-                    scope_entry, ScopedQueryEntryDataFilter
-                )
-            ]
-        ) > 1:
-            limit = setting_query_results_limit.value
-        else:
-            limit = setting_results_limit.value
+        scope_limit = setting_query_results_limit.value
 
         if self.value:
             query_type, value = QueryType.check_all(value=self.value)
 
             try:
                 results = search_backend._search(
-                    limit=limit, is_quoted_value=self.is_quoted_value,
+                    is_quoted_value=self.is_quoted_value,
                     is_raw_value=self.is_raw_value, query_type=query_type,
                     search_field=self.search_field, value=value
                 )
 
-                if len(results) >= limit:
-                    raise DynamicSearchScopedQueryError(
-                        _(
-                            'Search results exceed limit setting. Results '
-                            'might not be reliable if multiple scopes are '
-                            'used. Narrow down the search criteria or '
-                            'increase the value of the results limit '
-                            'setting.'
-                        )
-                    )
+                count = 0
 
-                return results
+                for item in results:
+                    count += 1
+
+                    if count > scope_limit:
+                        raise DynamicSearchScopedQueryError(
+                            _(
+                                message='Query results exceed the current '
+                                'limit of %d. Results will not be reliable '
+                                'if multiple scopes are used. Narrow down '
+                                'the search criteria or increase the value '
+                                'of the results limit setting `%s`.'
+                            ) % (
+                                setting_query_results_limit.value,
+                                setting_query_results_limit.global_name
+                            )
+                        )
+
+                    yield item
             except DynamicSearchBackendException:
                 """Raise `DynamicSearchBackendException` as is."""
                 raise
@@ -365,9 +361,9 @@ class ScopedQueryEntryDataFilter(ScopedQueryEntryData):
                 """Wrap any other exception raised by the backend."""
                 raise DynamicSearchBackendException(
                     _(
-                        'Search backend error. Verify that the search '
-                        'service is available and that the search syntax '
-                        'is valid for the active search backend; %s'
+                        message='Search backend error. Verify that the '
+                        'search service is available and that the search '
+                        'syntax is valid for the active search backend; %s'
                     ) % exception
                 ) from exception
         else:
@@ -396,17 +392,13 @@ class ScopedQueryEntryDataFilter(ScopedQueryEntryData):
         context = super().get_template_key_context()
 
         context.update(
-            {
-                'field_name': self.field_name
-            }
+            {'field_name': self.field_name}
         )
 
         return context
 
     def get_template_value_context(self):
-        return {
-            'value': self.value
-        }
+        return {'value': self.value}
 
     @property
     def is_empty(self):
@@ -493,10 +485,16 @@ class ScopedQueryEntryDataOperator(ScopedQueryEntryData):
         result = []
 
         for operand in self.operand_list:
-            scope_entry = self.scoped_query.get_scope_entry_by_identifier(scope_identifier=operand)
-            result.append(scope_entry.to_explain())
+            scope_entry = self.scoped_query.get_scope_entry_by_identifier(
+                scope_identifier=operand
+            )
+            result.append(
+                scope_entry.to_explain()
+            )
 
-        operator_with_operands = ' {} '.format(self.operator_text).join(result)
+        operator_with_operands = ' {} '.format(self.operator_text).join(
+            result
+        )
 
         context.update(
             {
@@ -547,9 +545,7 @@ class ScopedQueryEntryControlResult(ScopedQueryEntryControl):
         if key == '{}{}'.format(
             cls.scoped_query.scope_marker, SCOPE_RESULT_MARKER
         ):
-            return {
-                'result_scope_identifier': value
-            }
+            return {'result_scope_identifier': value}
 
     def __init__(self, result_scope_identifier, **kwargs):
         super().__init__(**kwargs)

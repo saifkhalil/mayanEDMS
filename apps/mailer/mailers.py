@@ -1,118 +1,140 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from .classes import MailerBackend
+from .classes import MailerBackendBaseEmail, MailerBackendCredentials
 
 
-class DjangoSMTP(MailerBackend):
+class DjangoSMTP(MailerBackendCredentials):
     """
-    Backend that wraps Django's SMTP backend
+    Backend that wraps Django's SMTP backend.
     """
-    class_fields = (
-        'host', 'port', 'use_tls', 'use_ssl', 'username', 'password'
-    )
     class_path = 'django.core.mail.backends.smtp.EmailBackend'
-    field_order = (
-        'host', 'port', 'use_tls', 'use_ssl', 'username', 'password', 'from'
-    )
-    fields = {
-        'from': {
-            'label': _('From'),
-            'class': 'django.forms.CharField', 'default': '',
-            'help_text': _(
-                'The sender\'s address. Some system will refuse to send '
-                'messages if this value is not set.'
-            ), 'kwargs': {
-                'max_length': 48
-            }, 'required': False
-        }, 'host': {
-            'label': _('Host'),
-            'class': 'django.forms.CharField', 'default': 'localhost',
-            'help_text': _('The host to use for sending email.'),
-            'kwargs': {
-                'max_length': 48
-            }, 'required': False
-        }, 'port': {
-            'label': _('Port'),
-            'class': 'django.forms.IntegerField', 'default': 25,
-            'help_text': _('Port to use for the SMTP server.'),
-            'required': False
-        }, 'use_tls': {
-            'label': _('Use TLS'),
-            'class': 'django.forms.BooleanField', 'default': False,
-            'help_text': _(
-                'Whether to use a TLS (secure) connection when talking to '
-                'the SMTP server. This is used for explicit TLS connections, '
-                'generally on port 587.'
-            ), 'required': False
-        }, 'use_ssl': {
-            'label': _('Use SSL'),
-            'class': 'django.forms.BooleanField', 'default': False,
-            'help_text': _(
-                'Whether to use an implicit TLS (secure) connection when '
-                'talking to the SMTP server. In most email documentation '
-                'this type of TLS connection is referred to as SSL. It is '
-                'generally used on port 465. If you are experiencing '
-                'problems, see the explicit TLS setting "Use TLS". Note '
-                'that "Use TLS" and "Use SSL" are mutually exclusive, '
-                'so only set one of those settings to True.'
-            ), 'required': False
-        }, 'username': {
-            'label': _('Username'),
-            'class': 'django.forms.CharField', 'default': '',
-            'help_text': _(
-                'Username to use for the SMTP server. If empty, '
-                'authentication won\'t attempted.'
-            ), 'kwargs': {
-                'max_length': 254
-            }, 'required': False
-        }, 'password': {
-            'label': _('Password'),
-            'class': 'django.forms.CharField', 'default': '',
-            'help_text': _(
-                'Password to use for the SMTP server. This setting is used '
-                'in conjunction with the username when authenticating to '
-                'the SMTP server. If either of these settings is empty, '
-                'authentication won\'t be attempted.'
-            ), 'kwargs': {
-                'max_length': 192
-            }, 'required': False
-        },
-    }
-    label = _('Django SMTP backend')
-    widgets = {
-        'password': {
-            'class': 'django.forms.widgets.PasswordInput',
-            'kwargs': {
-                'render_value': True
+    label = _(message='Django SMTP backend')
+
+    @classmethod
+    def get_form_fields(cls):
+        fields = super().get_form_fields()
+
+        fields.update(
+            {
+                'host': {
+                    'label': _(message='Host'),
+                    'class': 'django.forms.CharField',
+                    'default': 'localhost',
+                    'help_text': _(
+                        message='The host to use for sending email.'
+                    ),
+                    'kwargs': {
+                        'max_length': 48
+                    }, 'required': True
+                }, 'port': {
+                    'label': _(message='Port'),
+                    'class': 'django.forms.IntegerField', 'default': 25,
+                    'help_text': _(
+                        message='Port to use for the SMTP server.'
+                    ),
+                    'required': True
+                }, 'use_tls': {
+                    'label': _(message='Use TLS'),
+                    'class': 'django.forms.BooleanField', 'default': False,
+                    'help_text': _(
+                        message='Whether to use a TLS (secure) '
+                        'connection when talking to the SMTP server. This '
+                        'is used for explicit TLS connections, generally '
+                        'on port 587.'
+                    ), 'required': False
+                }, 'use_ssl': {
+                    'label': _(message='Use SSL'),
+                    'class': 'django.forms.BooleanField', 'default': False,
+                    'help_text': _(
+                        message='Whether to use an implicit TLS (secure) '
+                        'connection when talking to the SMTP server. In '
+                        'most email documentation this type of TLS '
+                        'connection is referred to as SSL. It is generally '
+                        'used on port 465. If you are experiencing '
+                        'problems, see the explicit TLS setting '
+                        '"Use TLS". Note that "Use TLS" and "Use SSL" '
+                        'are mutually exclusive, so only set one of those '
+                        'settings to True.'
+                    ), 'required': False
+                }
             }
-        }
-    }
+        )
+
+        return fields
+
+    @classmethod
+    def get_form_fieldsets(cls):
+        fieldsets = super().get_form_fieldsets()
+
+        fieldsets += (
+            (
+                _(message='Server'), {
+                    'fields': ('host', 'port', 'use_ssl', 'use_tls')
+                }
+            ),
+        )
+
+        return fieldsets
+
+    def get_connection_kwargs(self):
+        result = super().get_connection_kwargs()
+
+        result.update(
+            {
+                'host': self.kwargs['host'],
+                'port': self.kwargs['port'],
+                'use_ssl': self.kwargs.get('use_ssl'),
+                'use_tls': self.kwargs.get('use_tls')
+            }
+        )
+
+        return result
 
 
-class DjangoFileBased(MailerBackend):
+class DjangoFileBased(MailerBackendBaseEmail):
     """
-    Mailing backend that wraps Django's file based email backend
+    Mailing backend that wraps Django's file based email backend.
     """
-    class_fields = ('file_path',)
     class_path = 'django.core.mail.backends.filebased.EmailBackend'
-    field_order = (
-        'file_path', 'from'
-    )
-    fields = {
-        'file_path': {
-            'label': _('File path'),
-            'class': 'django.forms.CharField', 'kwargs': {
-                'max_length': 48
+    label = _(message='Django file based backend')
+
+    @classmethod
+    def get_form_fields(cls):
+        fields = super().get_form_fields()
+        fields.update(
+            {
+                'file_path': {
+                    'label': _(message='File path'),
+                    'class': 'django.forms.CharField', 'kwargs': {
+                        'max_length': 48
+                    }
+                }
             }
-        }, 'from': {
-            'label': _('From'),
-            'class': 'django.forms.CharField', 'default': '',
-            'help_text': _(
-                'The sender\'s address. Some system will refuse to send '
-                'messages if this value is not set.'
-            ), 'kwargs': {
-                'max_length': 48
-            }, 'required': False
-        }
-    }
-    label = _('Django file based backend')
+        )
+
+        return fields
+
+    @classmethod
+    def get_form_fieldsets(cls):
+        fieldsets = super().get_form_fieldsets()
+
+        fieldsets += (
+            (
+                _(message='Storage'), {
+                    'fields': ('file_path',)
+                }
+            ),
+        )
+
+        return fieldsets
+
+    def get_connection_kwargs(self):
+        result = super().get_connection_kwargs()
+
+        result.update(
+            {
+                'file_path': self.kwargs['file_path']
+            }
+        )
+
+        return result

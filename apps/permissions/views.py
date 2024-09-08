@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.user_management.permissions import permission_group_edit
 from mayan.apps.views.generics import (
@@ -18,14 +18,14 @@ from .icons import (
 from .links import link_role_create
 from .models import Role, StoredPermission
 from .permissions import (
-    permission_role_view, permission_role_create, permission_role_delete,
-    permission_role_edit
+    permission_role_create, permission_role_delete, permission_role_edit,
+    permission_role_view
 )
 
 
 class GroupRoleAddRemoveView(AddRemoveView):
-    list_added_title = _('Group roles')
-    list_available_title = _('Available roles')
+    list_added_title = _(message='Group roles')
+    list_available_title = _(message='Available roles')
     main_object_method_add_name = 'roles_add'
     main_object_method_remove_name = 'roles_remove'
     main_object_model = Group
@@ -42,7 +42,7 @@ class GroupRoleAddRemoveView(AddRemoveView):
     def get_extra_context(self):
         return {
             'object': self.main_object,
-            'title': _('Roles of group: %s') % self.main_object
+            'title': _(message='Roles of group: %s') % self.main_object
         }
 
 
@@ -54,24 +54,34 @@ class RoleCreateView(SingleObjectCreateView):
     view_permission = permission_role_create
 
     def get_extra_context(self):
-        return {'title': _('Create new role')}
+        return {
+            'title': _(message='Create new role')
+        }
 
     def get_instance_extra_data(self):
         return {'_event_actor': self.request.user}
 
 
 class RoleDeleteView(MultipleObjectDeleteView):
-    error_message = _('Error deleting role "%(instance)s"; %(exception)s')
+    error_message = _(
+        message='Error deleting role "%(instance)s"; %(exception)s'
+    )
     model = Role
     object_permission = permission_role_delete
     pk_url_kwarg = 'role_id'
     post_action_redirect = reverse_lazy(viewname='permissions:role_list')
-    success_message_plural = _('%(count)d roles deleted successfully.')
-    success_message_single = _('Role "%(object)s" deleted successfully.')
-    success_message_singular = _('%(count)d role deleted successfully.')
-    title_single = _('Delete role: %(object)s.')
-    title_singular = _('Delete the %(count)d selected role.')
-    title_plural = _('Delete the %(count)d selected roles.')
+    success_message_plural = _(
+        message='%(count)d roles deleted successfully.'
+    )
+    success_message_single = _(
+        message='Role "%(object)s" deleted successfully.'
+    )
+    success_message_singular = _(
+        message='%(count)d role deleted successfully.'
+    )
+    title_single = _(message='Delete role: %(object)s.')
+    title_singular = _(message='Delete the %(count)d selected role.')
+    title_plural = _(message='Delete the %(count)d selected roles.')
     view_icon = icon_role_single_delete
 
 
@@ -100,21 +110,21 @@ class RoleListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Roles are authorization units. They contain '
+                message='Roles are authorization units. They contain '
                 'user groups which inherit the role permissions for the '
                 'entire system. Roles can also part of access '
                 'controls lists. Access controls list are permissions '
                 'granted to a role for specific objects which its group '
                 'members inherit.'
             ),
-            'no_results_title': _('There are no roles'),
-            'title': _('Roles')
+            'no_results_title': _(message='There are no roles'),
+            'title': _(message='Roles')
         }
 
 
 class RoleGroupAddRemoveView(AddRemoveView):
-    list_added_title = _('Role groups')
-    list_available_title = _('Available groups')
+    list_added_title = _(message='Role groups')
+    list_available_title = _(message='Available groups')
     main_object_method_add_name = 'groups_add'
     main_object_method_remove_name = 'groups_remove'
     main_object_model = Role
@@ -132,16 +142,16 @@ class RoleGroupAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'subtitle': _(
-                'Add groups to be part of a role. They will '
+                message='Add groups to be part of a role. They will '
                 'inherit the role\'s permissions and access controls.'
             ),
-            'title': _('Groups of role: %s') % self.main_object
+            'title': _(message='Groups of role: %s') % self.main_object
         }
 
 
 class RolePermissionAddRemoveView(AddRemoveView):
-    list_added_title = _('Granted permissions')
-    list_available_title = _('Available permissions')
+    list_added_title = _(message='Granted permissions')
+    list_available_title = _(message='Available permissions')
     grouped = True
     main_object_method_add_name = 'permissions_add'
     main_object_method_remove_name = 'permissions_remove'
@@ -169,11 +179,15 @@ class RolePermissionAddRemoveView(AddRemoveView):
             namespaces_dictionary[
                 str(permission.namespace_label)
             ].append(
-                (permission.pk, str(permission))
+                (
+                    permission.pk, str(permission)
+                )
             )
 
         # Sort permissions by their translatable namespace label.
-        return sorted(namespaces_dictionary.items())
+        return sorted(
+            namespaces_dictionary.items()
+        )
 
     def get_actions_extra_kwargs(self):
         return {'user': self.request.user}
@@ -182,10 +196,10 @@ class RolePermissionAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'subtitle': _(
-                'Permissions granted here will apply to the entire system '
+                message='Permissions granted here will apply to the entire system '
                 'and all objects.'
             ),
-            'title': _('Permissions for role: %s') % self.main_object
+            'title': _(message='Permissions for role: %s') % self.main_object
         }
 
 
@@ -205,5 +219,5 @@ class StoredPermissionDetailView(SingleObjectDetailView):
     def get_extra_context(self, **kwargs):
         return {
             'object': self.object,
-            'title': _('Details of permission: %s') % self.object
+            'title': _(message='Details of permission: %s') % self.object
         }

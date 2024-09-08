@@ -3,9 +3,9 @@ import logging
 from django.shortcuts import reverse
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.views.generics import (
     SingleObjectCreateView, SingleObjectDeleteView, SingleObjectDetailView,
     SingleObjectEditView, SingleObjectListView
@@ -41,7 +41,7 @@ class SignatureCaptureCreateView(
         return {
             'object': self.external_object,
             'title': _(
-                'Create signature capture for document: %s'
+                message='Create signature capture for document: %s'
             ) % self.external_object
         }
 
@@ -53,9 +53,8 @@ class SignatureCaptureCreateView(
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='signature_captures:signature_capture_list', kwargs={
-                'document_id': self.external_object.pk
-            }
+            kwargs={'document_id': self.external_object.pk},
+            viewname='signature_captures:signature_capture_list'
         )
 
 
@@ -66,16 +65,14 @@ class SignatureCaptureDeleteView(SingleObjectDeleteView):
     view_icon = icon_signature_capture_single_delete
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_extra_context(self):
         return {
             'document': self.object.document,
             'navigation_object_list': ('object', 'document'),
             'object': self.object,
-            'title': _('Delete signature capture: %s') % self.object
+            'title': _(message='Delete signature capture: %s') % self.object
         }
 
     def get_post_action_redirect(self):
@@ -97,7 +94,7 @@ class SignatureCaptureDetailView(SingleObjectDetailView):
         return {
             'navigation_object_list': ('object', 'object.document'),
             'object': self.object,
-            'title': _('Details of: %s') % self.object
+            'title': _(message='Details of: %s') % self.object
         }
 
 
@@ -113,13 +110,11 @@ class SignatureCaptureEditView(SingleObjectEditView):
             'document': self.object.document,
             'navigation_object_list': ('object', 'document'),
             'object': self.object,
-            'title': _('Edit document signature capture: %s') % self.object
+            'title': _(message='Edit document signature capture: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class SignatureCaptureListView(
@@ -142,13 +137,13 @@ class SignatureCaptureListView(
                 )
             ),
             'no_results_text': _(
-                'Signature captures are electronic versions of a '
+                message='Signature captures are electronic versions of a '
                 'persons\'s handwritten signature.'
             ),
-            'no_results_title': _('Document has no signature captures'),
+            'no_results_title': _(message='Document has no signature captures'),
             'object': self.external_object,
             'title': _(
-                'Signature captures for document: %s'
+                message='Signature captures for document: %s'
             ) % self.external_object
         }
 

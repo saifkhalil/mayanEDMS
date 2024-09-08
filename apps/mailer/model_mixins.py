@@ -4,11 +4,14 @@ from django.conf import settings
 from django.core import mail
 from django.utils.html import strip_tags
 from django.utils.module_loading import import_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
+import mayan
 from mayan.apps.templating.classes import Template
 
 from .events import event_email_sent
+from .literals import ERROR_LOG_DOMAIN_NAME
+from .mailing_actions import ModelMailingAction
 from .utils import split_recipient_list
 
 
@@ -19,8 +22,11 @@ class UserMailerBusinessLogicMixin:
         backend, initializing it, and the using the backend instance to get
         a connection.
         """
+        backend_instance = self.get_backend_instance()
+        connection_kwargs = backend_instance.get_connection_kwargs()
+
         return mail.get_connection(
-            backend=self.get_backend().class_path, **self.get_backend_data()
+            backend=backend_instance.class_path, **connection_kwargs
         )
 
     def send(
@@ -81,12 +87,16 @@ class UserMailerBusinessLogicMixin:
 
         except Exception as exception:
             self.error_log.create(
+                domain_name=ERROR_LOG_DOMAIN_NAME,
                 text='{}; {}'.format(
                     exception.__class__.__name__, exception
                 )
             )
         else:
-            self.error_log.all().delete()
+            queryset_error_logs = self.error_log.filter(
+                domain_name=ERROR_LOG_DOMAIN_NAME
+            )
+            queryset_error_logs.delete()
 
             event_email_sent.commit(
                 action_object=_event_action_object, actor=user,
@@ -95,14 +105,21 @@ class UserMailerBusinessLogicMixin:
 
     def send_object(
         self, obj, to, as_attachment=False, bcc=None, body='', cc=None,
-        content_function_dotted_path=None,
-        mime_type_function_dotted_path=None, object_name=None,
-        organization_installation_url='', reply_to=None, subject='',
-        user=None
+        object_name=None, organization_installation_url='', reply_to=None,
+        subject='', user=None
     ):
         """
         Send an object file using this user mailing profile.
         """
+        if as_attachment:
+            action_name = 'attachment'
+        else:
+            action_name = 'link'
+
+        model_mailing_action = ModelMailingAction.get_action_for_model(
+            action_name=action_name, model=obj._meta.model
+        )
+
         context_dictionary = {
             'link': furl(organization_installation_url).join(
                 obj.get_absolute_url()
@@ -123,24 +140,16 @@ class UserMailerBusinessLogicMixin:
 
         attachments = []
         if as_attachment:
-            if not content_function_dotted_path:
-                raise ValueError(
-                    'Must provide `content_function_dotted_path` '
-                    'to allow sending the object as an attachment.'
-                )
-
-            if not mime_type_function_dotted_path:
-                raise ValueError(
-                    'Must provide `mime_type_function_dotted_path` to '
-                    'allow sending the object as an attachment.'
-                )
-
             content_function = import_string(
-                dotted_path=content_function_dotted_path
+                dotted_path=model_mailing_action.kwargs[
+                    'content_function_dotted_path'
+                ]
             )
 
             mime_type_function = import_string(
-                dotted_path=mime_type_function_dotted_path
+                dotted_path=model_mailing_action.kwargs[
+                    'mime_type_function_dotted_path'
+                ]
             )
             mime_type = mime_type_function(obj=obj)
 
@@ -166,10 +175,12 @@ class UserMailerBusinessLogicMixin:
         """
         try:
             self.send(
-                subject=_('Test email from Mayan EDMS'), to=to, user=user
+                subject=_(message='Test email from %s') % mayan.__title__,
+                to=to, user=user
             )
         except Exception as exception:
             self.error_log.create(
+                domain_name=ERROR_LOG_DOMAIN_NAME,
                 text='{}; {}'.format(
                     exception.__class__.__name__, exception
                 )
@@ -177,4 +188,7 @@ class UserMailerBusinessLogicMixin:
             if settings.DEBUG:
                 raise
         else:
-            self.error_log.all().delete()
+            queryset_error_logs = self.error_log.filter(
+                domain_name=ERROR_LOG_DOMAIN_NAME
+            )
+            queryset_error_logs.delete()

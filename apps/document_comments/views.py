@@ -1,8 +1,8 @@
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.views.generics import (
     SingleObjectCreateView, SingleObjectDeleteView, SingleObjectDetailView,
     SingleObjectEditView, SingleObjectListView
@@ -34,7 +34,9 @@ class DocumentCommentCreateView(
     def get_extra_context(self):
         return {
             'object': self.external_object,
-            'title': _('Add comment to document: %s') % self.external_object
+            'title': _(
+                message='Add comment to document: %s'
+            ) % self.external_object
         }
 
     def get_instance_extra_data(self):
@@ -45,9 +47,9 @@ class DocumentCommentCreateView(
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='comments:comments_for_document', kwargs={
+            kwargs={
                 'document_id': self.kwargs['document_id']
-            }
+            }, viewname='comments:comments_for_document'
         )
 
     def get_queryset(self):
@@ -64,19 +66,16 @@ class DocumentCommentDeleteView(SingleObjectDeleteView):
             'comment': self.object,
             'document': self.object.document,
             'navigation_object_list': ('document', 'comment'),
-            'title': _('Delete comment: %s?') % self.object
+            'title': _(message='Delete comment: %s?') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='comments:comments_for_document', kwargs={
-                'document_id': self.object.document_id
-            }
+            kwargs={'document_id': self.object.document_id},
+            viewname='comments:comments_for_document'
         )
 
     def get_source_queryset(self):
@@ -96,7 +95,7 @@ class DocumentCommentDetailView(SingleObjectDetailView):
             'comment': self.object,
             'document': self.object.document,
             'navigation_object_list': ('document', 'comment'),
-            'title': _('Details for comment: %s?') % self.object
+            'title': _(message='Details for comment: %s?') % self.object
         }
 
     def get_source_queryset(self):
@@ -116,19 +115,16 @@ class DocumentCommentEditView(SingleObjectEditView):
             'comment': self.object,
             'document': self.object.document,
             'navigation_object_list': ('document', 'comment'),
-            'title': _('Edit comment: %s?') % self.object
+            'title': _(message='Edit comment: %s?') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user,
-        }
+        return {'_event_actor': self.request.user}
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='comments:comments_for_document', kwargs={
-                'document_id': self.object.document_id
-            }
+            kwargs={'document_id': self.object.document_id},
+            viewname='comments:comments_for_document'
         )
 
     def get_source_queryset(self):
@@ -155,12 +151,14 @@ class DocumentCommentListView(ExternalObjectViewMixin, SingleObjectListView):
                 )
             ),
             'no_results_text': _(
-                'Document comments are timestamped text entries from users. '
-                'They are great for collaboration.'
+                message='Document comments are timestamped text entries from '
+                'users. They are great for collaboration.'
             ),
-            'no_results_title': _('There are no comments'),
+            'no_results_title': _(message='There are no comments'),
             'object': self.external_object,
-            'title': _('Comments for document: %s') % self.external_object
+            'title': _(
+                message='Comments for document: %s'
+            ) % self.external_object
         }
 
     def get_source_queryset(self):

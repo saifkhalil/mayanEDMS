@@ -1,3 +1,4 @@
+from itertools import islice
 import logging
 
 from django.apps import apps
@@ -9,6 +10,7 @@ from mayan.apps.lock_manager.backends.base import LockingBackend
 from mayan.apps.lock_manager.exceptions import LockError
 
 from .classes import DuplicateBackend
+from .literals import BULK_CREATE_BATCH_SIZE
 
 logger = logging.getLogger(name=__name__)
 
@@ -43,31 +45,55 @@ class StoredDuplicateBackendManager(models.Manager):
                                 document=document
                             )
 
-                            bulk_create_list = [
+                            bulk_create_list = (
                                 duplicates_entry.documents.through(
                                     duplicatebackendentry_id=duplicates_entry.pk,
                                     document=duplicate
                                 ) for duplicate in duplicates
-                            ]
-
-                            duplicates_entry.documents.through.objects.bulk_create(
-                                bulk_create_list, ignore_conflicts=True
                             )
+
+                            while True:
+                                batch = list(
+                                    islice(
+                                        bulk_create_list,
+                                        BULK_CREATE_BATCH_SIZE
+                                    )
+                                )
+
+                                if not batch:
+                                    break
+
+                                duplicates_entry.documents.through.objects.bulk_create(
+                                    batch_size=BULK_CREATE_BATCH_SIZE,
+                                    ignore_conflicts=True, objs=batch
+                                )
 
                             # Create empty duplicate entries for the
                             # duplicates as source that do not have one.
-                            bulk_create_list = [
+                            bulk_create_list = (
                                 DuplicateBackendEntry(
                                     stored_backend=stored_backend,
                                     document=duplicate,
                                 ) for duplicate in duplicates.filter(
                                     duplicates__stored_backend=None
                                 )
-                            ]
-
-                            DuplicateBackendEntry.objects.bulk_create(
-                                bulk_create_list, ignore_conflicts=True
                             )
+
+                            while True:
+                                batch = list(
+                                    islice(
+                                        bulk_create_list,
+                                        BULK_CREATE_BATCH_SIZE
+                                    )
+                                )
+
+                                if not batch:
+                                    break
+
+                                DuplicateBackendEntry.objects.bulk_create(
+                                    batch_size=BULK_CREATE_BATCH_SIZE,
+                                    ignore_conflicts=True, objs=batch
+                                )
 
                             # Get all duplicate entries for the duplicates as
                             # source.
@@ -77,16 +103,28 @@ class StoredDuplicateBackendManager(models.Manager):
 
                             # Create the many to many entries for this
                             # document as a target.
-                            bulk_create_list = [
+                            bulk_create_list = (
                                 document.as_duplicate.through(
                                     duplicatebackendentry_id=duplicate_entry.pk,
                                     document_id=document.pk
                                 ) for duplicate_entry in duplicate_entries
-                            ]
-
-                            document.as_duplicate.through.objects.bulk_create(
-                                bulk_create_list, ignore_conflicts=True
                             )
+
+                            while True:
+                                batch = list(
+                                    islice(
+                                        bulk_create_list,
+                                        BULK_CREATE_BATCH_SIZE
+                                    )
+                                )
+
+                                if not batch:
+                                    break
+
+                                document.as_duplicate.through.objects.bulk_create(
+                                    batch_size=BULK_CREATE_BATCH_SIZE,
+                                    ignore_conflicts=True, objs=batch
+                                )
                         else:
                             # Document has no duplicates for this backend.
                             # Delete any existing entry for where this
@@ -130,15 +168,15 @@ class DuplicateBackendEntryManager(models.Manager):
             app_label='duplicates', model_name='DuplicateTargetDocument'
         )
 
-        target_document_queryset = DuplicateTargetDocument.valid.all()
+        queryset_target_documents = DuplicateTargetDocument.valid.all()
 
         if permission:
-            target_document_queryset = AccessControlList.objects.restrict_queryset(
-                queryset=target_document_queryset, permission=permission,
+            queryset_target_documents = AccessControlList.objects.restrict_queryset(
+                queryset=queryset_target_documents, permission=permission,
                 user=user
             )
 
-        queryset = self.filter(documents__in=target_document_queryset).only(
+        queryset = self.filter(documents__in=queryset_target_documents).only(
             'document_id'
         ).values('document_id')
 
@@ -160,8 +198,12 @@ class DuplicateBackendEntryManager(models.Manager):
 
             when_list.append(
                 models.When(
-                    Q(pk__in=entry.documents.only('pk').values('pk')),
-                    then=Value(value=str(entry.stored_backend))
+                    Q(
+                        pk__in=entry.documents.only('pk').values('pk')
+                    ),
+                    then=Value(
+                        value=str(entry.stored_backend)
+                    )
                 )
             )
 

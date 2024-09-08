@@ -1,11 +1,11 @@
-import logging
 from io import BytesIO, StringIO
+import logging
 
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from django.utils.module_loading import import_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.class_mixins import AppsModuleLoaderMixin
 
@@ -85,7 +85,7 @@ class DefinedStorage(AppsModuleLoaderMixin):
             return self.get_storage_subclass()(**self.kwargs)
         except Exception as exception:
             message = self.error_message or _(
-                'Unable to initialize storage: %(name)s. Check the storage '
+                message='Unable to initialize storage: %(name)s. Check the storage '
                 'backend dotted path and arguments.'
             ) % {
                 'name': self.name
@@ -106,7 +106,7 @@ class DefinedStorage(AppsModuleLoaderMixin):
             )
         except Exception as exception:
             message = self.error_message or _(
-                'Unable to initialize storage: %(name)s. Check the storage '
+                message='Unable to initialize storage: %(name)s. Check the storage '
                 'backend dotted path and arguments.'
             ) % {
                 'name': self.name
@@ -169,7 +169,7 @@ class FakeStorageSubclass:
 class PassthroughStorage(Storage):
     def __init__(self, *args, **kwargs):
         logger.debug(
-            'initializing passthrought storage with: %s, %s', args, kwargs
+            'initializing passthrough storage with: %s, %s', args, kwargs
         )
         next_storage_backend = kwargs.pop(
             'next_storage_backend', DEFAULT_STORAGE_BACKEND

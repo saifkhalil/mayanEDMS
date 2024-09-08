@@ -1,7 +1,7 @@
 from mayan.apps.dependencies.classes import PythonDependency
 
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         Copyright 2013 Otto Yiu and other contributors
         http://ottoyiu.com
 
@@ -24,10 +24,10 @@ PythonDependency(
         OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
         WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     ''', module=__name__, name='django-cors-headers',
-    version_string='==3.10.0'
+    version_string='==4.4.0'
 )
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         Copyright (c) 2011-2015, Tom Christie All rights reserved.
 
         Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -36,10 +36,10 @@ PythonDependency(
 
         THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ''', module=__name__, name='djangorestframework',
-    version_string='==3.14.0'
+    version_string='==3.15.2'
 )
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         Copyright (c) 2015, Warren Jin <jinwarren@gmail.com>
 
         Permission to use, copy, modify, and/or distribute this software for any
@@ -57,14 +57,14 @@ PythonDependency(
     version_string='==0.1.2'
 )
 PythonDependency(
-    module=__name__, name='drf-yasg', version_string='==1.21.4'
+    module=__name__, name='drf-yasg', version_string='==1.21.7'
 )
 PythonDependency(
     module=__name__, name='flex', version_string='==6.14.1'
 )
 PythonDependency(
-    module=__name__, name='jsonschema', version_string='==4.4.0'
+    module=__name__, name='jsonschema', version_string='==4.22.0'
 )
 PythonDependency(
-    module=__name__, name='swagger-spec-validator', version_string='==2.7.4'
+    module=__name__, name='swagger-spec-validator', version_string='==3.0.3'
 )

@@ -1,8 +1,8 @@
 import warnings
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 
 from .literals import MESSAGE_SQLITE_WARNING
 from .patches import patch_Migration
@@ -13,7 +13,7 @@ from .warnings import DatabaseWarning
 class DatabasesApp(MayanAppConfig):
     has_tests = True
     name = 'mayan.apps.databases'
-    verbose_name = _('Databases')
+    verbose_name = _(message='Databases')
 
     def ready(self):
         super().ready()

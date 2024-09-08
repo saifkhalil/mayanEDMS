@@ -1,6 +1,8 @@
 from django.db import migrations
 
-from mayan.apps.databases.literals import DJANGO_POSITIVE_INTEGER_FIELD_MAX_VALUE
+from mayan.apps.databases.literals import (
+    DJANGO_POSITIVE_INTEGER_FIELD_MAX_VALUE
+)
 
 
 def code_document_file_size_copy(apps, schema_editor):
@@ -8,7 +10,7 @@ def code_document_file_size_copy(apps, schema_editor):
         app_label='documents', model_name='DocumentFile'
     )
 
-    for document_file in DocumentFile.objects.all():
+    for document_file in DocumentFile.objects.iterator():
         name = document_file.file.name
         document_file.file.close()
 

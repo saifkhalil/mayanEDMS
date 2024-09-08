@@ -1,6 +1,7 @@
 import logging
 
 from django.apps import apps
+from django.core.exceptions import ObjectDoesNotExist
 
 from mayan.apps.lock_manager.exceptions import LockError
 from mayan.celery import app
@@ -32,9 +33,17 @@ def task_deindex_instance(self, app_label, model_name, object_id):
     instance = Model._meta.default_manager.get(pk=object_id)
 
     try:
-        SearchBackend.get_instance().deindex_instance(instance=instance)
+        search_backend = SearchBackend.get_instance()
+        search_backend.deindex_instance(instance=instance)
     except (DynamicSearchRetry, LockError) as exception:
         raise self.retry(exc=exception)
+    except ObjectDoesNotExist as exception:
+        # Object was deleted before it could be deindexed.
+        logger.info(
+            str(
+                exception
+            )
+        )
 
     logger.info('Finished')
 
@@ -64,12 +73,20 @@ def task_index_instance(
         raise self.retry(exc=exception)
 
     try:
-        SearchBackend.get_instance().index_instance(
-            instance=instance, exclude_model=ExcludeModel,
-            exclude_kwargs=exclude_kwargs
+        search_backend = SearchBackend.get_instance()
+        search_backend.index_instance(
+            exclude_kwargs=exclude_kwargs, exclude_model=ExcludeModel,
+            instance=instance
         )
     except (DynamicSearchRetry, LockError) as exception:
         raise self.retry(exc=exception)
+    except ObjectDoesNotExist as exception:
+        # Object was deleted before it could be indexed.
+        logger.info(
+            str(
+                exception
+            )
+        )
     except Exception as exception:
         kwargs = {
             'app_label': app_label,
@@ -103,7 +120,8 @@ def task_index_instances(self, search_model_full_name, id_list):
     }
 
     try:
-        SearchBackend.get_instance().index_instances(**kwargs)
+        search_backend = SearchBackend.get_instance()
+        search_backend.index_instances(**kwargs)
     except (DynamicSearchRetry, LockError) as exception:
         raise self.retry(exc=exception)
     except Exception as exception:
@@ -164,3 +182,12 @@ def task_reindex_backend():
                     'search_model_full_name': search_model.full_name
                 }
             )
+
+
+@app.task(ignore_result=True)
+def task_saved_resultset_expired_delete():
+    SavedResultset = apps.get_model(
+        app_label='dynamic_search', model_name='SavedResultset'
+    )
+
+    SavedResultset.objects.expired_delete()

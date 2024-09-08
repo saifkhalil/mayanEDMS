@@ -3,7 +3,7 @@
 from mayan.apps.dependencies.classes import PythonDependency
 
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         dateutil - Extensions to the standard Python datetime module.
 
         Copyright (c) 2003-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
@@ -35,5 +35,6 @@ PythonDependency(
         LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
         NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
         SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-    ''', module=__name__, name='python-dateutil', version_string='==2.8.2'
+    ''', module=__name__, name='python-dateutil',
+    version_string='==2.9.0.post0'
 )

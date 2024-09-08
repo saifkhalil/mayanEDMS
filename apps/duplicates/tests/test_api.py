@@ -1,7 +1,9 @@
 from rest_framework import status
 
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
 from mayan.apps.documents.permissions import permission_document_view
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from .mixins import (
@@ -22,7 +24,9 @@ class DuplicatedDocumentAPIViewTestCase(
 
         response = self._request_test_duplicated_document_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -36,7 +40,9 @@ class DuplicatedDocumentAPIViewTestCase(
 
         response = self._request_test_duplicated_document_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(
+            response.data['count'], 1
+        )
         self.assertEqual(
             response.data['results'][0]['id'],
             self._test_document.pk
@@ -65,21 +71,23 @@ class DocumentDuplicatesAPIViewTestCase(
 
     def test_document_duplicates_list_api_view_with_source_document_access(self):
         self.grant_access(
-            obj=self._test_documents[0], permission=permission_document_view
+            obj=self._test_document_list[0], permission=permission_document_view
         )
 
         self._clear_events()
 
         response = self._request_test_document_duplicates_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
 
     def test_document_duplicates_list_api_view_with_target_document_access(self):
         self.grant_access(
-            obj=self._test_documents[1], permission=permission_document_view
+            obj=self._test_document_list[1], permission=permission_document_view
         )
 
         self._clear_events()
@@ -92,20 +100,22 @@ class DocumentDuplicatesAPIViewTestCase(
 
     def test_document_duplicates_list_api_view_with_full_access(self):
         self.grant_access(
-            obj=self._test_documents[0], permission=permission_document_view
+            obj=self._test_document_list[0], permission=permission_document_view
         )
         self.grant_access(
-            obj=self._test_documents[1], permission=permission_document_view
+            obj=self._test_document_list[1], permission=permission_document_view
         )
 
         self._clear_events()
 
         response = self._request_test_document_duplicates_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(
+            response.data['count'], 1
+        )
         self.assertEqual(
             response.data['results'][0]['id'],
-            self._test_documents[1].pk
+            self._test_document_list[1].pk
         )
 
         events = self._get_test_events()
@@ -113,13 +123,13 @@ class DocumentDuplicatesAPIViewTestCase(
 
     def test_trashed_source_document_duplicates_list_api_view_with_full_access(self):
         self.grant_access(
-            obj=self._test_documents[0], permission=permission_document_view
+            obj=self._test_document_list[0], permission=permission_document_view
         )
         self.grant_access(
-            obj=self._test_documents[1], permission=permission_document_view
+            obj=self._test_document_list[1], permission=permission_document_view
         )
 
-        self._test_documents[0].delete()
+        self._test_document_list[0].delete()
 
         self._clear_events()
 
@@ -131,19 +141,21 @@ class DocumentDuplicatesAPIViewTestCase(
 
     def test_trashed_target_document_duplicates_list_api_view_with_full_access(self):
         self.grant_access(
-            obj=self._test_documents[0], permission=permission_document_view
+            obj=self._test_document_list[0], permission=permission_document_view
         )
         self.grant_access(
-            obj=self._test_documents[1], permission=permission_document_view
+            obj=self._test_document_list[1], permission=permission_document_view
         )
 
-        self._test_documents[1].delete()
+        self._test_document_list[1].delete()
 
         self._clear_events()
 
         response = self._request_test_document_duplicates_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

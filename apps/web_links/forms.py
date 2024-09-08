@@ -1,13 +1,27 @@
-from django import forms
 from django.utils.text import format_lazy
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
+from mayan.apps.forms import forms
 from mayan.apps.templating.fields import ModelTemplateField
 
 from .models import WebLink
 
 
 class WebLinkForm(forms.ModelForm):
+    fieldsets = (
+        (
+            _(message='General'), {
+                'fields': ('label', 'enabled')
+            },
+        ),
+        (
+            _(message='Templating'), {
+                'fields': ('template',)
+            },
+        ),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['template'] = ModelTemplateField(
@@ -18,5 +32,5 @@ class WebLinkForm(forms.ModelForm):
         )
 
     class Meta:
-        fields = ('label', 'template', 'enabled')
+        fields = ('label', 'enabled', 'template')
         model = WebLink

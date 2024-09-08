@@ -181,7 +181,12 @@ def patch_files(path=None, replace_list=None):
 
     path_object = Path(path)
     for replace_entry in replace_list or []:
-        for path_entry in path_object.glob('**/{}'.format(replace_entry['filename_pattern'])):
+        path_entries = path_object.glob(
+            '**/{}'.format(
+                replace_entry['filename_pattern']
+            )
+        )
+        for path_entry in path_entries:
             if path_entry.is_file():
                 for pattern in replace_entry['content_patterns']:
                     with path_entry.open(mode=file_open_mode) as source_file_object:
@@ -189,7 +194,7 @@ def patch_files(path=None, replace_list=None):
                             source_position = 0
                             destination_position = 0
 
-                            while(True):
+                            while (True):
                                 source_file_object.seek(source_position)
                                 letter = source_file_object.read(1)
 
@@ -199,7 +204,9 @@ def patch_files(path=None, replace_list=None):
                                     if letter == pattern['search'][0]:
                                         text = '{}{}'.format(
                                             letter, source_file_object.read(
-                                                len(pattern['search']) - 1
+                                                len(
+                                                    pattern['search']
+                                                ) - 1
                                             )
                                         )
 

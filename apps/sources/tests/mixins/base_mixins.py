@@ -1,265 +1,122 @@
+from contextlib import contextmanager
 import json
 
-from django.db.models import Q
+from django.test import tag
 
-from mayan.apps.documents.document_file_actions import DocumentFileActionUseNewPages
-from mayan.apps.documents.tests.literals import TEST_FILE_SMALL_PATH
-
-from ...forms import NewDocumentForm
-from ...models import Source
-from ...source_backends.literals import (
-    DEFAULT_PERIOD_INTERVAL, SOURCE_UNCOMPRESS_CHOICE_NEVER
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
 )
+
+from ...models import Source
 
 from ..literals import (
-    TEST_SOURCE_BACKEND_PATH, TEST_SOURCE_BACKEND_PERIODIC_PATH,
-    TEST_SOURCE_LABEL, TEST_SOURCE_LABEL_EDITED
+    TEST_CASE_ACTION_NAME_SOURCE_CREATE, TEST_CASE_INTERFACE_NAME_MODEL,
+    TEST_SOURCE_BACKEND_PATH_BASE, TEST_SOURCE_LABEL,
+    TEST_SOURCE_METADATA_KEY, TEST_SOURCE_METADATA_VALUE
 )
-from ..mocks import MockRequest
 
 
-class DocumentFileUploadViewTestMixin:
-    def _request_document_file_upload_get_view(self):
-        return self.get(
-            viewname='sources:document_file_upload', kwargs={
-                'document_id': self._test_document.pk,
-                'source_id': self._test_source.pk,
-            }
-        )
-
-    def _request_document_file_upload_post_view(self):
-        with open(file=TEST_FILE_SMALL_PATH, mode='rb') as file_object:
-            return self.post(
-                viewname='sources:document_file_upload', kwargs={
-                    'document_id': self._test_document.pk,
-                    'source_id': self._test_source.pk,
-                }, data={
-                    'document-action': DocumentFileActionUseNewPages.backend_id,
-                    'source-file': file_object
-                }
-            )
-
-    def _request_document_file_upload_no_source_view(self):
-        with open(file=TEST_FILE_SMALL_PATH, mode='rb') as file_object:
-            return self.post(
-                viewname='sources:document_file_upload', kwargs={
-                    'document_id': self._test_document.pk,
-                }, data={
-                    'document-action': DocumentFileActionUseNewPages.backend_id,
-                    'source-file': file_object
-                }
-            )
-
-
-class DocumentUploadWizardViewTestMixin:
-    def _request_upload_interactive_view(self):
-        return self.get(
-            viewname='sources:document_upload_interactive', data={
-                'document_type_id': self._test_document_type.pk,
-            }
-        )
-
-    def _request_upload_wizard_view(self, document_path=TEST_FILE_SMALL_PATH):
-        with open(file=document_path, mode='rb') as file_object:
-            return self.post(
-                viewname='sources:document_upload_interactive', kwargs={
-                    'source_id': self._test_source.pk
-                }, data={
-                    'source-file': file_object,
-                    'document_type_id': self._test_document_type.pk,
-                }
-            )
-
-
-class InteractiveSourceBackendTestMixin:
-    class MockSourceForm:
-        def __init__(self, **kwargs):
-            self.cleaned_data = kwargs
-
-    def setUp(self):
-        super().setUp()
-        self._test_document_form = self.get_test_document_form()
-
-    def get_test_document_form(self):
-        document_form = NewDocumentForm(
-            data={}, document_type=self._test_document_type
-        )
-        document_form.full_clean()
-
-        return document_form
-
-    def get_test_request(self):
-        return MockRequest(user=self._test_case_user)
-
-
-class SourceAPIViewTestMixin:
-    def _request_test_source_create_api_view(
-        self, backend_path=None, extra_data=None
-    ):
-        pk_list = list(Source.objects.values_list('pk', flat=True))
-
-        data = {
-            'backend_path': backend_path or TEST_SOURCE_BACKEND_PATH,
-            'enabled': True,
-            'label': TEST_SOURCE_LABEL
-        }
-
-        if extra_data:
-            data.update(extra_data)
-
-        response = self.post(viewname='rest_api:source-list', data=data)
-
-        try:
-            self._test_source = Source.objects.get(~Q(pk__in=pk_list))
-        except Source.DoesNotExist:
-            self._test_source = None
-
-        return response
-
-    def _request_test_source_delete_api_view(self):
-        return self.delete(
-            viewname='rest_api:source-detail', kwargs={
-                'source_id': self._test_source.pk
-            }
-        )
-
-    def _request_test_source_edit_api_view_via_patch(self):
-        return self.patch(
-            viewname='rest_api:source-detail', kwargs={
-                'source_id': self._test_source.pk
-            }, data={'label': TEST_SOURCE_LABEL_EDITED}
-        )
-
-    def _request_test_source_edit_api_view_via_put(self):
-        data = {
-            'backend_path': self._test_source.backend_path,
-            'enabled': self._test_source.enabled,
-            'label': TEST_SOURCE_LABEL_EDITED
-        }
-
-        return self.put(
-            viewname='rest_api:source-detail', kwargs={
-                'source_id': self._test_source.pk
-            }, data=data
-        )
-
-    def _request_test_source_list_api_view(self):
-        return self.get(viewname='rest_api:source-list')
-
-
+@tag('apps_sources')
 class SourceTestMixin:
-    _create_source_method = '_create_test_source'
-    auto_create_test_source = True
+    _test_source_backend_path = None
+    _test_source_create_auto = True
+    _test_source_file_path = None
 
     def setUp(self):
+        # Initialize the list first. Needed for migration tests.
+        self._test_source_list = []
+
         super().setUp()
-        self._test_sources = []
 
-        if self.auto_create_test_source:
-            getattr(self, self._create_source_method)()
+        if self._test_source_create_auto:
+            self._test_source_create()
 
-    def _create_test_source(self, backend_path=None, backend_data=None):
-        total_test_sources = len(self._test_sources)
-        label = '{}_{}'.format(TEST_SOURCE_LABEL, total_test_sources)
+    def _execute_test_source_action(self, action_name, extra_data=None):
+        backend_data = self.get_test_source_backend_data(
+            action_name=action_name, extra_data=extra_data,
+            interface_name=TEST_CASE_INTERFACE_NAME_MODEL
+        )
+
+        action = self._test_source.get_action(name=action_name)
+
+        return action.execute(
+            interface_name='Model', interface_load_kwargs=backend_data
+        )
+
+    def _get_test_source_backend_data(self, interface_name, action_name):
+        # Method to allow test cases to add their own test source custom
+        # data without having to override the main method.
+        result = {}
+
+        if action_name == TEST_CASE_ACTION_NAME_SOURCE_CREATE:
+            label = self.get_test_source_backend_label()
+            result['label'] = label
+
+        return result
+
+    def _test_source_create(self, backend_path=None, extra_data=None):
+        self._test_source_pre_create()
+
+        backend_data = self.get_test_source_backend_data(
+            action_name=TEST_CASE_ACTION_NAME_SOURCE_CREATE,
+            interface_name=TEST_CASE_INTERFACE_NAME_MODEL,
+            extra_data=extra_data
+        )
+        json_backend_data = json.dumps(obj=backend_data)
+
+        backend_path = backend_path or self.get_test_source_backend_path()
 
         self._test_source = Source.objects.create(
-            backend_path=backend_path or TEST_SOURCE_BACKEND_PATH,
-            backend_data=json.dumps(obj=backend_data or {}),
-            label=label
-        )
-        self._test_sources.append(self._test_source)
-
-
-class SourceDocumentUploadViewTestMixin:
-    def _request_source_document_upload_view_via_get(self):
-        return self.get(
-            viewname='sources:document_upload_interactive', kwargs={
-                'source_id': self._test_source.pk
-            }, data={
-                'document_type_id': self._test_document_type.pk,
-            }
+            backend_data=json_backend_data, backend_path=backend_path,
+            label=backend_data['label']
         )
 
+        self._test_source_list.append(self._test_source)
 
-class PeriodicSourceBackendTestMixin(SourceTestMixin):
-    _create_source_method = '_create_test_periodic_source_backend'
+    def _test_source_pre_create(self):
+        return
 
-    def _create_test_periodic_source_backend(self, extra_data=None):
-        backend_data = {
-            'interval': DEFAULT_PERIOD_INTERVAL
-        }
+    def get_test_source_backend_data(
+        self, interface_name, action_name, extra_data=None
+    ):
+        backend_data = self._get_test_source_backend_data(
+            interface_name=interface_name, action_name=action_name
+        )
 
         if extra_data:
             backend_data.update(extra_data)
 
-        self._create_test_source(
-            backend_path=TEST_SOURCE_BACKEND_PERIODIC_PATH,
-            backend_data=backend_data
-        )
+        return backend_data
+
+    def get_test_source_backend_label(self):
+        total_test_source_count = len(self._test_source_list)
+        return '{}_{}'.format(TEST_SOURCE_LABEL, total_test_source_count)
+
+    def get_test_source_backend_path(self):
+        if self._test_source_backend_path:
+            return self._test_source_backend_path
+        else:
+            return TEST_SOURCE_BACKEND_PATH_BASE
+
+    @contextmanager
+    def get_test_source_file_object(self):
+        if self._test_source_file_path:
+            with open(file=self._test_source_file_path, mode='rb') as file_object:
+                yield file_object
+        else:
+            yield None
 
 
-class SourceViewTestMixin:
-    def _request_test_source_backend_selection_view(self):
-        return self.get(
-            viewname='sources:source_backend_selection'
-        )
+class SourceMetadataTestmixin(DocumentTestMixin, SourceTestMixin):
+    _test_source_metadata_create_auto = True
 
-    def _request_test_source_create_view(
-        self, backend_path=None, extra_data=None
-    ):
-        pk_list = list(Source.objects.values_list('pk', flat=True))
+    def setUp(self):
+        super().setUp()
 
-        data = {
-            'enabled': True,
-            'label': TEST_SOURCE_LABEL,
-            'uncompress': SOURCE_UNCOMPRESS_CHOICE_NEVER
-        }
+        if self._test_source_metadata_create_auto:
+            self._test_source_metadata_create()
 
-        if extra_data:
-            data.update(extra_data)
-
-        response = self.post(
-            kwargs={
-                'backend_path': backend_path or TEST_SOURCE_BACKEND_PATH
-            }, viewname='sources:source_create', data=data
-        )
-
-        try:
-            self._test_source = Source.objects.get(~Q(pk__in=pk_list))
-        except Source.DoesNotExist:
-            self._test_source = None
-
-        return response
-
-    def _request_test_source_delete_view(self):
-        return self.post(
-            viewname='sources:source_delete', kwargs={
-                'source_id': self._test_source.pk
-            }
-        )
-
-    def _request_test_source_edit_view(self):
-        return self.post(
-            viewname='sources:source_edit', kwargs={
-                'source_id': self._test_source.pk
-            }, data={
-                'label': TEST_SOURCE_LABEL_EDITED
-            }
-        )
-
-    def _request_test_source_list_view(self):
-        return self.get(viewname='sources:source_list')
-
-    def _request_test_source_test_get_view(self):
-        return self.get(
-            viewname='sources:source_test', kwargs={
-                'source_id': self._test_source.pk
-            }
-        )
-
-    def _request_test_source_test_post_view(self):
-        return self.post(
-            viewname='sources:source_test', kwargs={
-                'source_id': self._test_source.pk
-            }
+    def _test_source_metadata_create(self):
+        self._test_source_metadata = self._test_document_file.source_metadata.create(
+            key=TEST_SOURCE_METADATA_KEY, value=TEST_SOURCE_METADATA_VALUE
         )

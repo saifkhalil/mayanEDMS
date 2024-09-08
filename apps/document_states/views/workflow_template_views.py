@@ -1,21 +1,22 @@
 from django.contrib import messages
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
 from mayan.apps.documents.models.document_models import Document
 from mayan.apps.documents.models.document_type_models import DocumentType
 from mayan.apps.documents.permissions import permission_document_type_edit
 from mayan.apps.views.generics import (
-    AddRemoveView, ConfirmView, MultipleObjectFormActionView,
-    MultipleObjectDeleteView, SingleObjectCreateView, SingleObjectDetailView,
-    SingleObjectEditView, SingleObjectListView
+    AddRemoveView, ConfirmView, MultipleObjectDeleteView,
+    MultipleObjectFormActionView, SingleObjectCreateView,
+    SingleObjectDetailView, SingleObjectEditView, SingleObjectListView
 )
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
-from ..forms import (
-    WorkflowForm, WorkflowMultipleSelectionForm, WorkflowPreviewForm
+from ..forms.workflow_template_forms import (
+    WorkflowTemplateForm, WorkflowTemplatePreviewForm,
+    WorkflowTemplateSelectionForm
 )
 from ..icons import (
     icon_document_type_workflow_template_list,
@@ -29,8 +30,8 @@ from ..links import link_workflow_template_create
 from ..models import Workflow
 from ..permissions import (
     permission_workflow_template_create, permission_workflow_template_delete,
-    permission_workflow_template_edit, permission_workflow_tools,
-    permission_workflow_template_view
+    permission_workflow_template_edit, permission_workflow_template_view,
+    permission_workflow_tools
 )
 from ..tasks import (
     task_launch_all_workflows, task_launch_workflow, task_launch_workflow_for
@@ -38,8 +39,8 @@ from ..tasks import (
 
 
 class DocumentTypeWorkflowTemplateAddRemoveView(AddRemoveView):
-    list_added_title = _('Workflows assigned this document type')
-    list_available_title = _('Available workflows')
+    list_added_title = _(message='Workflows assigned this document type')
+    list_available_title = _(message='Available workflows')
     main_object_method_add_name = 'workflow_templates_add'
     main_object_method_remove_name = 'workflow_templates_remove'
     main_object_model = DocumentType
@@ -57,48 +58,48 @@ class DocumentTypeWorkflowTemplateAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'subtitle': _(
-                'Removing a workflow from a document type will also '
+                message='Removing a workflow from a document type will also '
                 'remove all running instances of that workflow.'
             ),
             'title': _(
-                'Workflows assigned the document type: %s'
+                message='Workflows assigned the document type: %s'
             ) % self.main_object
         }
 
 
 class DocumentWorkflowTemplatesLaunchView(MultipleObjectFormActionView):
     error_message = _(
-        'Error launching workflows for document "%(instance)s"; '
+        message='Error launching workflows for document "%(instance)s"; '
         '%(exception)s'
     )
-    form_class = WorkflowMultipleSelectionForm
+    form_class = WorkflowTemplateSelectionForm
     object_permission = permission_workflow_tools
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message_plural = _(
-        'Workflows launched successfully for %(count)d documents.'
+        message='Workflows launched successfully for %(count)d documents.'
     )
     success_message_single = _(
-        'Workflows launched successfully for document "%(object)s".'
+        message='Workflows launched successfully for document "%(object)s".'
     )
     success_message_singular = _(
-        'Workflows launched successfully for %(count)d document.'
+        message='Workflows launched successfully for %(count)d document.'
     )
     title_plural = _(
-        'Launch workflows for the selected %(count)d documents.'
+        message='Launch workflows for the selected %(count)d documents.'
     )
-    title_single = _('Launch workflow: %(object)s.')
+    title_single = _(message='Launch workflow: %(object)s.')
     title_singular = _(
-        'Launch workflows for the selected %(count)d document.'
+        message='Launch workflows for the selected %(count)d document.'
     )
     view_icon = icon_document_workflow_templates_launch
 
     def get_extra_context(self):
         return {
             'subtitle': _(
-                'Workflows already launched or workflows not applicable to '
-                'some documents when multiple documents are selected, '
-                'will be silently ignored.'
+                message='Workflows already launched or workflows not '
+                'applicable to some documents when multiple documents are '
+                'selected, will be silently ignored.'
             )
         }
 
@@ -108,7 +109,7 @@ class DocumentWorkflowTemplatesLaunchView(MultipleObjectFormActionView):
         ).distinct()
 
         result = {
-            'help_text': _('Workflows to be launched.'),
+            'help_text': _(message='Workflows to be launched.'),
             'permission': permission_workflow_tools,
             'queryset': workflows_union,
             'user': self.request.user
@@ -117,12 +118,12 @@ class DocumentWorkflowTemplatesLaunchView(MultipleObjectFormActionView):
         return result
 
     def object_action(self, form, instance):
-        workflow_queryset = AccessControlList.objects.restrict_queryset(
+        queryset_workflows = AccessControlList.objects.restrict_queryset(
             permission=permission_workflow_tools,
             queryset=form.cleaned_data['workflows'], user=self.request.user
         )
 
-        for workflow in workflow_queryset:
+        for workflow in queryset_workflows:
             task_launch_workflow_for.apply_async(
                 kwargs={
                     'document_id': instance.pk,
@@ -133,8 +134,10 @@ class DocumentWorkflowTemplatesLaunchView(MultipleObjectFormActionView):
 
 
 class WorkflowTemplateCreateView(SingleObjectCreateView):
-    extra_context = {'title': _('Create workflow')}
-    form_class = WorkflowForm
+    extra_context = {
+        'title': _(message='Create workflow')
+    }
+    form_class = WorkflowTemplateForm
     model = Workflow
     post_action_redirect = reverse_lazy(
         viewname='document_states:workflow_template_list'
@@ -143,14 +146,12 @@ class WorkflowTemplateCreateView(SingleObjectCreateView):
     view_permission = permission_workflow_template_create
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class WorkflowTemplateDeleteView(MultipleObjectDeleteView):
     error_message = _(
-        'Error deleting workflow "%(instance)s"; %(exception)s'
+        message='Error deleting workflow "%(instance)s"; %(exception)s'
     )
     model = Workflow
     object_permission = permission_workflow_template_delete
@@ -158,17 +159,25 @@ class WorkflowTemplateDeleteView(MultipleObjectDeleteView):
     post_action_redirect = reverse_lazy(
         viewname='document_states:workflow_template_list'
     )
-    success_message_plural = _('%(count)d workflows deleted successfully.')
-    success_message_single = _('Workflow "%(object)s" deleted successfully.')
-    success_message_singular = _('%(count)d workflow deleted successfully.')
-    title_plural = _('Delete the %(count)d selected workflows.')
-    title_single = _('Delete workflow: %(object)s.')
-    title_singular = _('Delete the %(count)d selected workflow.')
+    success_message_plural = _(
+        message='%(count)d workflows deleted successfully.'
+    )
+    success_message_single = _(
+        message='Workflow "%(object)s" deleted successfully.'
+    )
+    success_message_singular = _(
+        message='%(count)d workflow deleted successfully.'
+    )
+    title_plural = _(message='Delete the %(count)d selected workflows.')
+    title_single = _(message='Delete workflow: %(object)s.')
+    title_singular = _(message='Delete the %(count)d selected workflow.')
     view_icon = icon_workflow_template_delete
 
     def get_extra_context(self):
         return {
-            'message': _('All workflow instances will also be deleted.')
+            'message': _(
+                message='All workflow instances will also be deleted.'
+            )
         }
 
     def object_action(self, instance, form=None):
@@ -176,7 +185,7 @@ class WorkflowTemplateDeleteView(MultipleObjectDeleteView):
 
 
 class WorkflowTemplateEditView(SingleObjectEditView):
-    form_class = WorkflowForm
+    form_class = WorkflowTemplateForm
     model = Workflow
     object_permission = permission_workflow_template_edit
     pk_url_kwarg = 'workflow_template_id'
@@ -187,20 +196,16 @@ class WorkflowTemplateEditView(SingleObjectEditView):
 
     def get_extra_context(self):
         return {
-            'title': _(
-                'Edit workflow: %s'
-            ) % self.object
+            'title': _(message='Edit workflow: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class WorkflowTemplateDocumentTypeAddRemoveView(AddRemoveView):
-    list_added_title = _('Document types assigned this workflow')
-    list_available_title = _('Available document types')
+    list_added_title = _(message='Document types assigned this workflow')
+    list_available_title = _(message='Available document types')
     main_object_method_add_name = 'document_types_add'
     main_object_method_remove_name = 'document_types_remove'
     main_object_model = Workflow
@@ -218,12 +223,12 @@ class WorkflowTemplateDocumentTypeAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'subtitle': _(
-                'Removing a document type from a workflow will also '
+                message='Removing a document type from a workflow will also '
                 'remove all running instances of that workflow for '
                 'documents of the document type just removed.'
             ),
             'title': _(
-                'Document types assigned the workflow: %s'
+                message='Document types assigned the workflow: %s'
             ) % self.main_object
         }
 
@@ -237,10 +242,10 @@ class WorkflowTemplateLaunchView(ExternalObjectViewMixin, ConfirmView):
     def get_extra_context(self):
         return {
             'subtitle': _(
-                'This will launch the workflow for documents that have '
-                'already been uploaded.'
+                message='This will launch the workflow for documents that '
+                'have already been uploaded.'
             ),
-            'title': _('Launch workflow?')
+            'title': _(message='Launch workflow?')
         }
 
     def view_action(self):
@@ -251,7 +256,7 @@ class WorkflowTemplateLaunchView(ExternalObjectViewMixin, ConfirmView):
             }
         )
         messages.success(
-            message=_('Workflow launch queued successfully.'),
+            message=_(message='Workflow launch queued successfully.'),
             request=self.request
         )
 
@@ -269,19 +274,19 @@ class WorkflowTemplateListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Workflows store a series of states and keep track of the '
-                'current state of a document. Transitions are used to change the '
-                'current state to a new one.'
+                message='Workflows store a series of states and keep track '
+                'of the current state of a document. Transitions are used to '
+                'change the current state to a new one.'
             ),
             'no_results_title': _(
-                'No workflows have been defined'
+                message='No workflows have been defined'
             ),
-            'title': _('Workflows')
+            'title': _(message='Workflows')
         }
 
 
 class WorkflowTemplatePreviewView(SingleObjectDetailView):
-    form_class = WorkflowPreviewForm
+    form_class = WorkflowTemplatePreviewForm
     model = Workflow
     object_permission = permission_workflow_template_view
     pk_url_kwarg = 'workflow_template_id'
@@ -291,17 +296,17 @@ class WorkflowTemplatePreviewView(SingleObjectDetailView):
         return {
             'hide_labels': True,
             'object': self.object,
-            'title': _('Preview of: %s') % self.object
+            'title': _(message='Preview of: %s') % self.object
         }
 
 
 class ToolLaunchWorkflows(ConfirmView):
     extra_context = {
         'subtitle': _(
-            'This will launch all workflows created after documents have '
-            'already been uploaded.'
+            message='This will launch all workflows created after documents '
+            'have already been uploaded.'
         ),
-        'title': _('Launch all workflows?')
+        'title': _(message='Launch all workflows?')
     }
     view_icon = icon_tool_launch_workflows
     view_permission = permission_workflow_tools
@@ -311,6 +316,6 @@ class ToolLaunchWorkflows(ConfirmView):
             kwargs={'user_id': self.request.user.pk}
         )
         messages.success(
-            message=_('Workflow launch queued successfully.'),
+            message=_(message='Workflow launch queued successfully.'),
             request=self.request
         )

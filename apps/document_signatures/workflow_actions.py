@@ -1,8 +1,7 @@
 import logging
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.acls.models import AccessControlList
 from mayan.apps.django_gpg.models import Key
 from mayan.apps.django_gpg.permissions import permission_key_sign
 from mayan.apps.document_states.classes import WorkflowAction
@@ -14,74 +13,95 @@ logger = logging.getLogger(name=__name__)
 
 
 class DocumentSignatureDetachedAction(WorkflowAction):
-    fields = {
+    form_field_widgets = {
         'key': {
-            'label': _('Key'),
-            'class': 'django.forms.ModelChoiceField', 'kwargs': {
-                'help_text': _(
-                    'Private key that will be used to sign the document '
-                    'file.'
-                ), 'queryset': Key.objects.none(),
-            },
-        }, 'passphrase': {
-            'label': _('Passphrase'),
-            'class': 'django.forms.CharField', 'kwargs': {
-                'help_text': _(
-                    'The passphrase to unlock the key and allow it to be '
-                    'used to sign the document file.'
-                ), 'required': False
-            },
+            'class': 'django.forms.widgets.Select', 'kwargs': {
+                'attrs': {'class': 'select2'}
+            }
         },
-    }
-    field_order = ('key', 'passphrase')
-    label = _('Sign document (detached)')
-    widgets = {
         'passphrase': {
             'class': 'django.forms.widgets.PasswordInput',
         }
     }
+    form_fields = {
+        'passphrase': {
+            'label': _(message='Passphrase'),
+            'class': 'django.forms.CharField', 'kwargs': {
+                'help_text': _(
+                    message='The passphrase to unlock the key and allow it to be '
+                    'used to sign the document file.'
+                ), 'required': False
+            }
+        }
+    }
+    label = _(message='Sign document (detached)')
+
+    @classmethod
+    def get_form_fields(cls):
+        fields = super().get_form_fields()
+
+        fields.update(
+            {
+                'key': {
+                    'class': 'mayan.apps.forms.form_fields.FormFieldFilteredModelChoice',
+                    'help_text': _(
+                        message='Private key that will be used to sign the document '
+                        'file.'
+                    ),
+                    'kwargs': {
+                        'source_model': Key,
+                        'permission': permission_key_sign
+                    },
+                    'label': _(message='Private key'),
+                    'required': True
+                }
+            }
+        )
+
+        return fields
+
+    @classmethod
+    def get_form_fieldsets(cls):
+        fieldsets = super().get_form_fieldsets()
+
+        fieldsets += (
+            (
+                _(message='Key'), {
+                    'fields': ('key', 'passphrase',)
+                }
+            ),
+        )
+        return fieldsets
 
     def get_arguments(self, context):
-        latest_file = context['document'].file_latest
+        latest_file = context['workflow_instance'].document.file_latest
         if not latest_file:
             raise WorkflowStateActionError(
                 _(
-                    'Document has no file to sign. You might be trying to '
-                    'use this action in an initial state before the created '
-                    'document is yet to be processed.'
+                    message='Document has no file to sign. You might be trying to '
+                    'use this action in an initial state before the '
+                    'created document is yet to be processed.'
                 )
             )
 
         return {
             'document_file': latest_file,
             'key': Key.objects.get(
-                pk=self.form_data['key']
+                pk=self.kwargs['key']
             ),
-            'passphrase': self.form_data.get('passphrase')
+            'passphrase': self.kwargs.get('passphrase')
         }
 
-    def get_form_schema(self, **kwargs):
-        result = super().get_form_schema(**kwargs)
-
-        queryset = AccessControlList.objects.restrict_queryset(
-            permission=permission_key_sign, queryset=Key.objects.all(),
-            user=kwargs['request'].user
-        )
-
-        result['fields']['key']['kwargs']['queryset'] = queryset
-
-        return result
-
     def execute(self, context):
-        DetachedSignature.objects.sign_document_file(
-            **self.get_arguments(context=context)
-        )
+        kwargs = self.get_arguments(context=context)
+
+        DetachedSignature.objects.sign_document_file(**kwargs)
 
 
 class DocumentSignatureEmbeddedAction(DocumentSignatureDetachedAction):
-    label = _('Sign document (embedded)')
+    label = _(message='Sign document (embedded)')
 
     def execute(self, context):
-        EmbeddedSignature.objects.sign_document_file(
-            **self.get_arguments(context=context)
-        )
+        kwargs = self.get_arguments(context=context)
+
+        EmbeddedSignature.objects.sign_document_file(**kwargs)

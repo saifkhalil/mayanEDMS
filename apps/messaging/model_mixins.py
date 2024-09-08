@@ -1,7 +1,7 @@
-from django.utils.translation import ugettext_lazy as _
-
 from bleach import Cleaner
 from bleach.linkifier import LinkifyFilter
+
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.templating.classes import Template
 
@@ -13,7 +13,7 @@ class MessageBusinessLogicMixin:
         ).render(
             context={'instance': self}
         )
-    get_label.short_description = _('Label')
+    get_label.short_description = _(message='Label')
 
     def get_rendered_body(self):
         cleaner = Cleaner(

@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
@@ -15,7 +15,11 @@ from mayan.apps.rest_api.relations import (
     FilteredPrimaryKeyRelatedField, FilteredSimplePrimaryKeyRelatedField
 )
 
-from .models import DocumentMetadata, DocumentTypeMetadataType, MetadataType
+from .models.document_type_metadata_type_models import (
+    DocumentTypeMetadataType
+)
+from .models.metadata_instance_models import DocumentMetadata
+from .models.metadata_type_models import MetadataType
 from .permissions import (
     permission_document_metadata_add, permission_metadata_type_edit
 )
@@ -25,7 +29,7 @@ class MetadataTypeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         extra_kwargs = {
             'url': {
-                'label': _('URL'), 'lookup_field': 'pk',
+                'label': _(message='URL'), 'lookup_field': 'pk',
                 'lookup_url_kwarg': 'metadata_type_id',
                 'view_name': 'rest_api:metadatatype-detail'
             }
@@ -42,19 +46,19 @@ class DocumentTypeMetadataTypeSerializer(
     serializers.HyperlinkedModelSerializer
 ):
     document_type = DocumentTypeSerializer(
-        label=_('Document type'), read_only=True
+        label=_(message='Document type'), read_only=True
     )
     metadata_type = MetadataTypeSerializer(
-        label=_('Metadata type'), read_only=True
+        label=_(message='Metadata type'), read_only=True
     )
     metadata_type_id = FilteredSimplePrimaryKeyRelatedField(
         help_text=_(
-            'Primary key of the metadata type to be added.'
-        ), label=_('Metadata type ID'), source_model=MetadataType,
+            message='Primary key of the metadata type to be added.'
+        ), label=_(message='Metadata type ID'), source_model=MetadataType,
         source_permission=permission_metadata_type_edit, write_only=True
     )
     url = serializers.SerializerMethodField(
-        label=_('URL')
+        label=_(message='URL')
     )
 
     class Meta:
@@ -68,10 +72,11 @@ class DocumentTypeMetadataTypeSerializer(
 
     def get_url(self, instance):
         return reverse(
-            viewname='rest_api:documenttypemetadatatype-detail', kwargs={
+            format=self.context['format'], kwargs={
                 'document_type_id': instance.document_type.pk,
                 'metadata_type_id': instance.pk
-            }, request=self.context['request'], format=self.context['format']
+            }, request=self.context['request'],
+            viewname='rest_api:documenttypemetadatatype-detail'
         )
 
     def validate(self, attrs):
@@ -97,18 +102,19 @@ class DocumentMetadataSerializer(
 ):
     metadata_type_id = FilteredPrimaryKeyRelatedField(
         help_text=_(
-            'Primary key of the metadata type to be added to the document.'
-        ), label=_('Metadata type ID'), source_model=MetadataType,
+            message='Primary key of the metadata type to be added to the '
+            'document.'
+        ), label=_(message='Metadata type ID'), source_model=MetadataType,
         source_permission=permission_document_metadata_add, write_only=True
     )
     document = DocumentSerializer(
-        label=_('Document'), read_only=True
+        label=_(message='Document'), read_only=True
     )
     metadata_type = MetadataTypeSerializer(
-        label=_('Metadata type'), read_only=True
+        label=_(message='Metadata type'), read_only=True
     )
     url = serializers.SerializerMethodField(
-        label=_('URL')
+        label=_(message='URL')
     )
 
     class Meta:
@@ -122,10 +128,11 @@ class DocumentMetadataSerializer(
 
     def get_url(self, instance):
         return reverse(
-            viewname='rest_api:documentmetadata-detail', kwargs={
+            format=self.context['format'], kwargs={
                 'document_id': instance.document.pk,
                 'metadata_id': instance.pk
-            }, request=self.context['request'], format=self.context['format']
+            }, request=self.context['request'],
+            viewname='rest_api:documentmetadata-detail'
         )
 
     def validate(self, attrs):

@@ -1,8 +1,7 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from mayan.apps.user_management.permissions import permission_user_view
 from mayan.apps.user_management.querysets import get_user_queryset
-from .events import event_cabinet_edited
 
 def method_document_get_cabinets(self, permission, user):
     AccessControlList = apps.get_model(
@@ -20,10 +19,9 @@ def method_document_get_cabinets(self, permission, user):
 
 
 method_document_get_cabinets.help_text = _(
-    'Return a list of cabinets containing the document.'
+    message='Return a list of cabinets containing the document.'
 )
-method_document_get_cabinets.short_description = _('get_cabinets()')
-
+method_document_get_cabinets.short_description = _(message='get_cabinets()')
 def method_cabinet_get_users(self, user, permission=permission_user_view):
    AccessControlList = apps.get_model(
        app_label='acls', model_name='AccessControlList'

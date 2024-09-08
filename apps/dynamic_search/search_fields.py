@@ -7,7 +7,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .exceptions import DynamicSearchException, DynamicSearchModelException
 from .literals import QUERY_PARAMETER_ANY_FIELD
@@ -27,8 +27,6 @@ class SearchField:
     # Priority ensures concrete and collection fields are processed before
     # virtual fields.
     priority = None
-
-    label = None
 
     @staticmethod
     class ValueTransformationNull(ValueTransformation):
@@ -94,6 +92,26 @@ class SearchField:
     def field_name(self):
         return self._field_name
 
+    @cached_property
+    def field_name_model_list(self):
+        result = []
+
+        model_list = get_fields_from_path(
+            model=self.model, path=self.field_name
+        )
+
+        for model in model_list:
+            remote_field = model.remote_field
+
+            if remote_field:
+                base_model = remote_field.model
+            else:
+                base_model = self.search_model.base_model
+
+            result.append(base_model)
+
+        return result
+
     def do_value_index_transform(self, search_backend, value):
         return self.do_value_transform(
             key='index', search_backend=search_backend, value=value
@@ -122,7 +140,9 @@ class SearchField:
     def get_backend_field_query_type_list(self, search_backend):
         return self.get_search_field_type_backend_dictionary(
             search_backend=search_backend
-        ).get('query_type_list', [])
+        ).get(
+            'query_type_list', []
+        )
 
     @functools.cache
     def get_backend_field_transformations(self, search_backend):
@@ -238,9 +258,11 @@ class SearchFieldRelated(SearchFieldConcrete):
         ).values_list(last_field, flat=True)
 
         sub_queryset = sub_queryset.filter(
-            **{'{field_name}{lookup_separator}isnull'.format(
-                field_name=last_field, lookup_separator=LOOKUP_SEP
-            ): False}
+            **{
+                '{field_name}{lookup_separator}isnull'.format(
+                    field_name=last_field, lookup_separator=LOOKUP_SEP
+                ): False
+            }
         )
 
         if exclude_model and self.related_model == exclude_model:
@@ -248,7 +270,9 @@ class SearchFieldRelated(SearchFieldConcrete):
 
         result = []
 
-        for item in set(sub_queryset):
+        sub_queryset = sub_queryset.distinct()
+
+        for item in sub_queryset:
             item_value = self.do_value_index_transform(
                 search_backend=search_backend, value=item
             )
@@ -280,13 +304,12 @@ class SearchFieldVirtual(SearchField):
         return models.TextField
 
     def get_model_field(self):
-        return get_fields_from_path(
-            model=self.model, path='id'
-        )[-1]
+        field_list = get_fields_from_path(model=self.model, path='id')
+        return field_list[-1]
 
 
 class SearchFieldVirtualAllFields(SearchFieldVirtual):
-    label = _('Any')
+    label = _(message='Any')
 
     @classmethod
     def check(cls, *args, **kwargs):

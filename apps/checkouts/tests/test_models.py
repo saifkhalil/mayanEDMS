@@ -48,7 +48,9 @@ class DocumentCheckoutTestCase(
 
         self._test_document.check_in()
 
-        self.assertFalse(self._test_document.is_checked_out())
+        self.assertFalse(
+            self._test_document.is_checked_out()
+        )
         self.assertFalse(
             DocumentCheckout.objects.is_checked_out(
                 document=self._test_document
@@ -64,7 +66,7 @@ class DocumentCheckoutTestCase(
         self.assertEqual(events[0].verb, event_document_auto_checked_in.id)
 
     def test_document_double_check_out(self):
-        self._create_test_case_superuser()
+        self._create_test_case_super_user()
         self._check_out_test_document()
 
         self._clear_events()
@@ -73,7 +75,7 @@ class DocumentCheckoutTestCase(
             DocumentCheckout.objects.check_out_document(
                 document=self._test_document,
                 expiration_datetime=self._check_out_expiration_datetime,
-                user=self._test_case_superuser,
+                user=self._test_case_super_user,
                 block_new_file=True
             )
 
@@ -99,7 +101,9 @@ class DocumentCheckoutTestCase(
 
         DocumentCheckout.objects.check_in_expired_check_outs()
 
-        self.assertFalse(self._test_document.is_checked_out())
+        self.assertFalse(
+            self._test_document.is_checked_out()
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 1)
@@ -116,7 +120,9 @@ class DocumentCheckoutTestCase(
 
         self._clear_events()
 
-        self.assertTrue(self._test_check_out.get_absolute_url())
+        self.assertTrue(
+            self._test_check_out.get_absolute_url()
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -132,7 +138,7 @@ class DocumentCheckoutTestCase(
 
         with self.assertRaises(expected_exception=NewDocumentFileNotAllowed):
             with open(file=TEST_FILE_SMALL_PATH, mode='rb') as file_object:
-                self._test_document.file_new(file_object=file_object)
+                self._test_document.files_upload(file_object=file_object)
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -143,7 +149,7 @@ class DocumentCheckoutTestCase(
             name='mayan.apps.documents.models.document_model_mixins'
         )
 
-        self._create_test_case_superuser()
+        self._create_test_case_super_user()
 
         self._check_out_test_document()
 
@@ -151,7 +157,7 @@ class DocumentCheckoutTestCase(
 
         with self.assertRaises(expected_exception=NewDocumentFileNotAllowed):
             with open(file=TEST_FILE_SMALL_PATH, mode='rb') as file_object:
-                self._test_document.file_new(file_object=file_object)
+                self._test_document.files_upload(file_object=file_object)
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

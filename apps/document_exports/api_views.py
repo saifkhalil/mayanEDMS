@@ -1,9 +1,9 @@
 from rest_framework import status
 
-from mayan.apps.rest_api import generics
 from mayan.apps.documents.api_views.api_view_mixins import (
     ParentObjectDocumentAPIViewMixin
 )
+from mayan.apps.rest_api import generics
 
 from .permissions import permission_document_version_export
 from .tasks import task_document_version_export
@@ -17,8 +17,8 @@ class APIDocumentVersionExportView(
     """
     action_response_status = status.HTTP_202_ACCEPTED
     lookup_url_kwarg = 'document_version_id'
-    mayan_object_permissions = {
-        'POST': (permission_document_version_export,),
+    mayan_object_permission_map = {
+        'POST': permission_document_version_export
     }
 
     def get_source_queryset(self):

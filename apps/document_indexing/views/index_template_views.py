@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from mayan.apps.acls.models import AccessControlList
 from mayan.apps.documents.models.document_models import Document
@@ -50,8 +50,8 @@ class DocumentTypeIndexTemplateAddRemoveView(AddRemoveView):
     main_object_pk_url_kwarg = 'document_type_id'
     secondary_object_model = IndexTemplate
     secondary_object_permission = permission_index_template_edit
-    list_available_title = _('Available indexes')
-    list_added_title = _('Indexes linked')
+    list_available_title = _(message='Available indexes')
+    list_added_title = _(message='Indexes linked')
     related_field = 'index_templates'
     view_icon = icon_document_type_index_templates
 
@@ -62,12 +62,12 @@ class DocumentTypeIndexTemplateAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'subtitle': _(
-                'Documents of this type will appear in the indexes linked '
-                'when these are updated. Events of the documents of this '
-                'type will trigger updates in the linked indexes.'
+                message='Documents of this type will appear in the indexes '
+                'linked when these are updated. Events of the documents of '
+                'this type will trigger updates in the linked indexes.'
             ),
             'title': _(
-                'Indexes linked to document type: %s'
+                message='Indexes linked to document type: %s'
             ) % self.main_object
         }
 
@@ -85,19 +85,21 @@ class IndexTemplateListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Indexes group document automatically into levels. '
+                message='Indexes group document automatically into levels. '
                 'Indexes are defined using template whose markers are '
                 'replaced with direct properties of documents like label '
                 'or description, or that of extended properties like '
                 'metadata.'
             ),
-            'no_results_title': _('There are no index templates.'),
-            'title': _('Index templates')
+            'no_results_title': _(message='There are no index templates.'),
+            'title': _(message='Index templates')
         }
 
 
 class IndexTemplateCreateView(SingleObjectCreateView):
-    extra_context = {'title': _('Create index')}
+    extra_context = {
+        'title': _(message='Create index')
+    }
     fields = ('label', 'slug', 'enabled')
     model = IndexTemplate
     post_action_redirect = reverse_lazy(
@@ -122,7 +124,7 @@ class IndexTemplateDeleteView(SingleObjectDeleteView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Delete the index: %s?') % self.object
+            'title': _(message='Delete the index: %s?') % self.object
         }
 
 
@@ -134,8 +136,8 @@ class IndexTemplateDocumentTypeAddRemoveView(AddRemoveView):
     main_object_pk_url_kwarg = 'index_template_id'
     secondary_object_model = DocumentType
     secondary_object_permission = permission_document_type_edit
-    list_available_title = _('Available document types')
-    list_added_title = _('Document types linked')
+    list_available_title = _(message='Available document types')
+    list_added_title = _(message='Document types linked')
     related_field = 'document_types'
     view_icon = icon_index_template_document_types
 
@@ -146,12 +148,13 @@ class IndexTemplateDocumentTypeAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'subtitle': _(
-                'Only the documents of the types selected will be shown '
-                'in the index when built. Only the events of the documents '
-                'of the types select will trigger updates in the index.'
+                message='Only the documents of the types selected will be '
+                'shown in the index when built. Only the events of the '
+                'documents of the types select will trigger updates in the '
+                'index.'
             ),
             'title': _(
-                'Document types linked to index: %s'
+                message='Document types linked to index: %s'
             ) % self.main_object
         }
 
@@ -169,7 +172,7 @@ class IndexTemplateEditView(SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit index: %s') % self.object
+            'title': _(message='Edit index: %s') % self.object
         }
 
     def get_instance_extra_data(self):
@@ -213,7 +216,7 @@ class IndexTemplateEventTriggerListView(ExternalObjectViewMixin, FormView):
         except Exception as exception:
             messages.error(
                 message=_(
-                    'Error updating index template event trigger; %s'
+                    message='Error updating index template event trigger; %s'
                 ) % exception, request=self.request
 
             )
@@ -222,7 +225,7 @@ class IndexTemplateEventTriggerListView(ExternalObjectViewMixin, FormView):
         else:
             messages.success(
                 message=_(
-                    'Index template event triggers updated successfully.'
+                    message='Index template event triggers updated successfully.'
                 ), request=self.request
             )
 
@@ -232,12 +235,12 @@ class IndexTemplateEventTriggerListView(ExternalObjectViewMixin, FormView):
         return {
             'form_display_mode_table': True,
             'subtitle': _(
-                'Triggers are document events that cause instances of this '
+                message='Triggers are document events that cause instances of this '
                 'index template to be updated.'
             ),
             'object': self.external_object,
             'title': _(
-                'Index template event triggers for: %s'
+                message='Index template event triggers for: %s'
             ) % self.external_object
         }
 
@@ -282,7 +285,7 @@ class IndexTemplateNodeListView(
             'hide_object': True,
             'object': self.external_object,
             'title': _(
-                'Tree template nodes for index: %s'
+                message='Tree template nodes for index: %s'
             ) % self.external_object
         }
 
@@ -299,24 +302,23 @@ class IndexTemplateNodeCreateView(SingleObjectCreateView):
 
     def dispatch(self, request, *args, **kwargs):
         AccessControlList.objects.check_access(
-            obj=self.get_parent_node().index, permissions=(
-                permission_index_template_edit,
-            ), user=request.user
+            obj=self.get_parent_node().index,
+            permission=permission_index_template_edit, user=request.user
         )
 
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request=request, *args, **kwargs)
 
     def get_extra_context(self):
         return {
             'object': self.get_parent_node().index,
-            'title': _('Create child node of: %s') % self.get_parent_node()
+            'title': _(
+                message='Create child node of: %s'
+            ) % self.get_parent_node()
         }
 
     def get_initial(self):
         parent_node = self.get_parent_node()
-        return {
-            'index': parent_node.index, 'parent': parent_node
-        }
+        return {'index': parent_node.index, 'parent': parent_node}
 
     def get_parent_node(self):
         return get_object_or_404(
@@ -336,15 +338,14 @@ class IndexTemplateNodeDeleteView(SingleObjectDeleteView):
             'navigation_object_list': ('index', 'node'),
             'node': self.object,
             'title': _(
-                'Delete the index template node: %s?'
+                message='Delete the index template node: %s?'
             ) % self.object
         }
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='indexing:index_template_view', kwargs={
-                'index_template_id': self.object.index.pk
-            }
+            kwargs={'index_template_id': self.object.index.pk},
+            viewname='indexing:index_template_view'
         )
 
 
@@ -361,15 +362,14 @@ class IndexTemplateNodeEditView(SingleObjectEditView):
             'navigation_object_list': ('index', 'node'),
             'node': self.object,
             'title': _(
-                'Edit the index template node: %s'
+                message='Edit the index template node: %s'
             ) % self.object
         }
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='indexing:index_template_view', kwargs={
-                'index_template_id': self.object.index.pk
-            }
+            kwargs={'index_template_id': self.object.index.pk},
+            viewname='indexing:index_template_view'
         )
 
 
@@ -382,7 +382,9 @@ class IndexTemplateRebuildView(ConfirmView):
     def get_extra_context(self):
         return {
             'object': self.get_object(),
-            'title': _('Rebuild index template: %s') % self.get_object()
+            'title': _(
+                message='Rebuild index template: %s'
+            ) % self.get_object()
         }
 
     def get_object(self):
@@ -404,14 +406,14 @@ class IndexTemplateRebuildView(ConfirmView):
         )
 
         messages.success(
-            message=_('Index template queued for rebuild.'),
+            message=_(message='Index template queued for rebuild.'),
             request=self.request
         )
 
 
 class IndexTemplateAllRebuildView(FormView):
     extra_context = {
-        'title': _('Rebuild index templates'),
+        'title': _(message='Rebuild index templates')
     }
     form_class = IndexTemplateFilteredForm
     view_icon = icon_index_instances_rebuild
@@ -427,21 +429,19 @@ class IndexTemplateAllRebuildView(FormView):
             count += 1
 
         messages.success(
-            message=ungettext(
+            message=ngettext(
                 singular='%(count)d index template queued for rebuild.',
                 plural='%(count)d index templates queued for rebuild.',
                 number=count
             ) % {
-                'count': count,
+                'count': count
             }, request=self.request
         )
 
         return super().form_valid(form=form)
 
     def get_form_extra_kwargs(self):
-        return {
-            'user': self.request.user
-        }
+        return {'user': self.request.user}
 
     def get_post_action_redirect(self):
         return reverse(viewname='common:tools_list')
@@ -449,7 +449,7 @@ class IndexTemplateAllRebuildView(FormView):
 
 class IndexTemplateResetView(FormView):
     extra_context = {
-        'title': _('Reset indexes'),
+        'title': _(message='Reset indexes')
     }
     form_class = IndexTemplateFilteredForm
     view_icon = icon_index_instances_reset
@@ -461,12 +461,12 @@ class IndexTemplateResetView(FormView):
             count += 1
 
         messages.success(
-            message=ungettext(
+            message=ngettext(
                 singular='%(count)d index reset.',
                 plural='%(count)d indexes reset.',
                 number=count
             ) % {
-                'count': count,
+                'count': count
             }, request=self.request
         )
 
@@ -475,7 +475,8 @@ class IndexTemplateResetView(FormView):
     def get_form_extra_kwargs(self):
         return {
             'help_text': _(
-                'Index templates for which their instances will be deleted.'
+                message='Index templates for which their instances will be '
+                'deleted.'
             ),
             'user': self.request.user
         }

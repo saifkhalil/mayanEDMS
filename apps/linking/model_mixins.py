@@ -1,8 +1,8 @@
 from django.apps import apps
 from django.db.models import Q
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.templating.classes import Template
 
 from .events import event_smart_link_edited
@@ -37,10 +37,12 @@ class SmartLinkBusinessLogicMixin:
         if self.dynamic_label:
             try:
                 template = Template(template_string=self.dynamic_label)
-                return template.render(context={'document': document})
+                return template.render(
+                    context={'document': document}
+                )
             except Exception as exception:
                 return _(
-                    'Error generating dynamic label; %s' % str(
+                    message='Error generating dynamic label; %s' % str(
                         exception
                     )
                 )
@@ -55,7 +57,7 @@ class SmartLinkBusinessLogicMixin:
         if document.document_type.pk not in self.document_types.values_list('pk', flat=True):
             raise Exception(
                 _(
-                    'This smart link is not allowed for the selected '
+                    message='This smart link is not allowed for the selected '
                     'document\'s type.'
                 )
             )
@@ -65,13 +67,15 @@ class SmartLinkBusinessLogicMixin:
         for condition in self.conditions.filter(enabled=True):
             template = Template(template_string=condition.expression)
 
-            condition_query = Q(**{
-                '{}__{}'.format(
-                    condition.foreign_document_data, condition.operator
-                ): template.render(
-                    context={'document': document}
-                )
-            })
+            condition_query = Q(
+                **{
+                    '{}__{}'.format(
+                        condition.foreign_document_data, condition.operator
+                    ): template.render(
+                        context={'document': document}
+                    )
+                }
+            )
             if condition.negated:
                 condition_query = ~condition_query
 
@@ -105,8 +109,8 @@ class SmartLinkConditionBusinessLogicMixin:
     def get_full_label(self):
         return '{} foreign {} {} {} {}'.format(
             self.get_inclusion_display(),
-            self.foreign_document_data, _('not') if self.negated else '',
+            self.foreign_document_data, _(message='not') if self.negated else '',
             self.get_operator_display(), self.expression
         )
 
-    get_full_label.short_description = _('Full label')
+    get_full_label.short_description = _(message='Full label')

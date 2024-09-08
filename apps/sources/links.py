@@ -1,17 +1,21 @@
 import logging
 
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.permissions import (
     permission_document_create, permission_document_file_new
 )
-from mayan.apps.navigation.classes import Link
+from mayan.apps.navigation.links import Link
+from mayan.apps.navigation.utils import factory_condition_queryset_access
+from mayan.apps.source_periodic.source_backends.mixins import (
+    SourceBackendMixinPeriodic
+)
 
 from .icons import (
-    icon_document_create_multiple, icon_document_file_upload,
-    icon_source_backend_selection, icon_source_delete, icon_source_edit,
-    icon_source_list, icon_source_test
+    icon_document_file_source_metadata_list, icon_document_upload_wizard,
+    icon_document_file_upload, icon_source_backend_selection,
+    icon_source_delete, icon_source_edit, icon_source_list, icon_source_test
 )
 from .permissions import (
     permission_sources_create, permission_sources_delete,
@@ -100,54 +104,65 @@ def condition_document_new_files_allowed(context, resolved_object):
         return new_document_files_allowed and document_access and source_access
 
 
-def condition_source_is_not_interactive(context, resolved_object):
+def condition_source_supports_dry_run(context, resolved_object):
     source = context.get('resolved_object', None)
     if source:
-        return not getattr(
-            source.get_backend(), 'is_interactive', False
-        )
+        backend_class = source.get_backend_class()
+        return issubclass(backend_class, SourceBackendMixinPeriodic)
 
 
 # Document
 
-link_document_create_multiple = Link(
+link_document_upload_wizard = Link(
     condition=condition_document_creation_access,
-    icon=icon_document_create_multiple, text=_('New document'),
-    view='sources:document_create_multiple'
+    icon=icon_document_upload_wizard, text=_(message='New document'),
+    view='sources:document_upload_wizard'
 )
 link_document_file_upload = Link(
     condition=condition_document_new_files_allowed,
     kwargs={'document_id': 'resolved_object.pk'},
-    icon=icon_document_file_upload,
-    text=_('Upload new file'), view='sources:document_file_upload'
+    icon=icon_document_file_upload, text=_(message='Upload new file'),
+    view='sources:document_file_upload'
+)
+
+# Document file
+
+link_document_file_source_metadata_list = Link(
+    kwargs={'document_file_id': 'resolved_object.pk'},
+    icon=icon_document_file_source_metadata_list, text=_(message='Source metadata'),
+    view='sources:document_file_source_metadata_list'
 )
 
 # Source
 
 link_source_backend_selection = Link(
     icon=icon_source_backend_selection,
-    permissions=(permission_sources_create,),
-    text=_('Create source'), view='sources:source_backend_selection'
+    permission=permission_sources_create,
+    text=_(message='Create source'), view='sources:source_backend_selection'
 )
 link_source_delete = Link(
     args=('resolved_object.pk',), icon=icon_source_delete,
-    permissions=(permission_sources_delete,), tags='dangerous',
-    text=_('Delete'), view='sources:source_delete'
+    permission=permission_sources_delete, tags='dangerous',
+    text=_(message='Delete'), view='sources:source_delete'
 )
 link_source_edit = Link(
     args=('resolved_object.pk',), icon=icon_source_edit,
-    permissions=(permission_sources_edit,), text=_('Edit'),
+    permission=permission_sources_edit, text=_(message='Edit'),
     view='sources:source_edit'
 )
 link_source_list = Link(
-    icon=icon_source_list,
-    permissions=(permission_sources_view,), text=_('Sources'),
+    icon=icon_source_list, text=_(message='Sources'), view='sources:source_list'
+)
+link_source_setup = Link(
+    condition=factory_condition_queryset_access(
+        app_label='sources', model_name='Source',
+        object_permission=permission_sources_view,
+        view_permission=permission_sources_create,
+    ), icon=icon_source_list, text=_(message='Sources'),
     view='sources:source_list'
 )
 link_source_test = Link(
-    args=('resolved_object.pk',),
-    condition=condition_source_is_not_interactive,
-    icon=icon_source_test,
-    permissions=(permission_sources_view,), text=_('Test'),
-    view='sources:source_test'
+    args=('resolved_object.pk',), condition=condition_source_supports_dry_run,
+    icon=icon_source_test, permission=permission_sources_view,
+    text=_(message='Test'), view='sources:source_test'
 )

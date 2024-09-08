@@ -1,29 +1,30 @@
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from mayan.apps.documents.forms.document_type_forms import (
     DocumentTypeFilteredSelectForm
 )
 from mayan.apps.documents.models.document_file_models import DocumentFile
-from mayan.apps.documents.models.document_file_page_models import DocumentFilePage
+from mayan.apps.documents.models.document_file_page_models import (
+    DocumentFilePage
+)
 from mayan.apps.documents.models.document_type_models import DocumentType
+from mayan.apps.storage.views.download_views import ViewSingleObjectDownload
 from mayan.apps.views.generics import (
     FormView, MultipleObjectConfirmActionView, MultipleObjectDeleteView,
-    SingleObjectDetailView, SingleObjectDownloadView, SingleObjectEditView
+    SingleObjectDetailView, SingleObjectEditView
 )
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from .forms import DocumentFileContentForm, DocumentFilePageContentForm
 from .icons import (
     icon_document_file_content_single_delete,
-    icon_document_file_content_detail,
-    icon_document_file_content_download,
+    icon_document_file_content_detail, icon_document_file_content_download,
     icon_document_file_parsing_single_submit,
     icon_document_file_page_content_detail,
-    icon_document_type_parsing_settings,
-    icon_document_type_parsing_submit
+    icon_document_type_parsing_settings, icon_document_type_parsing_submit
 )
 from .models import DocumentFilePageContent
 from .permissions import (
@@ -34,27 +35,27 @@ from .permissions import (
 
 class DocumentFileContentDeleteView(MultipleObjectDeleteView):
     error_message = _(
-        'Error deleting document version content "%(instance)s"; '
+        message='Error deleting document version content "%(instance)s"; '
         '%(exception)s'
     )
     object_permission = permission_document_file_parse
     pk_url_kwarg = 'document_file_id'
     source_queryset = DocumentFile.valid.all()
     success_message_plural = _(
-        'Content of %(count)d document versions deleted successfully.'
+        message='Content of %(count)d document versions deleted successfully.'
     )
     success_message_single = _(
-        'Content of "%(object)s" deleted successfully.'
+        message='Content of "%(object)s" deleted successfully.'
     )
     success_message_singular = _(
-        'Content of %(count)d document version deleted successfully.'
+        message='Content of %(count)d document version deleted successfully.'
     )
-    title_single = _('Delete the content of: %(object)s.')
+    title_single = _(message='Delete the content of: %(object)s.')
     title_singular = _(
-        'Delete the content of the %(count)d selected document version.'
+        message='Delete the content of the %(count)d selected document version.'
     )
     title_plural = _(
-        'Delete the content of the %(count)d selected document versions.'
+        message='Delete the content of the %(count)d selected document versions.'
     )
     view_icon = icon_document_file_content_single_delete
 
@@ -64,7 +65,7 @@ class DocumentFileContentDeleteView(MultipleObjectDeleteView):
         )
 
 
-class DocumentFileContentDownloadView(SingleObjectDownloadView):
+class DocumentFileContentDownloadView(ViewSingleObjectDownload):
     object_permission = permission_document_file_content_view
     pk_url_kwarg = 'document_file_id'
     source_queryset = DocumentFile.valid.all()
@@ -95,7 +96,7 @@ class DocumentFileContentView(SingleObjectDetailView):
         return {
             'hide_labels': True,
             'object': self.object,
-            'title': _('Content for document file: %s') % self.object
+            'title': _(message='Content for document file: %s') % self.object
         }
 
 
@@ -117,13 +118,13 @@ class DocumentFilePageContentView(SingleObjectDetailView):
         return {
             'hide_labels': True,
             'object': self.object,
-            'title': _('Content for document file page: %s') % self.object
+            'title': _(message='Content for document file page: %s') % self.object
         }
 
     def get_source_queryset(self):
-        document_file_queryset = DocumentFile.valid.all()
+        queryset_document_files = DocumentFile.valid.all()
         return DocumentFilePage.objects.filter(
-            document_file_id__in=document_file_queryset.values('pk')
+            document_file_id__in=queryset_document_files.values('pk')
         )
 
 
@@ -132,10 +133,10 @@ class DocumentFileSubmitView(MultipleObjectConfirmActionView):
     pk_url_kwarg = 'document_file_id'
     source_queryset = DocumentFile.valid.all()
     success_message = _(
-        '%(count)d document file added to the parsing queue'
+        message='%(count)d document file added to the parsing queue'
     )
     success_message_plural = _(
-        '%(count)d documents files added to the parsing queue'
+        message='%(count)d documents files added to the parsing queue'
     )
     view_icon = icon_document_file_parsing_single_submit
 
@@ -143,7 +144,7 @@ class DocumentFileSubmitView(MultipleObjectConfirmActionView):
         queryset = self.object_list
 
         result = {
-            'title': ungettext(
+            'title': ngettext(
                 singular='Submit %(count)d document file to the parsing queue?',
                 plural='Submit %(count)d documents files to the parsing queue?',
                 number=queryset.count()
@@ -157,7 +158,7 @@ class DocumentFileSubmitView(MultipleObjectConfirmActionView):
                 {
                     'object': queryset.first(),
                     'title': _(
-                        'Submit document file "%s" to the parsing queue'
+                        message='Submit document file "%s" to the parsing queue'
                     ) % queryset.first()
                 }
             )
@@ -187,7 +188,7 @@ class DocumentTypeSettingsEditView(
         return {
             'object': self.get_document_type(),
             'title': _(
-                'Edit parsing settings for document type: %s.'
+                message='Edit parsing settings for document type: %s.'
             ) % self.get_document_type()
         }
 
@@ -197,7 +198,7 @@ class DocumentTypeSettingsEditView(
 
 class DocumentTypeSubmitView(FormView):
     extra_context = {
-        'title': _('Submit all documents of a type for parsing')
+        'title': _(message='Submit all documents of a type for parsing')
     }
     form_class = DocumentTypeFilteredSelectForm
     post_action_redirect = reverse_lazy(viewname='common:tools_list')
@@ -219,9 +220,9 @@ class DocumentTypeSubmitView(FormView):
 
         messages.success(
             message=_(
-                '%(count)d documents added to the parsing queue.'
+                message='%(count)d documents added to the parsing queue.'
             ) % {
-                'count': count,
+                'count': count
             }, request=self.request
         )
 

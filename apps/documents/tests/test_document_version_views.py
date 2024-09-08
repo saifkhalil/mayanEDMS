@@ -1,6 +1,8 @@
 from mayan.apps.file_caching.events import event_cache_partition_purged
 from mayan.apps.file_caching.models import CachePartitionFile
-from mayan.apps.file_caching.permissions import permission_cache_partition_purge
+from mayan.apps.file_caching.permissions import (
+    permission_cache_partition_purge
+)
 from mayan.apps.file_caching.tests.mixins import CachePartitionViewTestMixin
 
 from ..document_file_actions import (
@@ -489,7 +491,7 @@ class DocumentVersionModificationViewTestCase(
 ):
     def test_document_version_action_page_append_view_no_permission(self):
         self._upload_test_document_file(
-            action=DocumentFileActionNothing.backend_id
+            action_name=DocumentFileActionNothing.backend_id
         )
 
         self._clear_events()
@@ -501,7 +503,7 @@ class DocumentVersionModificationViewTestCase(
 
         self.assertEqual(
             self._test_document_version.pages.count(),
-            self._test_document_files[0].pages.count()
+            self._test_document_file_list[0].pages.count()
         )
 
         events = self._get_test_events()
@@ -509,7 +511,7 @@ class DocumentVersionModificationViewTestCase(
 
     def test_document_version_action_page_append_view_with_access(self):
         self._upload_test_document_file(
-            action=DocumentFileActionNothing.backend_id
+            action_name=DocumentFileActionNothing.backend_id
         )
 
         self.grant_access(
@@ -526,11 +528,11 @@ class DocumentVersionModificationViewTestCase(
 
         self.assertEqual(
             self._test_document_version.pages.count(),
-            self._test_document_files[0].pages.count() + self._test_document_files[1].pages.count()
+            self._test_document_file_list[0].pages.count() + self._test_document_file_list[1].pages.count()
         )
 
         events = self._get_test_events()
-        self.assertEqual(events.count(), 3)
+        self.assertEqual(events.count(), 4)
 
         self.assertEqual(events[0].action_object, None)
         self.assertEqual(events[0].actor, self._test_case_user)
@@ -547,6 +549,7 @@ class DocumentVersionModificationViewTestCase(
         self.assertEqual(
             events[1].verb, event_document_version_page_created.id
         )
+
         self.assertEqual(events[2].action_object, self._test_document_version)
         self.assertEqual(events[2].actor, self._test_case_user)
         self.assertEqual(
@@ -556,9 +559,14 @@ class DocumentVersionModificationViewTestCase(
             events[2].verb, event_document_version_page_created.id
         )
 
+        self.assertEqual(events[3].action_object, self._test_document)
+        self.assertEqual(events[3].actor, self._test_case_user)
+        self.assertEqual(events[3].target, self._test_document_version)
+        self.assertEqual(events[3].verb, event_document_version_edited.id)
+
     def test_trashed_document_version_action_page_append_view_with_access(self):
         self._upload_test_document_file(
-            action=DocumentFileActionNothing.backend_id
+            action_name=DocumentFileActionNothing.backend_id
         )
 
         self.grant_access(
@@ -577,7 +585,7 @@ class DocumentVersionModificationViewTestCase(
 
         self.assertEqual(
             self._test_document_version.pages.count(),
-            self._test_document_files[0].pages.count()
+            self._test_document_file_list[0].pages.count()
         )
 
         events = self._get_test_events()
@@ -585,7 +593,7 @@ class DocumentVersionModificationViewTestCase(
 
     def test_document_version_action_page_reset_view_no_permission(self):
         self._upload_test_document_file(
-            action=DocumentFileActionAppendNewPages.backend_id
+            action_name=DocumentFileActionAppendNewPages.backend_id
         )
 
         self._clear_events()
@@ -597,12 +605,12 @@ class DocumentVersionModificationViewTestCase(
 
         self.assertEqual(
             self._test_document_version.pages.count(),
-            self._test_document_files[0].pages.count() + self._test_document_files[1].pages.count()
+            self._test_document_file_list[0].pages.count() + self._test_document_file_list[1].pages.count()
         )
 
         self.assertEqual(
             self._test_document_version.pages.all()[0].content_object,
-            self._test_document_file_pages[0]
+            self._test_document_file_page_list[0]
         )
 
         events = self._get_test_events()
@@ -610,7 +618,7 @@ class DocumentVersionModificationViewTestCase(
 
     def test_document_version_action_page_reset_view_with_access(self):
         self._upload_test_document_file(
-            action=DocumentFileActionAppendNewPages.backend_id
+            action_name=DocumentFileActionAppendNewPages.backend_id
         )
 
         self.grant_access(
@@ -627,16 +635,16 @@ class DocumentVersionModificationViewTestCase(
 
         self.assertEqual(
             self._test_document_version.pages.count(),
-            self._test_document_files[0].pages.count()
+            self._test_document_file_list[0].pages.count()
         )
 
         self.assertEqual(
             self._test_document_version.pages.all()[0].content_object,
-            self._test_document_file_pages[1]
+            self._test_document_file_page_list[1]
         )
 
         events = self._get_test_events()
-        self.assertEqual(events.count(), 3)
+        self.assertEqual(events.count(), 4)
 
         self.assertEqual(events[0].action_object, None)
         self.assertEqual(events[0].actor, self._test_case_user)
@@ -661,9 +669,14 @@ class DocumentVersionModificationViewTestCase(
             events[2].verb, event_document_version_page_created.id
         )
 
+        self.assertEqual(events[3].action_object, self._test_document)
+        self.assertEqual(events[3].actor, self._test_case_user)
+        self.assertEqual(events[3].target, self._test_document_version)
+        self.assertEqual(events[3].verb, event_document_version_edited.id)
+
     def test_trashed_document_version_action_page_reset_view_with_access(self):
         self._upload_test_document_file(
-            action=DocumentFileActionAppendNewPages.backend_id
+            action_name=DocumentFileActionAppendNewPages.backend_id
         )
 
         self.grant_access(
@@ -682,12 +695,12 @@ class DocumentVersionModificationViewTestCase(
 
         self.assertEqual(
             self._test_document_version.pages.count(),
-            self._test_document_files[0].pages.count() + self._test_document_files[1].pages.count()
+            self._test_document_file_list[0].pages.count() + self._test_document_file_list[1].pages.count()
         )
 
         self.assertEqual(
             self._test_document_version.pages.all()[0].content_object,
-            self._test_document_file_pages[0]
+            self._test_document_file_page_list[0]
         )
 
         events = self._get_test_events()

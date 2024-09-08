@@ -3,7 +3,8 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ngettext
+
 from mayan.apps.databases.classes import ModelQueryFields
 from mayan.apps.views.generics import (
     MultipleObjectFormActionView, SingleObjectDetailView,
@@ -40,7 +41,7 @@ class DocumentListView(SingleObjectListView):
         except Exception as exception:
             messages.error(
                 message=_(
-                    'Error retrieving document list: %(exception)s.'
+                    message='Error retrieving document list: %(exception)s.'
                 ) % {
                     'exception': exception
                 }, request=self.request
@@ -66,16 +67,16 @@ class DocumentListView(SingleObjectListView):
             'list_as_items': True,
             'no_results_icon': icon_document_list,
             'no_results_text': _(
-                'This could mean that no documents have been uploaded or '
-                'that your user account has not been granted the view '
-                'permission for any document or document type.'
+                message='This could mean that no documents have been '
+                'uploaded or that your user account has not been granted the '
+                'view permission for any document or document type.'
             ),
-            'no_results_title': _('No documents available'),
-            'title': _('All documents')
+            'no_results_title': _(message='No documents available'),
+            'title': _(message='All documents')
         }
 
     def get_source_queryset(self):
-        cabinets = Cabinet.objects.filter(users=self.request.user)
+		cabinets = Cabinet.objects.filter(users=self.request.user)
         queryset = ModelQueryFields.get(model=Document).get_queryset()
         queryset = self.get_document_queryset().filter(pk__in=queryset)
         if self.request.user.is_superuser:
@@ -83,6 +84,7 @@ class DocumentListView(SingleObjectListView):
         else:
             queryset = queryset.filter(cabinets__in=cabinets)
         return queryset
+        return self.get_document_queryset().filter(pk__in=queryset)
 
 class MyDocumentListView(SingleObjectListView):
     object_permission = permission_document_view
@@ -107,11 +109,12 @@ class MyDocumentListView(SingleObjectListView):
             return super().get_context_data(**kwargs)
 
     def get_document_queryset(self):
-        # if self.request.user.is_superuser:
+#        if self.request.user.is_superuser:
         return Document.valid.all().filter(create_by=self.request.user)
-        # else:
-        #     cabinets = Cabinet.objects.filter(users=self.request.user)
-        #     return Document.valid.all().filter(create_by=self.request.user).filter(cabinets__in=cabinets)
+#        else:
+#            cabinets = Cabinet.objects.filter(users=self.request.user)
+#            return Document.valid.all().filter(create_by=self.request.user).filter(cabinets__in=cabinets)
+
 
     def get_extra_context(self):
         return {
@@ -129,10 +132,14 @@ class MyDocumentListView(SingleObjectListView):
         }
 
     def get_source_queryset(self):
+        cabinets = Cabinet.objects.filter(users=self.request.user)
         queryset = ModelQueryFields.get(model=Document).get_queryset()
-        return self.get_document_queryset().filter(pk__in=queryset)
-
-
+        queryset = self.get_document_queryset().filter(pk__in=queryset)
+        if self.request.user.is_superuser:
+            queryset = queryset
+        else:
+            queryset = queryset.filter(cabinets__in=cabinets)
+        return queryset
 
 class DocumentTypeChangeView(MultipleObjectFormActionView):
     form_class = DocumentTypeFilteredSelectForm
@@ -140,18 +147,20 @@ class DocumentTypeChangeView(MultipleObjectFormActionView):
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message = _(
-        'Document type change request performed on %(count)d document'
+        message='Document type change request performed on %(count)d '
+        'document.'
     )
     success_message_plural = _(
-        'Document type change request performed on %(count)d documents'
+        message='Document type change request performed on %(count)d '
+        'documents.'
     )
     view_icon = icon_document_type_change
 
     def get_extra_context(self):
         result = {
-            'title': ungettext(
-                singular='Change the type of the selected document',
-                plural='Change the type of the selected documents',
+            'title': ngettext(
+                singular='Change the type of the selected document.',
+                plural='Change the type of the selected documents.',
                 number=self.object_list.count()
             )
         }
@@ -161,7 +170,7 @@ class DocumentTypeChangeView(MultipleObjectFormActionView):
                 {
                     'object': self.object_list.first(),
                     'title': _(
-                        'Change the type of the document: %s'
+                        message='Change the type of the document: %s'
                     ) % self.object_list.first()
                 }
             )
@@ -189,7 +198,7 @@ class DocumentTypeChangeView(MultipleObjectFormActionView):
 
         messages.success(
             message=_(
-                'Document type for "%s" changed successfully.'
+                message='Document type for "%s" changed successfully.'
             ) % instance, request=self.request
         )
 
@@ -215,7 +224,7 @@ class DocumentPreviewView(DocumentVersionPreviewView):
         return {
             'hide_labels': True,
             'object': self.object,
-            'title': _('Preview of document: %s') % self.object
+            'title': _(message='Preview of document: %s') % self.object
         }
 
 
@@ -227,26 +236,25 @@ class DocumentPropertiesEditView(SingleObjectEditView):
     view_icon = icon_document_properties_edit
 
     def dispatch(self, request, *args, **kwargs):
-        result = super().dispatch(request, *args, **kwargs)
+        result = super().dispatch(request=request, *args, **kwargs)
         self.object.add_as_recent_document_for_user(user=request.user)
         return result
 
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit properties of document: %s') % self.object
+            'title': _(
+                message='Edit properties of document: %s'
+            ) % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='documents:document_properties', kwargs={
-                'document_id': self.object.pk
-            }
+            kwargs={'document_id': self.object.pk},
+            viewname='documents:document_properties'
         )
 
 
@@ -258,7 +266,7 @@ class DocumentPropertiesView(SingleObjectDetailView):
     view_icon = icon_document_properties_detail
 
     def dispatch(self, request, *args, **kwargs):
-        result = super().dispatch(request, *args, **kwargs)
+        result = super().dispatch(request=request, *args, **kwargs)
         self.object.add_as_recent_document_for_user(request.user)
         return result
 
@@ -266,5 +274,5 @@ class DocumentPropertiesView(SingleObjectDetailView):
         return {
             'document': self.object,
             'object': self.object,
-            'title': _('Properties of document: %s') % self.object
+            'title': _(message='Properties of document: %s') % self.object
         }

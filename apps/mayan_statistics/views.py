@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     ConfirmView, SimpleView, SingleObjectListView
@@ -7,10 +7,9 @@ from mayan.apps.views.generics import (
 
 from .classes import StatisticNamespace
 from .icons import (
-    icon_statistic_detail, icon_statistic_queue,
-    icon_statistic_namespace_detail, icon_statistic_namespace_list
+    icon_statistic_detail, icon_statistic_namespace_detail,
+    icon_statistic_namespace_list, icon_statistic_queue
 )
-
 from .permissions import permission_statistics_view
 from .tasks import task_execute_statistic
 from .view_mixins import StatisticTypeViewMixin
@@ -21,12 +20,12 @@ class StatisticNamespaceListView(SingleObjectListView):
         'hide_link': True,
         'no_results_icon': icon_statistic_namespace_list,
         'no_results_text': _(
-            'Statistics namespaces group statistics into logical units. '
+            message='Statistics namespaces group statistics into logical units. '
         ),
-        'no_results_title': _('No statistic namespaces available'),
-        'title': _('Statistics namespaces')
+        'no_results_title': _(message='No statistic namespaces available'),
+        'title': _(message='Statistics namespaces')
     }
-    template_name = 'appearance/generic_list.html'
+    template_name = 'appearance/list.html'
     view_icon = icon_statistic_namespace_list
     view_permission = permission_statistics_view
 
@@ -47,12 +46,12 @@ class StatisticNamespaceDetailView(SingleObjectListView):
             'hide_link': True,
             'no_results_icon': icon_statistic_namespace_detail,
             'no_results_text': _(
-                'Statistics are metrics and chart representations of '
+                message='Statistics are metrics and chart representations of '
                 'existing data.'
             ),
-            'no_results_title': _('No statistic available'),
+            'no_results_title': _(message='No statistic available'),
             'object': self.object,
-            'title': _('Namespace details for: %s') % self.object
+            'title': _(message='Namespace details for: %s') % self.object
         }
 
     def get_object(self):
@@ -75,7 +74,7 @@ class StatisticTypeDetailView(StatisticTypeViewMixin, SimpleView):
             'navigation_object_list': ('namespace', 'object'),
             'no_data': not self.object.get_results_data()['series'],
             'object': self.object,
-            'title': _('Results for: %s') % self.object
+            'title': _(message='Results for: %s') % self.object
         }
 
     def get_template_names(self):
@@ -95,7 +94,7 @@ class StatisticTypeQueueView(StatisticTypeViewMixin, ConfirmView):
             # (to send to the queue) a statistic for it to be update ahead
             # of schedule
             'title': _(
-                'Queue statistic "%s" to be updated?'
+                message='Queue statistic "%s" to be updated?'
             ) % self.object
         }
 
@@ -103,6 +102,6 @@ class StatisticTypeQueueView(StatisticTypeViewMixin, ConfirmView):
         task_execute_statistic.delay(slug=self.object.slug)
         messages.success(
             message=_(
-                'Statistic "%s" queued successfully for update.'
+                message='Statistic "%s" queued successfully for update.'
             ) % self.object.label, request=self.request
         )

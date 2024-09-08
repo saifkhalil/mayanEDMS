@@ -12,7 +12,7 @@ from ..permissions import (
 from ..serializers.document_file_serializers import (
     DocumentFileSerializer, DocumentFilePageSerializer
 )
-from ..tasks import task_document_file_upload
+from ..tasks import task_document_file_delete, task_document_file_upload
 
 from .api_view_mixins import (
     ParentObjectDocumentAPIViewMixin, ParentObjectDocumentFileAPIViewMixin
@@ -26,7 +26,6 @@ class APIDocumentFileListView(
     get: Return a list of the selected document's files.
     post: Create a new document file.
     """
-    ordering_fields = ('comment', 'encoding', 'id', 'mime_type')
     serializer_class = DocumentFileSerializer
 
     def create(self, request, *args, **kwargs):
@@ -42,7 +41,7 @@ class APIDocumentFileListView(
 
         task_document_file_upload.apply_async(
             kwargs={
-                'action': serializer.validated_data['action'],
+                'action_name': serializer.validated_data['action_name'],
                 'comment': serializer.validated_data.get('comment', ''),
                 'document_id': self.get_document(
                     permission=permission_document_file_new
@@ -67,18 +66,26 @@ class APIDocumentFileDetailView(
     get: Returns the selected document file details.
     """
     lookup_url_kwarg = 'document_file_id'
-    mayan_object_permissions = {
-        'DELETE': (permission_document_file_delete,),
-        'GET': (permission_document_file_view,),
-        'PATCH': (permission_document_file_edit,),
-        'PUT': (permission_document_file_edit,),
+    mayan_object_permission_map = {
+        'DELETE': permission_document_file_delete,
+        'GET': permission_document_file_view,
+        'PATCH': permission_document_file_edit,
+        'PUT': permission_document_file_edit
     }
     serializer_class = DocumentFileSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        task_document_file_delete.apply_async(
+            kwargs={
+                'document_file_id': instance.pk,
+                'user_id': request.user.pk
+            }
+        )
+        return Response(status=status.HTTP_202_ACCEPTED)
+
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_source_queryset(self):
         return self.get_document().files.all()
@@ -94,10 +101,8 @@ class APIDocumentFilePageDetailView(
     get: Returns the selected document page details.
     """
     lookup_url_kwarg = 'document_file_page_id'
+    mayan_object_permission_map = {'GET': permission_document_file_view}
     serializer_class = DocumentFilePageSerializer
-    mayan_object_permissions = {
-        'GET': (permission_document_file_view,),
-    }
 
     def get_source_queryset(self):
         return self.get_document_file().pages.all()
@@ -111,9 +116,7 @@ class APIDocumentFilePageImageView(
     get: Returns an image representation of the selected document.
     """
     lookup_url_kwarg = 'document_file_page_id'
-    mayan_object_permissions = {
-        'GET': (permission_document_file_view,),
-    }
+    mayan_object_permission_map = {'GET': permission_document_file_view}
 
     def get_source_queryset(self):
         return self.get_document_file().pages.all()

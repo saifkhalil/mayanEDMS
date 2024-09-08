@@ -1,16 +1,17 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import menu_object, menu_secondary, menu_tools
-from mayan.apps.navigation.classes import SourceColumn
-from mayan.apps.views.html_widgets import ObjectLinkWidget
+from mayan.apps.forms import column_widgets
+from mayan.apps.navigation.source_columns import SourceColumn
 
+from .classes import ErrorLogDomain
 from .links import (
     link_global_error_log_partition_entry_list,
-    link_object_error_log_entry_list_clear,
-    link_object_error_log_entry_delete
+    link_object_error_log_entry_list_clear, link_object_error_log_entry_delete
 )
+from .literals import DEFAULT_ERROR_LOG_DOMAIN_NAME
 from .mixins import LoggingAppConfigMixin
 
 
@@ -20,7 +21,7 @@ class LoggingApp(LoggingAppConfigMixin, MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.logging'
-    verbose_name = _('Logging')
+    verbose_name = _(message='Logging')
 
     def ready(self, *args, **kwargs):
         super().ready(*args, **kwargs)
@@ -33,6 +34,10 @@ class LoggingApp(LoggingAppConfigMixin, MayanAppConfig):
         )
         ErrorLogPartitionEntry = self.get_model(
             model_name='ErrorLogPartitionEntry'
+        )
+
+        ErrorLogDomain(
+            name=DEFAULT_ERROR_LOG_DOMAIN_NAME, label=_(message='System')
         )
 
         ModelPermission.register_inheritance(
@@ -48,10 +53,15 @@ class LoggingApp(LoggingAppConfigMixin, MayanAppConfig):
         )
         SourceColumn(
             attribute='get_object', source=GlobalErrorLogPartitionEntry,
-            widget=ObjectLinkWidget
+            widget=column_widgets.ObjectLinkWidget
         )
+
         SourceColumn(
             attribute='datetime', is_identifier=True, is_sortable=True,
+            source=ErrorLogPartitionEntry
+        )
+        SourceColumn(
+            attribute='get_domain_label', label=_(message='Domain'),
             source=ErrorLogPartitionEntry
         )
         SourceColumn(

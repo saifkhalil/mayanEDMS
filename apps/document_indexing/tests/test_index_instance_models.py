@@ -1,6 +1,8 @@
 from django.db.utils import IntegrityError
 
-from mayan.apps.documents.models.trashed_document_models import TrashedDocument
+from mayan.apps.documents.models.trashed_document_models import (
+    TrashedDocument
+)
 from mayan.apps.documents.tests.base import (
     GenericDocumentTestCase, GenericTransactionDocumentTestCase
 )
@@ -8,7 +10,10 @@ from mayan.apps.documents.tests.literals import (
     TEST_DOCUMENT_DESCRIPTION, TEST_DOCUMENT_DESCRIPTION_EDITED,
     TEST_DOCUMENT_LABEL_EDITED
 )
-from mayan.apps.metadata.models import DocumentTypeMetadataType, MetadataType
+from mayan.apps.metadata.models.document_type_metadata_type_models import (
+    DocumentTypeMetadataType
+)
+from mayan.apps.metadata.models.metadata_type_models import MetadataType
 
 from ..models import (
     IndexInstance, IndexInstanceNode, IndexTemplate, IndexTemplateNode
@@ -20,35 +25,6 @@ from .literals import (
     TEST_INDEX_TEMPLATE_DOCUMENT_TYPE_EXPRESSION
 )
 from .mixins import IndexTemplateTestMixin
-
-
-class IndexInstanceNodeMaintenanceTestCase(
-    IndexTemplateTestMixin, GenericDocumentTestCase
-):
-    auto_create_test_index_template_node = False
-    auto_upload_test_document = False
-
-    def test_index_instance_node_deletion(self):
-        self._test_index_template.index_template_nodes.create(
-            expression='{% if not document.label %}No label{% endif %}',
-            link_documents=True,
-            parent=self._test_index_template.index_template_root_node
-        )
-        self._create_test_document_stub(label='')
-        self._create_test_document_stub(label='')
-
-        IndexTemplate.objects.rebuild()
-
-        self._test_documents[1].label = 'test_label'
-        self._test_documents[1].save()
-
-        self.assertEqual(IndexInstanceNode.objects.count(), 2)
-        self.assertTrue(
-            self._test_documents[0] in IndexInstanceNode.objects.last().documents.all()
-        )
-        self.assertTrue(
-            self._test_documents[1] not in IndexInstanceNode.objects.last().documents.all()
-        )
 
 
 class IndexInstanceBasicTestCase(
@@ -123,6 +99,70 @@ class IndexInstanceBasicTestCase(
         )
 
 
+class IndexInstanceNodeConsistencyTestCase(
+    IndexTemplateTestMixin, GenericDocumentTestCase
+):
+    _test_index_template_node_expression = '{{ document.pk }}'
+
+    def test_index_instance_node_cleanup(self):
+        self._create_test_document_stub()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 2)
+
+        self._test_document.delete()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 2)
+
+        self._test_document.delete()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 1)
+
+    def test_index_instance_node_inactive_cleanup(self):
+        self._create_test_document_stub()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 2)
+
+        self._test_index_template.enabled = False
+        self._test_index_template.save()
+
+        self._test_document.delete()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 2)
+
+        self._test_document.delete()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 2)
+
+
+class IndexInstanceNodeMaintenanceTestCase(
+    IndexTemplateTestMixin, GenericDocumentTestCase
+):
+    auto_create_test_index_template_node = False
+    auto_upload_test_document = False
+
+    def test_index_instance_node_deletion(self):
+        self._test_index_template.index_template_nodes.create(
+            expression='{% if not document.label %}No label{% endif %}',
+            link_documents=True,
+            parent=self._test_index_template.index_template_root_node
+        )
+        self._create_test_document_stub(label='')
+        self._create_test_document_stub(label='')
+
+        IndexTemplate.objects.rebuild()
+
+        self._test_document_list[1].label = 'test_label'
+        self._test_document_list[1].save()
+
+        self.assertEqual(IndexInstanceNode.objects.count(), 2)
+        self.assertTrue(
+            self._test_document_list[0] in IndexInstanceNode.objects.last().documents.all()
+        )
+        self.assertTrue(
+            self._test_document_list[1] not in IndexInstanceNode.objects.last().documents.all()
+        )
+
+
 class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
     auto_upload_test_document = False
     auto_create_test_index_template_node = False
@@ -190,10 +230,13 @@ class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
             set(
                 IndexInstanceNode.objects.values_list('value', flat=True)
             ), {
-                '', str(self._test_documents[1].uuid),
-                self._test_documents[1].label,
-                str(self._test_documents[0].uuid),
-                self._test_documents[0].label
+                '',
+                str(
+                    self._test_document_list[1].uuid
+                ), self._test_document_list[1].label,
+                str(
+                    self._test_document_list[0].uuid
+                ), self._test_document_list[0].label
             }
         )
 
@@ -227,13 +270,15 @@ class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
         self._test_index_template.rebuild()
 
         self.assertEqual(
-            IndexInstanceNode.objects.last().value, self._test_document.label
+            IndexInstanceNode.objects.last().value,
+            self._test_document.label
         )
         self._test_document.label = TEST_DOCUMENT_LABEL_EDITED
         self._test_document.save()
 
         self.assertEqual(
-            IndexInstanceNode.objects.last().value, self._test_document.label
+            IndexInstanceNode.objects.last().value,
+            self._test_document.label
         )
 
     def test_document_type_index(self):
@@ -245,11 +290,13 @@ class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
 
         self.assertEqual(
             IndexInstanceNode.objects.last().value,
-            self._test_document_types[0].label
+            self._test_document_type_list[0].label
         )
 
         self._create_test_document_type()
-        self._test_index_template.document_types.add(self._test_document_type)
+        self._test_index_template.document_types.add(
+            self._test_document_type
+        )
 
         self._test_document._document_type_change(
             document_type=self._test_document_type
@@ -257,7 +304,7 @@ class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
 
         self.assertEqual(
             IndexInstanceNode.objects.last().value,
-            self._test_document_types[1].label
+            self._test_document_type_list[1].label
         )
 
     def test_method_get_absolute_url(self):
@@ -304,23 +351,27 @@ class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
 
         self.assertEqual(
             list(
-                IndexTemplateNode.objects.values_list('expression', flat=True)
+                IndexTemplateNode.objects.values_list(
+                    'expression', flat=True
+                )
             ), ['', '{{ document.metadata_value_of.test }}']
         )
 
         # There should be only a root index instances nodes.
-        self.assertEqual(IndexInstanceNode.objects.count(), 1)
-        self.assertEqual(IndexInstanceNode.objects.first().parent, None)
+        self.assertEqual(
+            IndexInstanceNode.objects.count(), 1
+        )
+        self.assertEqual(
+            IndexInstanceNode.objects.first().parent, None
+        )
 
         # Rebuild all indexes.
         IndexTemplate.objects.rebuild()
 
         # Check that document is in instance node.
         instance_node = IndexInstanceNode.objects.get(value='0001')
-        self.assertQuerysetEqual(
-            instance_node.documents.all(), [
-                repr(self._test_document)
-            ]
+        self.assertQuerySetEqual(
+            qs=instance_node.documents.all(), values=(self._test_document,)
         )
 
 

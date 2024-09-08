@@ -10,12 +10,12 @@ from ..literals import (
 from ..search_backends import SearchBackend
 
 from .mixins.backend_mixins import BackendSearchTestMixin
-from .mixins.base import SearchTestMixin, TestSearchObjectSimpleTestMixin
+from .mixins.base import TestSearchObjectSimpleTestMixin
 
 
 class SearchReindexManagementCommandTestCaseMixin(
     BackendSearchTestMixin, ManagementCommandTestMixin,
-    TestSearchObjectSimpleTestMixin, SearchTestMixin
+    TestSearchObjectSimpleTestMixin
 ):
     _test_management_command_name = COMMAND_NAME_SEARCH_REINDEX
 
@@ -27,17 +27,25 @@ class SearchReindexManagementCommandTestCaseMixin(
     def test_artifacts(self):
         self._test_search_backend.reset()
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[0].char}
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[0].char
+            }
         )
-        self.assertTrue(self._test_objects[0] not in queryset)
+        self.assertTrue(
+            self._test_object_list[0] not in queryset
+        )
 
         self._call_test_management_command()
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[0].char}
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[0].char
+            }
         )
-        self.assertTrue(self._test_objects[0] in queryset)
+        self.assertTrue(
+            self._test_object_list[0] in queryset
+        )
 
     def test_calling(self):
         self._call_test_management_command()
@@ -71,69 +79,99 @@ class WhooshSearchReindexManagementCommandTestCase(
 
 class SearchIndexObjectManagementCommandTestCaseMixin(
     BackendSearchTestMixin, ManagementCommandTestMixin,
-    TestSearchObjectSimpleTestMixin, SearchTestMixin
+    TestSearchObjectSimpleTestMixin
 ):
     _test_management_command_name = COMMAND_NAME_SEARCH_INDEX_OBJECTS
 
     def _create_test_search_objects(self):
-        self._create_test_object(instance_kwargs={'char': 'abc'})
-        self._create_test_object(instance_kwargs={'char': 'xyz'})
+        self._create_test_object(
+            instance_kwargs={'char': 'abc'}
+        )
+        self._create_test_object(
+            instance_kwargs={'char': 'xyz'}
+        )
 
     def test_artifacts(self):
-        queryset = self._do_search(
-            query={'char': self._test_objects[0].char}
+        saved_resultset, queryset = self._do_search(
+            query={'char': self._test_object_list[0].char}
         )
-        self.assertTrue(self._test_objects[0] in queryset)
+        self.assertTrue(
+            self._test_object_list[0] in queryset
+        )
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[1].char}
+        saved_resultset, queryset = self._do_search(
+            query={'char': self._test_object_list[1].char}
         )
-        self.assertTrue(self._test_objects[1] in queryset)
+        self.assertTrue(
+            self._test_object_list[1] in queryset
+        )
 
         backend = SearchBackend.get_instance()
         backend.reset()
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[0].char}
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[0].char
+            }
         )
-        self.assertTrue(self._test_objects[0] not in queryset)
-
-        queryset = self._do_search(
-            query={'char': self._test_objects[1].char}
-        )
-        self.assertTrue(self._test_objects[1] not in queryset)
-
-        self._call_test_management_command(
-            self._test_search_model.full_name, self._test_objects[0].pk
+        self.assertTrue(
+            self._test_object_list[0] not in queryset
         )
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[0].char}
+        saved_resultset, queryset = self._do_search(
+            query={'char': self._test_object_list[1].char}
         )
-        self.assertTrue(self._test_objects[0] in queryset)
-
-        queryset = self._do_search(
-            query={'char': self._test_objects[1].char}
+        self.assertTrue(
+            self._test_object_list[1] not in queryset
         )
-        self.assertTrue(self._test_objects[1] not in queryset)
 
         self._call_test_management_command(
-            self._test_search_model.full_name, self._test_objects[1].pk
+            self._test_search_model.full_name, self._test_object_list[0].pk
         )
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[0].char}
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[0].char
+            }
         )
-        self.assertTrue(self._test_objects[0] in queryset)
+        self.assertTrue(
+            self._test_object_list[0] in queryset
+        )
 
-        queryset = self._do_search(
-            query={'char': self._test_objects[1].char}
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[1].char
+            }
         )
-        self.assertTrue(self._test_objects[1] in queryset)
+        self.assertTrue(
+            self._test_object_list[1] not in queryset
+        )
+
+        self._call_test_management_command(
+            self._test_search_model.full_name, self._test_object_list[1].pk
+        )
+
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[0].char
+            }
+        )
+        self.assertTrue(
+            self._test_object_list[0] in queryset
+        )
+
+        saved_resultset, queryset = self._do_search(
+            query={
+                'char': self._test_object_list[1].char
+            }
+        )
+        self.assertTrue(
+            self._test_object_list[1] in queryset
+        )
 
     def test_calling(self):
         self._call_test_management_command(
-            self._test_search_model.full_name, self._test_objects[0].pk
+            self._test_search_model.full_name, self._test_object_list[0].pk
         )
 
 
@@ -164,8 +202,7 @@ class WhooshSearchIndexObjectManagementCommandTestCase(
 
 
 class SearchStatusManagementCommandTestCaseMixin(
-    ManagementCommandTestMixin, TestSearchObjectSimpleTestMixin,
-    SearchTestMixin
+    ManagementCommandTestMixin, TestSearchObjectSimpleTestMixin
 ):
     _test_management_command_name = COMMAND_NAME_SEARCH_STATUS
 
@@ -187,7 +224,9 @@ class SearchStatusManagementCommandTestCaseMixin(
                 model_name, count = line.split(':')
                 count = int(count)
 
-        self.assertEqual(count, len(self._test_objects))
+        self.assertEqual(
+            count, len(self._test_object_list)
+        )
 
 
 class DjangoSearchStatusManagementCommandTestCase(

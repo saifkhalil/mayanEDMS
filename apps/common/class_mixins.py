@@ -18,7 +18,9 @@ class AppsModuleLoaderMixin:
     @classmethod
     def load_modules(cls):
         # This set keeps track of what apps have already been processed.
-        cls.__loader_module_sets.setdefault(cls._loader_module_name, set())
+        cls.__loader_module_sets.setdefault(
+            cls._loader_module_name, set()
+        )
 
         for app in apps.get_app_configs():
             if app not in cls.__loader_module_sets[cls._loader_module_name]:
@@ -54,4 +56,7 @@ class AppsModuleLoaderMixin:
 
     @classmethod
     def post_load_modules(cls):
-        return
+        """
+        Optional method that will get executed when the method `load_modules`
+        completes.
+        """

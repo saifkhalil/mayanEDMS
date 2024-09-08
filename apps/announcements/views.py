@@ -2,7 +2,7 @@ import logging
 
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     MultipleObjectConfirmActionView, SingleObjectCreateView,
@@ -10,8 +10,8 @@ from mayan.apps.views.generics import (
 )
 
 from .icons import (
-    icon_announcement_create, icon_announcement_delete, icon_announcement_edit,
-    icon_announcement_list
+    icon_announcement_create, icon_announcement_delete,
+    icon_announcement_edit, icon_announcement_list
 )
 from .links import link_announcement_create
 from .models import Announcement
@@ -31,18 +31,16 @@ class AnnouncementCreateView(SingleObjectCreateView):
 
     def get_extra_context(self):
         return {
-            'title': _('Create announcement'),
+            'title': _(message='Create announcement')
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class AnnouncementDeleteView(MultipleObjectConfirmActionView):
     error_message = _(
-        'Error deleting announcement "%(instance)s"; %(exception)s'
+        message='Error deleting announcement "%(instance)s"; %(exception)s'
     )
     model = Announcement
     object_permission = permission_announcement_delete
@@ -51,23 +49,21 @@ class AnnouncementDeleteView(MultipleObjectConfirmActionView):
         viewname='announcements:announcement_list'
     )
     success_message_plural = _(
-        '%(count)d announcements deleted successfully.'
+        message='%(count)d announcements deleted successfully.'
     )
     success_message_single = _(
-        'Announcement "%(object)s" deleted successfully.'
+        message='Announcement "%(object)s" deleted successfully.'
     )
     success_message_singular = _(
-        '%(count)d announcement deleted successfully.'
+        message='%(count)d announcement deleted successfully.'
     )
-    title_plural = _('Delete the %(count)d selected announcements.')
-    title_single = _('Delete announcement: %(object)s.')
-    title_singular = _('Delete the %(count)d selected announcement.')
+    title_plural = _(message='Delete the %(count)d selected announcements.')
+    title_single = _(message='Delete announcement: %(object)s.')
+    title_singular = _(message='Delete the %(count)d selected announcement.')
     view_icon = icon_announcement_delete
 
     def get_extra_context(self):
-        context = {
-            'delete_view': True
-        }
+        context = {'delete_view': True}
 
         if self.object_list.count() == 1:
             context.update(
@@ -95,13 +91,11 @@ class AnnouncementEditView(SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit announcement: %s') % self.object
+            'title': _(message='Edit announcement: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class AnnouncementListView(SingleObjectListView):
@@ -118,10 +112,11 @@ class AnnouncementListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Announcements are displayed in the login view. You can use '
-                'announcements to convery information about your organzation, '
-                'announcements or usage guidelines for your users.'
+                message='Announcements are displayed in the login view. You can use '
+                'announcements to convey information about your '
+                'organization, announcements or usage guidelines for '
+                'your users.'
             ),
-            'no_results_title': _('No announcements available'),
-            'title': _('Announcements')
+            'no_results_title': _(message='No announcements available'),
+            'title': _(message='Announcements')
         }

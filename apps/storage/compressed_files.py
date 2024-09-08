@@ -1,3 +1,4 @@
+import email
 from io import BytesIO
 import tarfile
 import zipfile
@@ -10,13 +11,14 @@ try:
 except ImportError:
     COMPRESSION = zipfile.ZIP_STORED
 
+from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes, force_str
 
 from mayan.apps.mime_types.classes import MIMETypeBackend
 
 from .exceptions import NoMIMETypeMatch
-from .literals import MSG_MIME_TYPES
+from .literals import MIME_TYPE_EML, MSG_MIME_TYPES
 
 
 class Archive:
@@ -91,6 +93,66 @@ class Archive:
         raise NotImplementedError
 
 
+class EMLArchive(Archive):
+    def _get_parts(self, message):
+        counter = 1
+
+        if message.is_multipart():
+            for part in message.iter_parts():
+                yield from self._get_parts(message=part)
+        else:
+            if message.is_attachment() or message.get_content_disposition() == 'inline':
+                content = message.get_content()
+                if len(content) != 0:
+                    detected_filename = message.get_filename()
+                    if detected_filename:
+                        label = detected_filename
+                    else:
+                        label = 'attachment-{}'.format(counter)
+                        counter += 1
+
+                    yield {'label': label, 'message': message}
+            else:
+                # If it is not an attachment then it should be a body message
+                # part.
+                yield {'label': 'body', 'message': message}
+
+    def _open(self, file_object):
+        self._archive = email.message_from_binary_file(
+            fp=file_object, policy=email.policy.default
+        )
+
+    def get_parts(self):
+        yield from self._get_parts(message=self._archive)
+
+    def member_contents(self, filename):
+        for part in self.get_parts():
+            if part['label'] == filename:
+                return force_bytes(
+                    s=part['message'].get_content()
+                )
+
+    def members(self):
+        result = []
+        for part in self.get_parts():
+            result.append(
+                part['label']
+            )
+
+        return result
+
+    def open_member(self, filename):
+        for part in self.get_parts():
+            if part['label'] == filename:
+                return File(
+                    file=BytesIO(
+                        initial_bytes=force_bytes(
+                            s=part['message'].get_content()
+                        )
+                    ), name=filename
+                )
+
+
 class MsgArchive(Archive):
     def _open(self, file_object):
         self._archive = extract_msg.Message(path=file_object)
@@ -115,14 +177,18 @@ class MsgArchive(Archive):
 
     def open_member(self, filename):
         if filename == 'message.txt':
-            return BytesIO(
-                initial_bytes=force_bytes(s=self._archive.body)
+            return File(
+                file=BytesIO(
+                    initial_bytes=force_bytes(s=self._archive.body)
+                ), name=filename
             )
 
         for member in self._archive.attachments:
             if member.longFilename == filename:
-                return BytesIO(
-                    initial_bytes=force_bytes(s=member.data)
+                return File(
+                    file=BytesIO(
+                        initial_bytes=force_bytes(s=member.data)
+                    ), name=filename
                 )
 
 
@@ -132,7 +198,9 @@ class TarArchive(Archive):
 
     def add_file(self, file_object, filename):
         self._archive.addfile(
-            tarfile.TarInfo(), fileobj=file_object
+            tarinfo=self._archive.gettarinfo(
+                fileobj=file_object, arcname=filename
+            ), fileobj=file_object
         )
 
     def create(self):
@@ -182,7 +250,7 @@ class ZipArchive(Archive):
                 filename = filename.decode('CP437')
                 is_unicode = False
             except AttributeError:
-                filename = force_text(s=filename)
+                filename = force_str(s=filename)
                 is_unicode = True
             except UnicodeEncodeError:
                 is_unicode = True
@@ -222,6 +290,9 @@ class ZipArchive(Archive):
         )
 
 
+Archive.register(
+    archive_classes=(EMLArchive,), mime_types=MIME_TYPE_EML
+)
 Archive.register(
     archive_classes=(MsgArchive,), mime_types=MSG_MIME_TYPES
 )

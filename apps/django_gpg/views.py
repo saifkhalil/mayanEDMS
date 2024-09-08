@@ -3,15 +3,15 @@ import logging
 from django.contrib import messages
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
+from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerMethodAfter
+from mayan.apps.storage.views.download_views import ViewSingleObjectDownload
 from mayan.apps.views.generics import (
     ConfirmView, SingleObjectCreateView, SingleObjectDeleteView,
-    SingleObjectDetailView, SingleObjectDownloadView, SingleObjectListView,
-    SimpleView
+    SingleObjectDetailView, SingleObjectListView, SimpleView
 )
-from mayan.apps.events.classes import EventManagerMethodAfter
-from mayan.apps.events.decorators import method_event
 
 from .events import event_key_downloaded
 from .forms import KeyDetailForm, KeySearchForm
@@ -39,7 +39,7 @@ class KeyDeleteView(SingleObjectDeleteView):
 
     def get_extra_context(self):
         return {
-            'title': _('Delete key: %s') % self.object
+            'title': _(message='Delete key: %s') % self.object
         }
 
     def get_post_action_redirect(self):
@@ -58,11 +58,11 @@ class KeyDetailView(SingleObjectDetailView):
 
     def get_extra_context(self):
         return {
-            'title': _('Details for key: %s') % self.object
+            'title': _(message='Details for key: %s') % self.object
         }
 
 
-class KeyDownloadView(SingleObjectDownloadView):
+class KeyDownloadView(ViewSingleObjectDownload):
     model = Key
     object_permission = permission_key_download
     pk_url_kwarg = 'key_id'
@@ -94,8 +94,8 @@ class KeyReceive(ConfirmView):
 
     def get_extra_context(self):
         return {
-            'message': _('Import key ID: %s?') % self.kwargs['key_id'],
-            'title': _('Import key')
+            'message': _(message='Import key ID: %s?') % self.kwargs['key_id'],
+            'title': _(message='Import key')
         }
 
     def view_action(self):
@@ -114,7 +114,7 @@ class KeyReceive(ConfirmView):
             )
         else:
             messages.success(
-                message=_('Successfully received key: %(key_id)s') % {
+                message=_(message='Successfully received key: %(key_id)s') % {
                     'key_id': self.kwargs['key_id'],
                 }, request=self.request
             )
@@ -138,7 +138,7 @@ class KeyQueryResultView(SingleObjectListView):
             'no_results_title': _(
                 'No results returned'
             ),
-            'title': _('Key query results')
+            'title': _(message='Key query results')
         }
 
     def get_source_queryset(self):
@@ -150,7 +150,7 @@ class KeyQueryResultView(SingleObjectListView):
 
 
 class KeyQueryView(SimpleView):
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
     view_icon = icon_keyserver_search
     view_permission = permission_keyserver_query
 
@@ -159,7 +159,7 @@ class KeyQueryView(SimpleView):
             'form': self.get_form(),
             'form_action': reverse(viewname='django_gpg:key_query_results'),
             'submit_method': 'GET',
-            'title': _('Query key server')
+            'title': _(message='Query key server')
         }
 
     def get_form(self):
@@ -183,13 +183,11 @@ class KeyUploadView(SingleObjectCreateView):
 
     def get_extra_context(self):
         return {
-            'title': _('Upload new key')
+            'title': _(message='Upload new key')
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class PrivateKeyListView(SingleObjectListView):
@@ -212,7 +210,7 @@ class PrivateKeyListView(SingleObjectListView):
             'no_results_title': _(
                 'There no private keys'
             ),
-            'title': _('Private keys')
+            'title': _(message='Private keys')
         }
 
 
@@ -237,5 +235,5 @@ class PublicKeyListView(SingleObjectListView):
             'no_results_title': _(
                 'There no public keys'
             ),
-            'title': _('Public keys')
+            'title': _(message='Public keys')
         }

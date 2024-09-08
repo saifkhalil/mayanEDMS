@@ -1,29 +1,30 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
 from mayan.apps.acls.permissions import (
     permission_acl_edit, permission_acl_view
 )
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.classes import ModelCopy
 from mayan.apps.common.menus import (
-    menu_list_facet, menu_object, menu_related, menu_secondary, menu_setup
+    menu_list_facet, menu_object, menu_related, menu_return, menu_secondary,
+    menu_setup
 )
 from mayan.apps.documents.links.document_type_links import (
     link_document_type_list
 )
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.forms import column_widgets
+from mayan.apps.navigation.source_columns import SourceColumn
 from mayan.apps.rest_api.fields import DynamicSerializerField
-from mayan.apps.views.html_widgets import TwoStateWidget
 
 from .events import event_web_link_edited, event_web_link_navigated
 from .links import (
     link_document_type_web_links, link_document_web_link_list,
     link_web_link_create, link_web_link_delete, link_web_link_document_types,
-    link_web_link_edit, link_web_link_instance_view,
-    link_web_link_list, link_web_link_setup
+    link_web_link_edit, link_web_link_instance_view, link_web_link_list,
+    link_web_link_setup
 )
 from .methods import (
     method_document_type_web_links_add, method_document_type_web_links_remove
@@ -40,7 +41,7 @@ class WebLinksApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.web_links'
-    verbose_name = _('Web links')
+    verbose_name = _(message='Web links')
 
     def ready(self):
         super().ready()
@@ -122,7 +123,7 @@ class WebLinksApp(MayanAppConfig):
         source_column_enabled = SourceColumn(
             attribute='enabled', include_label=True, is_sortable=True,
             source=WebLink,
-            widget=TwoStateWidget
+            widget=column_widgets.TwoStateWidget
         )
         source_column_enabled.add_exclude(source=ResolvedWebLink)
 
@@ -163,11 +164,20 @@ class WebLinksApp(MayanAppConfig):
                 'web_links:web_link_create'
             )
         )
-        menu_secondary.bind_links(
-            links=(link_web_link_list, link_web_link_create),
+        menu_return.bind_links(
+            links=(link_web_link_list,),
             sources=(
                 WebLink, 'web_links:web_link_list',
                 'web_links:web_link_create'
             )
         )
-        menu_setup.bind_links(links=(link_web_link_setup,))
+        menu_secondary.bind_links(
+            links=(link_web_link_create,),
+            sources=(
+                WebLink, 'web_links:web_link_list',
+                'web_links:web_link_create'
+            )
+        )
+        menu_setup.bind_links(
+            links=(link_web_link_setup,)
+        )

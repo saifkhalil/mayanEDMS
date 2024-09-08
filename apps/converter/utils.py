@@ -1,5 +1,7 @@
 import uuid
 
+from django.core.files.base import File
+
 from .literals import TRANSFORMATION_MARKER, TRANSFORMATION_SEPARATOR
 from .transformations import BaseTransformation
 
@@ -68,7 +70,9 @@ class IndexedDictionary:
 
                     result_dictionary.setdefault(
                         index, {}
-                    ).setdefault('arguments', {})
+                    ).setdefault(
+                        'arguments', {}
+                    )
                     result_dictionary[index]['arguments'].update(
                         {key: value}
                     )
@@ -106,6 +110,19 @@ class IndexedDictionary:
             )
 
         return result_list
+
+
+def factory_file_generator(image_object):
+    def file_generator():
+        with image_object.open() as file_object:
+            while True:
+                chunk = file_object.read(File.DEFAULT_CHUNK_SIZE)
+                if not chunk:
+                    break
+                else:
+                    yield chunk
+
+    return file_generator
 
 
 def model_upload_to(instance, filename):

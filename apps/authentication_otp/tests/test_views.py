@@ -1,14 +1,15 @@
+from urllib.parse import unquote_plus
+
 from furl import furl
 
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
-from django.utils.http import urlunquote_plus
 
 from mayan.apps.authentication.classes import AuthenticationBackend
 from mayan.apps.authentication.events import event_user_logged_in
 from mayan.apps.authentication.tests.mixins import LoginViewTestMixin
-from mayan.apps.smart_settings.classes import SettingNamespace
+from mayan.apps.smart_settings.settings import setting_cluster
 from mayan.apps.testing.tests.base import GenericViewTestCase
 from mayan.apps.user_management.events import event_user_edited
 from mayan.apps.views.http import URL
@@ -24,19 +25,19 @@ class LoginOTPTestCase(
     AuthenticationOTPTestMixin, LoginViewTestMixin, GenericViewTestCase
 ):
     authenticated_url = reverse(viewname='common:home')
-    authentication_url = urlunquote_plus(
-        furl(
+    authentication_url = unquote_plus(
+        string=furl(
             path=reverse(settings.LOGIN_URL), args={
                 'next': authenticated_url
             }
         ).tostr()
     )
     auto_login_user = False
-    create_test_case_superuser = True
+    create_test_case_super_user = True
 
     def setUp(self):
         super().setUp()
-        SettingNamespace.invalidate_cache_all()
+        setting_cluster.do_cache_invalidate()
 
     @override_settings(AUTHENTICATION_BACKEND=PATH_AUTHENTICATION_BACKEND_EMAIL_OTP)
     def test_login_view_with_email_no_otp(self):
@@ -54,13 +55,13 @@ class LoginOTPTestCase(
         self.assertEqual(events.count(), 2)
 
         self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_superuser)
-        self.assertEqual(events[0].target, self._test_case_superuser)
+        self.assertEqual(events[0].actor, self._test_case_super_user)
+        self.assertEqual(events[0].target, self._test_case_super_user)
         self.assertEqual(events[0].verb, event_user_edited.id)
 
         self.assertEqual(events[1].action_object, None)
-        self.assertEqual(events[1].actor, self._test_case_superuser)
-        self.assertEqual(events[1].target, self._test_case_superuser)
+        self.assertEqual(events[1].actor, self._test_case_super_user)
+        self.assertEqual(events[1].target, self._test_case_super_user)
         self.assertEqual(events[1].verb, event_user_logged_in.id)
 
     @override_settings(AUTHENTICATION_BACKEND=PATH_AUTHENTICATION_BACKEND_EMAIL_OTP)
@@ -85,13 +86,13 @@ class LoginOTPTestCase(
         self.assertEqual(events.count(), 2)
 
         self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_superuser)
-        self.assertEqual(events[0].target, self._test_case_superuser)
+        self.assertEqual(events[0].actor, self._test_case_super_user)
+        self.assertEqual(events[0].target, self._test_case_super_user)
         self.assertEqual(events[0].verb, event_user_edited.id)
 
         self.assertEqual(events[1].action_object, None)
-        self.assertEqual(events[1].actor, self._test_case_superuser)
-        self.assertEqual(events[1].target, self._test_case_superuser)
+        self.assertEqual(events[1].actor, self._test_case_super_user)
+        self.assertEqual(events[1].target, self._test_case_super_user)
         self.assertEqual(events[1].verb, event_user_logged_in.id)
 
     @override_settings(AUTHENTICATION_BACKEND=PATH_AUTHENTICATION_BACKEND_USERNAME_OTP)
@@ -110,13 +111,13 @@ class LoginOTPTestCase(
         self.assertEqual(events.count(), 2)
 
         self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_superuser)
-        self.assertEqual(events[0].target, self._test_case_superuser)
+        self.assertEqual(events[0].actor, self._test_case_super_user)
+        self.assertEqual(events[0].target, self._test_case_super_user)
         self.assertEqual(events[0].verb, event_user_edited.id)
 
         self.assertEqual(events[1].action_object, None)
-        self.assertEqual(events[1].actor, self._test_case_superuser)
-        self.assertEqual(events[1].target, self._test_case_superuser)
+        self.assertEqual(events[1].actor, self._test_case_super_user)
+        self.assertEqual(events[1].target, self._test_case_super_user)
         self.assertEqual(events[1].verb, event_user_logged_in.id)
 
     @override_settings(AUTHENTICATION_BACKEND=PATH_AUTHENTICATION_BACKEND_USERNAME_OTP)
@@ -141,13 +142,13 @@ class LoginOTPTestCase(
         self.assertEqual(events.count(), 2)
 
         self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_superuser)
-        self.assertEqual(events[0].target, self._test_case_superuser)
+        self.assertEqual(events[0].actor, self._test_case_super_user)
+        self.assertEqual(events[0].target, self._test_case_super_user)
         self.assertEqual(events[0].verb, event_user_edited.id)
 
         self.assertEqual(events[1].action_object, None)
-        self.assertEqual(events[1].actor, self._test_case_superuser)
-        self.assertEqual(events[1].target, self._test_case_superuser)
+        self.assertEqual(events[1].actor, self._test_case_super_user)
+        self.assertEqual(events[1].target, self._test_case_super_user)
         self.assertEqual(events[1].verb, event_user_logged_in.id)
 
     @override_settings(AUTHENTICATION_BACKEND=PATH_AUTHENTICATION_BACKEND_USERNAME_OTP)
@@ -171,7 +172,7 @@ class LoginOTPTestCase(
                             viewname='authentication:multi_factor_authentication_view'
                         ), query={'next': TEST_REDIRECT_URL}
                     ).to_string(), 302
-                ),
+                )
             ]
         )
 
@@ -181,19 +182,23 @@ class LoginOTPTestCase(
             }, follow=True, query={'next': TEST_REDIRECT_URL}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.redirect_chain, [(TEST_REDIRECT_URL, 302)])
+        self.assertEqual(
+            response.redirect_chain, [
+                (TEST_REDIRECT_URL, 302)
+            ]
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 2)
 
         self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_superuser)
-        self.assertEqual(events[0].target, self._test_case_superuser)
+        self.assertEqual(events[0].actor, self._test_case_super_user)
+        self.assertEqual(events[0].target, self._test_case_super_user)
         self.assertEqual(events[0].verb, event_user_edited.id)
 
         self.assertEqual(events[1].action_object, None)
-        self.assertEqual(events[1].actor, self._test_case_superuser)
-        self.assertEqual(events[1].target, self._test_case_superuser)
+        self.assertEqual(events[1].actor, self._test_case_super_user)
+        self.assertEqual(events[1].target, self._test_case_super_user)
         self.assertEqual(events[1].verb, event_user_logged_in.id)
 
 

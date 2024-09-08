@@ -27,7 +27,7 @@ class APICheckedoutDocumentListView(generics.ListCreateAPIView):
             return DocumentCheckoutSerializer
 
     def get_source_queryset(self):
-        valid_document_queryset = Document.valid.all()
+        queryset_valid_documents = Document.valid.all()
 
         queryset = AccessControlList.objects.restrict_queryset(
             permission=permission_document_check_out_detail_view,
@@ -35,7 +35,7 @@ class APICheckedoutDocumentListView(generics.ListCreateAPIView):
             user=self.request.user
         )
 
-        return queryset.filter(document_id__in=valid_document_queryset)
+        return queryset.filter(document_id__in=queryset_valid_documents)
 
 
 class APICheckedoutDocumentView(generics.RetrieveDestroyAPIView):
@@ -53,7 +53,7 @@ class APICheckedoutDocumentView(generics.RetrieveDestroyAPIView):
         }
 
     def get_source_queryset(self):
-        valid_document_queryset = Document.valid.all()
+        queryset_valid_documents = Document.valid.all()
 
         if self.request.method == 'GET':
             queryset = AccessControlList.objects.restrict_queryset(
@@ -62,23 +62,23 @@ class APICheckedoutDocumentView(generics.RetrieveDestroyAPIView):
                 user=self.request.user
             )
 
-            return queryset.filter(document_id__in=valid_document_queryset)
+            return queryset.filter(document_id__in=queryset_valid_documents)
         elif self.request.method == 'DELETE':
-            check_in_queryset = AccessControlList.objects.restrict_queryset(
+            queryset_check_ins = AccessControlList.objects.restrict_queryset(
                 permission=permission_document_check_in,
                 queryset=DocumentCheckout.objects.filter(
                     user_id=self.request.user.pk
                 ), user=self.request.user
             )
-            check_in_override_queryset = AccessControlList.objects.restrict_queryset(
+            queryset_check_in_overrides = AccessControlList.objects.restrict_queryset(
                 permission=permission_document_check_in_override,
                 queryset=DocumentCheckout.objects.exclude(
                     user_id=self.request.user.pk
                 ), user=self.request.user
             )
 
-            return (check_in_queryset | check_in_override_queryset).filter(
-                document_id__in=valid_document_queryset.values('pk')
+            return (queryset_check_ins | queryset_check_in_overrides).filter(
+                document_id__in=queryset_valid_documents.values('pk')
             )
 
 
@@ -91,8 +91,8 @@ class APIDocumentCheckoutView(
     """
     external_object_queryset = Document.valid.all()
     external_object_pk_url_kwarg = 'document_id'
-    mayan_external_object_permissions = {
-        'GET': (permission_document_check_out_detail_view,)
+    mayan_external_object_permission_map = {
+        'GET': permission_document_check_out_detail_view
     }
     serializer_class = DocumentCheckoutSerializer
 
@@ -102,7 +102,7 @@ class APIDocumentCheckoutView(
             '_event_keep_attributes': ('_event_actor',)
         }
 
-    def get_mayan_object_permissions(self):
+    def get_mayan_object_permission_map(self):
         if self.request.method == 'DELETE':
             try:
                 checkout = self.get_external_object().checkout

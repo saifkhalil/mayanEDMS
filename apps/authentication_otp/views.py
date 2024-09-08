@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.core.signing import BadSignature, dumps, loads
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from mayan.apps.views.generics import (
@@ -25,7 +25,7 @@ class UserOTPDataDetailView(
         return {
             'object': self.object,
             'title': _(
-                'One time pad details for user: %s'
+                message='One time pad details for user: %s'
             ) % self.object
         }
 
@@ -42,7 +42,7 @@ class UserOTPDataDisableView(OTPBackendEnabledViewMixin, ConfirmView):
         return {
             'object': self.object,
             'title': _(
-                'Disable one time pad for user: %s'
+                message='Disable one time pad for user: %s'
             ) % self.object
         }
 
@@ -53,13 +53,15 @@ class UserOTPDataDisableView(OTPBackendEnabledViewMixin, ConfirmView):
         self.request.user.otp_data.disable()
 
         messages.success(
-            message=_('OTP disable successfully.'), request=self.request
+            message=_(message='OTP disable successfully.'), request=self.request
         )
 
 
 class UserOTPDataEnableView(OTPBackendEnabledViewMixin, RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        signed_secret = dumps(obj=pyotp.random_base32())
+        signed_secret = dumps(
+            obj=pyotp.random_base32()
+        )
 
         return URL(
             path=reverse(viewname='authentication_otp:otp_verify'),
@@ -75,7 +77,8 @@ class UserOTPDataVerifyTokenView(OTPBackendEnabledViewMixin, FormView):
 
         if request.user.otp_data.is_enabled():
             messages.info(
-                message=_('OTP is already enabled.'), request=self.request
+                message=_(message='OTP is already enabled.'),
+                request=self.request
             )
             return HttpResponseRedirect(
                 redirect_to=reverse(
@@ -91,7 +94,8 @@ class UserOTPDataVerifyTokenView(OTPBackendEnabledViewMixin, FormView):
         self.request.user.otp_data.enable(secret=secret, token=token)
 
         messages.success(
-            message=_('OTP enabled successfully.'), request=self.request
+            message=_(message='OTP enabled successfully.'),
+            request=self.request
         )
 
         return super().form_valid(form=form)
@@ -100,7 +104,7 @@ class UserOTPDataVerifyTokenView(OTPBackendEnabledViewMixin, FormView):
         return {
             'object': self.object,
             'title': _(
-                'Enable one time pad for user: %s'
+                message='Enable one time pad for user: %s'
             ) % self.object
         }
 
@@ -112,7 +116,7 @@ class UserOTPDataVerifyTokenView(OTPBackendEnabledViewMixin, FormView):
         except BadSignature:
             messages.error(
                 message=_(
-                    'OTP secret validation error.'
+                    message='OTP secret validation error.'
                 ), request=self.request
             )
             secret = None
@@ -120,7 +124,7 @@ class UserOTPDataVerifyTokenView(OTPBackendEnabledViewMixin, FormView):
         return {
             'initial': {
                 'secret': secret,
-                'signed_secret': signed_secret,
+                'signed_secret': signed_secret
             },
             'user': self.request.user
         }

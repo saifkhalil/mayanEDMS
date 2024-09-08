@@ -1,10 +1,10 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.documents.permissions import permission_document_view
-from mayan.apps.events.classes import EventManagerMethodAfter
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerMethodAfter
 
 from .events import event_tag_attached, event_tag_removed
 from .html_widgets import widget_single_tag
@@ -60,7 +60,7 @@ class TagBusinessLogicMixin:
 
     def get_preview_widget(self):
         return widget_single_tag(tag=self)
-    get_preview_widget.short_description = _('Preview')
+    get_preview_widget.short_description = _(message='Preview')
 
     def remove_from(self, document, user):
         return self._remove_from(document=document, user=user)

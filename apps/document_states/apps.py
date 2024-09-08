@@ -1,34 +1,36 @@
 from django.apps import apps
 from django.db.models.signals import post_migrate, post_save, pre_delete
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.classes import ModelCopy
 from mayan.apps.common.menus import (
     menu_list_facet, menu_main, menu_multi_item, menu_object, menu_related,
-    menu_secondary, menu_setup, menu_tools
+    menu_return, menu_secondary, menu_setup, menu_tools
 )
 from mayan.apps.databases.classes import (
     ModelField, ModelProperty, ModelReverseField
 )
-from mayan.apps.documents.links.document_type_links import link_document_type_list
+from mayan.apps.documents.links.document_type_links import (
+    link_document_type_list
+)
 from mayan.apps.documents.signals import signal_post_document_type_change
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.logging.classes import ErrorLog
+from mayan.apps.forms import column_widgets
+from mayan.apps.logging.classes import ErrorLog, ErrorLogDomain
 from mayan.apps.logging.permissions import permission_error_log_entry_view
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 from mayan.apps.rest_api.fields import DynamicSerializerField
-from mayan.apps.views.html_widgets import TwoStateWidget
 
 from .classes import DocumentStateHelper, WorkflowAction
+from .column_widgets import WorkflowLogExtraDataWidget
 from .events import (
     event_workflow_instance_created, event_workflow_instance_transitioned,
     event_workflow_template_edited
 )
 from .handlers import (
-    handler_create_workflow_image_cache,
-    handler_launch_workflow_on_create,
+    handler_create_workflow_image_cache, handler_launch_workflow_on_create,
     handler_launch_workflow_on_type_change, handler_trigger_transition,
     handler_workflow_template_post_edit,
     handler_workflow_template_state_post_edit,
@@ -36,20 +38,21 @@ from .handlers import (
     handler_workflow_template_transition_post_edit,
     handler_workflow_template_transition_pre_delete
 )
-from .html_widgets import WorkflowLogExtraDataWidget, widget_transition_events
+from .html_widgets import widget_transition_events
 from .links import (
     link_document_multiple_workflow_templates_launch,
     link_document_single_workflow_templates_launch,
-    link_tool_launch_workflows, link_workflow_instance_list,
-    link_workflow_instance_detail, link_workflow_instance_transition,
+    link_document_type_workflow_template_list, link_tool_launch_workflows,
+    link_workflow_instance_detail, link_workflow_instance_list,
+    link_workflow_instance_transition,
     link_workflow_runtime_proxy_document_list,
-    link_workflow_runtime_proxy_list, link_workflow_template_preview,
+    link_workflow_runtime_proxy_list,
     link_workflow_runtime_proxy_state_document_list,
-    link_workflow_runtime_proxy_state_list,
-    link_document_type_workflow_templates, link_workflow_template_create,
-    link_workflow_template_document_types, link_workflow_template_edit,
-    link_workflow_template_multiple_delete, link_workflow_template_launch,
-    link_workflow_template_list, link_workflow_template_single_delete,
+    link_workflow_runtime_proxy_state_list, link_workflow_template_create,
+    link_workflow_template_document_type_list, link_workflow_template_edit,
+    link_workflow_template_delete_multiple, link_workflow_template_launch,
+    link_workflow_template_list, link_workflow_template_delete_single,
+    link_workflow_template_preview, link_workflow_template_setup,
     link_workflow_template_state_list,
     link_workflow_template_state_action_delete,
     link_workflow_template_state_action_edit,
@@ -71,6 +74,7 @@ from .links import (
     link_workflow_template_transition_field_edit,
     link_workflow_template_transition_field_list
 )
+from .literals import ERROR_LOG_DOMAIN_NAME
 from .methods import (
     method_document_type_workflow_templates_add,
     method_document_type_workflow_templates_remove
@@ -88,7 +92,7 @@ class DocumentStatesApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.document_states'
-    verbose_name = _('Workflows')
+    verbose_name = _(message='Workflows')
 
     def ready(self):
         super().ready()
@@ -103,16 +107,18 @@ class DocumentStatesApp(MayanAppConfig):
             app_label='documents', model_name='DocumentType'
         )
 
-        Workflow = self.get_model('Workflow')
-        WorkflowInstance = self.get_model('WorkflowInstance')
-        WorkflowInstanceLogEntry = self.get_model('WorkflowInstanceLogEntry')
-        WorkflowRuntimeProxy = self.get_model('WorkflowRuntimeProxy')
-        WorkflowState = self.get_model('WorkflowState')
-        WorkflowStateAction = self.get_model('WorkflowStateAction')
-        WorkflowStateEscalation = self.get_model('WorkflowStateEscalation')
-        WorkflowStateRuntimeProxy = self.get_model('WorkflowStateRuntimeProxy')
-        WorkflowTransition = self.get_model('WorkflowTransition')
-        WorkflowTransitionField = self.get_model('WorkflowTransitionField')
+        Workflow = self.get_model(model_name='Workflow')
+        WorkflowInstance = self.get_model(model_name='WorkflowInstance')
+        WorkflowInstanceLogEntry = self.get_model(model_name='WorkflowInstanceLogEntry')
+        WorkflowRuntimeProxy = self.get_model(model_name='WorkflowRuntimeProxy')
+        WorkflowState = self.get_model(model_name='WorkflowState')
+        WorkflowStateAction = self.get_model(model_name='WorkflowStateAction')
+        WorkflowStateEscalation = self.get_model(model_name='WorkflowStateEscalation')
+        WorkflowStateRuntimeProxy = self.get_model(
+            'WorkflowStateRuntimeProxy'
+        )
+        WorkflowTransition = self.get_model(model_name='WorkflowTransition')
+        WorkflowTransitionField = self.get_model(model_name='WorkflowTransitionField')
         WorkflowTransitionTriggerEvent = self.get_model(
             'WorkflowTransitionTriggerEvent'
         )
@@ -138,6 +144,10 @@ class DocumentStatesApp(MayanAppConfig):
         error_log = ErrorLog(app_config=self)
         error_log.register_model(model=WorkflowStateAction)
 
+        ErrorLogDomain(
+            label=_(message='Workflows'), name=ERROR_LOG_DOMAIN_NAME
+        )
+
         EventModelRegistry.register(model=WorkflowInstance)
         EventModelRegistry.register(
             exclude=(WorkflowRuntimeProxy,), model=Workflow,
@@ -160,8 +170,8 @@ class DocumentStatesApp(MayanAppConfig):
         )
         ModelCopy(model=WorkflowStateAction).add_fields(
             field_names=(
-                'state', 'label', 'enabled', 'when', 'action_path',
-                'action_data', 'condition'
+                'state', 'label', 'enabled', 'when', 'backend_path',
+                'backend_data', 'condition'
             )
         )
         ModelCopy(model=WorkflowTransition).add_fields(
@@ -221,16 +231,16 @@ class DocumentStatesApp(MayanAppConfig):
         ModelProperty(
             model=Document,
             name='workflow.< workflow internal name >.get_current_state',
-            label=_('Current state of a workflow'), description=_(
-                'Return the current state of the selected workflow.'
+            label=_(message='Current state of a workflow'), description=_(
+                message='Return the current state of the selected workflow.'
             )
         )
         ModelProperty(
             model=Document,
             name='workflow.< workflow internal name >.get_current_state.completion',
-            label=_('Current state of a workflow'), description=_(
-                'Return the completion value of the current state of the '
-                'selected workflow.'
+            label=_(message='Current state of a workflow'), description=_(
+                message='Return the completion value of the current state of '
+                'the selected workflow.'
             )
         )
 
@@ -243,7 +253,8 @@ class DocumentStatesApp(MayanAppConfig):
         )
         ModelPermission.register(
             model=Workflow, permissions=(
-                permission_error_log_entry_view, permission_workflow_template_delete,
+                permission_error_log_entry_view,
+                permission_workflow_template_delete,
                 permission_workflow_template_edit, permission_workflow_tools,
                 permission_workflow_instance_transition,
                 permission_workflow_template_view
@@ -287,25 +298,27 @@ class DocumentStatesApp(MayanAppConfig):
 
         ModelProperty(
             description=_(
-                'Return the last workflow instance log entry. The '
+                message='Return the last workflow instance log entry. The '
                 'log entry itself has the following fields: datetime, '
                 'transition, user, and comment.'
-            ), label=_('Get last log entry'), model=WorkflowInstance,
+            ), label=_(message='Get last log entry'), model=WorkflowInstance,
             name='get_last_log_entry'
         )
         ModelProperty(
             description=_(
-                'Return the current context dictionary which includes '
+                message='Return the current context dictionary which includes '
                 'runtime data from the workflow transition fields.'
-            ), label=_('Get the context'), model=WorkflowInstance,
+            ), label=_(message='Get the context'), model=WorkflowInstance,
             name='get_runtime_context'
         )
         ModelProperty(
             description=_(
-                'Return the transition of the workflow instance.'
-            ), label=_('Get last transition'), model=WorkflowInstance,
+                message='Return the transition of the workflow instance.'
+            ), label=_(message='Get last transition'), model=WorkflowInstance,
             name='get_last_transition'
         )
+
+        # Workflow template
 
         SourceColumn(
             attribute='label', is_identifier=True, is_sortable=True,
@@ -319,45 +332,62 @@ class DocumentStatesApp(MayanAppConfig):
             source=WorkflowRuntimeProxy
         )
         column_workflow_get_initial_state = SourceColumn(
-            attribute='get_initial_state', empty_value=_('None'),
+            attribute='get_initial_state', empty_value=_(message='None'),
             include_label=True, source=Workflow
         )
+
+        # Workflow runtime template
+
         column_workflow_get_initial_state.add_exclude(
             source=WorkflowRuntimeProxy
         )
         SourceColumn(
+            attribute='get_document_count', include_label=True,
+            kwargs={'user': 'request.user'}, label=_(message='Documents'),
+            order=99, source=WorkflowRuntimeProxy
+        )
+
+        # Workflow instance
+
+        SourceColumn(
             attribute='get_current_state', include_label=True,
-            label=_('Current state'), source=WorkflowInstance,
+            label=_(message='Current state'), source=WorkflowInstance,
         )
         SourceColumn(
             func=lambda context: getattr(
-                context['object'].get_last_log_entry(), 'user', _('None')
-            ), include_label=True, label=_('User'), source=WorkflowInstance
+                context['object'].get_last_log_entry(), 'user',
+                _(message='None')
+            ), include_label=True, label=_(message='User'),
+            source=WorkflowInstance
         )
         SourceColumn(
             attribute='get_last_transition', include_label=True,
-            label=_('Last transition'), source=WorkflowInstance
+            label=_(message='Last transition'), source=WorkflowInstance
         )
         SourceColumn(
             func=lambda context: getattr(
-                context['object'].get_last_log_entry(), 'datetime', _('None')
-            ), include_label=True, label=_('Date and time'),
+                context['object'].get_last_log_entry(), 'datetime',
+                _(message='None')
+            ), include_label=True, label=_(message='Date and time'),
             source=WorkflowInstance
         )
         SourceColumn(
             func=lambda context: getattr(
                 context['object'].get_current_state(),
-                'completion', _('None')
-            ), include_label=True, label=_('Completion'),
+                'completion', _(message='None')
+            ), include_label=True, label=_(message='Completion'),
             source=WorkflowInstance
         )
 
+        # Workflow template log entry
+
         SourceColumn(
             attribute='datetime', is_identifier=True,
-            label=_('Date and time'), source=WorkflowInstanceLogEntry
+            is_sortable=True, label=_(message='Date and time'),
+            source=WorkflowInstanceLogEntry
         )
         SourceColumn(
-            attribute='user', include_label=True, label=_('User'),
+            attribute='user', include_label=True, label=_(message='User'),
             source=WorkflowInstanceLogEntry
         )
         SourceColumn(
@@ -378,9 +408,11 @@ class DocumentStatesApp(MayanAppConfig):
         )
         SourceColumn(
             attribute='get_extra_data', include_label=True,
-            label=_('Additional details'), source=WorkflowInstanceLogEntry,
-            widget=WorkflowLogExtraDataWidget
+            label=_(message='Additional details'),
+            source=WorkflowInstanceLogEntry, widget=WorkflowLogExtraDataWidget
         )
+
+        # Workflow template state
 
         SourceColumn(
             attribute='label', is_identifier=True, is_sortable=True,
@@ -388,7 +420,7 @@ class DocumentStatesApp(MayanAppConfig):
         )
         SourceColumn(
             attribute='initial', include_label=True, is_sortable=True,
-            source=WorkflowState, widget=TwoStateWidget
+            source=WorkflowState, widget=column_widgets.TwoStateWidget
         )
         SourceColumn(
             attribute='completion', include_label=True, is_sortable=True,
@@ -398,9 +430,27 @@ class DocumentStatesApp(MayanAppConfig):
             attribute='get_actions_display', include_label=True,
             source=WorkflowState
         )
+        column_workflow_escalations = SourceColumn(
+            attribute='get_escalations_display', include_label=True,
+            source=WorkflowState
+        )
+
+        # Workflow template state runtime proxy
+
         column_workflow_actions.add_exclude(
             source=WorkflowStateRuntimeProxy
         )
+        column_workflow_escalations.add_exclude(
+            source=WorkflowStateRuntimeProxy
+        )
+
+        SourceColumn(
+            attribute='get_document_count', include_label=True,
+            kwargs={'user': 'request.user'}, label=_(message='Documents'),
+            order=99, source=WorkflowStateRuntimeProxy
+        )
+
+        # Workflow template state action
 
         SourceColumn(
             attribute='label', is_identifier=True, is_sortable=True,
@@ -408,22 +458,22 @@ class DocumentStatesApp(MayanAppConfig):
         )
         SourceColumn(
             attribute='enabled', include_label=True, is_sortable=True,
-            source=WorkflowStateAction, widget=TwoStateWidget
+            source=WorkflowStateAction, widget=column_widgets.TwoStateWidget
         )
         SourceColumn(
             attribute='get_when_display', include_label=True,
-            label=_('When?'), source=WorkflowStateAction
+            label=_(message='When?'), source=WorkflowStateAction
         )
         SourceColumn(
-            attribute='get_class_label', include_label=True,
-            label=_('Action type'), source=WorkflowStateAction
+            attribute='get_backend_class_label', include_label=True,
+            label=_(message='Action type'), source=WorkflowStateAction
         )
         SourceColumn(
             attribute='has_condition', include_label=True,
-            source=WorkflowStateAction, widget=TwoStateWidget
+            source=WorkflowStateAction, widget=column_widgets.TwoStateWidget
         )
 
-        # Workflow Template State Escalation
+        # Workflow template state escalation
 
         SourceColumn(
             attribute='priority', is_identifier=True, is_sortable=True,
@@ -431,7 +481,7 @@ class DocumentStatesApp(MayanAppConfig):
         )
         SourceColumn(
             attribute='enabled', include_label=True, is_sortable=True,
-            source=WorkflowStateEscalation, widget=TwoStateWidget
+            source=WorkflowStateEscalation, widget=column_widgets.TwoStateWidget
         )
         SourceColumn(
             attribute='unit', include_label=True,
@@ -442,11 +492,15 @@ class DocumentStatesApp(MayanAppConfig):
             source=WorkflowStateEscalation
         )
         SourceColumn(
+            attribute='transition', include_label=True, is_sortable=True,
+            source=WorkflowStateEscalation
+        )
+        SourceColumn(
             attribute='has_condition', include_label=True,
-            source=WorkflowStateEscalation, widget=TwoStateWidget
+            source=WorkflowStateEscalation, widget=column_widgets.TwoStateWidget
         )
 
-        # Workflow transition
+        # Workflow template transition
 
         SourceColumn(
             attribute='label', is_identifier=True, is_sortable=True,
@@ -462,7 +516,7 @@ class DocumentStatesApp(MayanAppConfig):
         )
         SourceColumn(
             attribute='has_condition', include_label=True,
-            source=WorkflowTransition, widget=TwoStateWidget
+            source=WorkflowTransition, widget=column_widgets.TwoStateWidget
         )
         SourceColumn(
             attribute='get_field_display', include_label=True,
@@ -472,11 +526,13 @@ class DocumentStatesApp(MayanAppConfig):
             func=lambda context: widget_transition_events(
                 transition=context['object']
             ), help_text=_(
-                'Triggers are system events that will cause the transition '
-                'to be applied.'
-            ), include_label=True, label=_('Triggers'),
+                message='Triggers are system events that will cause the '
+                'transition to be applied.'
+            ), include_label=True, label=_(message='Triggers'),
             source=WorkflowTransition
         )
+
+        # Workflow template transition field
 
         SourceColumn(
             attribute='name', is_identifier=True, is_sortable=True,
@@ -488,15 +544,23 @@ class DocumentStatesApp(MayanAppConfig):
         )
         SourceColumn(
             attribute='get_field_type_display', include_label=True,
-            label=_('Type'), source=WorkflowTransitionField
+            label=_(message='Type'), source=WorkflowTransitionField
         )
         SourceColumn(
             attribute='required', include_label=True, is_sortable=True,
-            source=WorkflowTransitionField, widget=TwoStateWidget
+            source=WorkflowTransitionField, widget=column_widgets.TwoStateWidget
+        )
+        SourceColumn(
+            attribute='has_default', include_label=True,
+            source=WorkflowTransitionField
+        )
+        SourceColumn(
+            attribute='has_lookup', include_label=True,
+            source=WorkflowTransitionField
         )
         SourceColumn(
             attribute='get_widget_display', include_label=True,
-            label=_('Widget'), is_sortable=False,
+            label=_(message='Widget'), is_sortable=False,
             source=WorkflowTransitionField
         )
         SourceColumn(
@@ -504,103 +568,30 @@ class DocumentStatesApp(MayanAppConfig):
             source=WorkflowTransitionField
         )
 
-        SourceColumn(
-            func=lambda context: context['object'].get_document_count(
-                user=context['request'].user
-            ), include_label=True, label=_('Documents'), order=99,
-            source=WorkflowRuntimeProxy
-        )
-        SourceColumn(
-            func=lambda context: context['object'].get_document_count(
-                user=context['request'].user
-            ), include_label=True, label=_('Documents'), order=99,
-            source=WorkflowStateRuntimeProxy
-        )
+        # Workflow instance
 
         menu_list_facet.bind_links(
             links=(link_workflow_instance_list,), sources=(Document,)
         )
+        menu_list_facet.bind_links(
+            links=(link_workflow_instance_detail,),
+            sources=(WorkflowInstance,)
+        )
+        menu_object.bind_links(
+            links=(link_workflow_instance_transition,),
+            sources=(WorkflowInstance,)
+        )
         menu_secondary.bind_links(
             links=(link_document_single_workflow_templates_launch,),
             sources=(
+                WorkflowInstance,
                 'document_states:document_multiple_workflow_templates_launch',
                 'document_states:document_single_workflow_templates_launch',
-                'document_states:workflow_instance_list', WorkflowInstance
+                'document_states:workflow_instance_list'
             )
         )
 
-        menu_list_facet.bind_links(
-            exclude=(WorkflowRuntimeProxy,),
-            links=(
-                link_workflow_template_document_types,
-                link_workflow_template_state_list,
-                link_workflow_template_transition_list,
-                link_workflow_template_preview
-            ), sources=(Workflow,)
-        )
-
-        menu_list_facet.bind_links(
-            links=(
-                link_document_type_workflow_templates,
-            ), sources=(DocumentType,)
-        )
-
-        menu_main.bind_links(
-            links=(link_workflow_runtime_proxy_list,), position=20
-        )
-        menu_multi_item.bind_links(
-            links=(link_document_multiple_workflow_templates_launch,),
-            sources=(Document,)
-        )
-        menu_multi_item.bind_links(
-            links=(link_workflow_template_multiple_delete,),
-            sources=(Workflow,)
-        )
-        menu_object.bind_links(
-            exclude=(WorkflowRuntimeProxy,),
-            links=(
-                link_workflow_template_single_delete,
-                link_workflow_template_edit,
-                link_workflow_template_launch
-            ), sources=(Workflow,)
-        )
-        menu_object.bind_links(
-            exclude=(WorkflowStateRuntimeProxy,),
-            links=(
-                link_workflow_template_state_edit,
-                link_workflow_template_state_delete
-            ), sources=(WorkflowState,)
-        )
-        menu_object.bind_links(
-            links=(
-                link_workflow_template_transition_edit,
-                link_workflow_template_transition_delete
-            ), sources=(WorkflowTransition,)
-        )
-        menu_object.bind_links(
-            links=(
-                link_workflow_template_transition_field_delete,
-                link_workflow_template_transition_field_edit
-            ), sources=(WorkflowTransitionField,)
-        )
-        menu_object.bind_links(
-            links=(
-                link_workflow_instance_detail,
-                link_workflow_instance_transition
-            ), sources=(WorkflowInstance,)
-        )
-        menu_object.bind_links(
-            links=(
-                link_workflow_template_state_action_edit,
-                link_workflow_template_state_action_delete,
-            ), sources=(WorkflowStateAction,)
-        )
-        menu_object.bind_links(
-            links=(
-                link_workflow_template_state_escalation_edit,
-                link_workflow_template_state_escalation_delete,
-            ), sources=(WorkflowStateEscalation,)
-        )
+        # Workflow runtime proxy
 
         menu_list_facet.bind_links(
             links=(
@@ -609,16 +600,15 @@ class DocumentStatesApp(MayanAppConfig):
             ), sources=(WorkflowRuntimeProxy,)
         )
         menu_list_facet.bind_links(
-            exclude=(WorkflowStateRuntimeProxy,),
-            links=(
-                link_workflow_template_state_action_list,
-                link_workflow_template_state_escalation_list
-            ), sources=(WorkflowState,)
-        )
-        menu_list_facet.bind_links(
             links=(
                 link_workflow_runtime_proxy_state_document_list,
             ), sources=(WorkflowStateRuntimeProxy,)
+        )
+
+        # Workflow template
+
+        menu_main.bind_links(
+            links=(link_workflow_runtime_proxy_list,), position=20
         )
         menu_list_facet.bind_links(
             links=(
@@ -626,10 +616,37 @@ class DocumentStatesApp(MayanAppConfig):
                 link_workflow_template_transition_field_list,
             ), sources=(WorkflowTransition,)
         )
-
+        menu_list_facet.bind_links(
+            links=(
+                link_document_type_workflow_template_list,
+            ), sources=(DocumentType,)
+        )
+        menu_list_facet.bind_links(
+            exclude=(WorkflowRuntimeProxy,),
+            links=(
+                link_workflow_template_document_type_list,
+                link_workflow_template_state_list,
+                link_workflow_template_transition_list,
+                link_workflow_template_preview
+            ), sources=(Workflow,)
+        )
+        menu_multi_item.bind_links(
+            links=(link_document_multiple_workflow_templates_launch,),
+            sources=(Document,)
+        )
+        menu_multi_item.bind_links(
+            links=(link_workflow_template_delete_multiple,),
+            sources=(Workflow,)
+        )
+        menu_object.bind_links(
+            exclude=(WorkflowRuntimeProxy,), links=(
+                link_workflow_template_delete_single,
+                link_workflow_template_edit,
+                link_workflow_template_launch
+            ), sources=(Workflow,)
+        )
         menu_related.bind_links(
-            links=(link_workflow_template_list,),
-            sources=(
+            links=(link_workflow_template_list,), sources=(
                 DocumentType, 'documents:document_type_list',
                 'documents:document_type_create'
             )
@@ -642,53 +659,104 @@ class DocumentStatesApp(MayanAppConfig):
                 'document_states:workflow_template_list'
             )
         )
-        menu_secondary.bind_links(
-            exclude=(WorkflowRuntimeProxy,),
-            links=(link_workflow_template_list, link_workflow_template_create),
-            sources=(
+        menu_return.bind_links(
+            exclude=(WorkflowRuntimeProxy,), links=(
+                link_workflow_template_list,
+            ), sources=(
                 Workflow, 'document_states:workflow_template_create',
                 'document_states:workflow_template_list'
             )
         )
         menu_secondary.bind_links(
-            links=(link_workflow_template_transition_field_create,),
-            sources=(
-                WorkflowTransition,
+            exclude=(WorkflowRuntimeProxy,), links=(
+                link_workflow_template_create,
+            ), sources=(
+                Workflow, 'document_states:workflow_template_create',
+                'document_states:workflow_template_list'
             )
+        )
+        menu_setup.bind_links(
+            links=(link_workflow_template_setup,)
+        )
+        menu_tools.bind_links(
+            links=(link_tool_launch_workflows,)
+        )
+
+        # Workflow template escalation
+
+        menu_object.bind_links(
+            links=(
+                link_workflow_template_state_escalation_edit,
+                link_workflow_template_state_escalation_delete,
+            ), sources=(WorkflowStateEscalation,)
+        )
+
+        # Workflow template state
+
+        menu_list_facet.bind_links(
+            exclude=(WorkflowStateRuntimeProxy,),
+            links=(
+                link_workflow_template_state_action_list,
+                link_workflow_template_state_escalation_list
+            ), sources=(WorkflowState,)
+        )
+        menu_object.bind_links(
+            exclude=(WorkflowStateRuntimeProxy,),
+            links=(
+                link_workflow_template_state_edit,
+                link_workflow_template_state_delete
+            ), sources=(WorkflowState,)
         )
         menu_secondary.bind_links(
             links=(
                 link_workflow_template_state_action_selection,
                 link_workflow_template_state_escalation_create
-            ), sources=(
-                WorkflowState,
-            )
+            ), sources=(WorkflowState,)
         )
         menu_secondary.bind_links(
-            links=(
-                link_workflow_template_transition_create,
-            ), sources=(
-                WorkflowTransition,
-                'document_states:workflow_template_transition_create',
-                'document_states:workflow_template_transition_list'
-            )
-        )
-        menu_secondary.bind_links(
-            links=(
-                link_workflow_template_state_create,
-            ), sources=(
+            links=(link_workflow_template_state_create,), sources=(
                 WorkflowState,
                 'document_states:workflow_template_state_create',
                 'document_states:workflow_template_state_list'
             )
         )
 
-        menu_setup.bind_links(
-            links=(link_workflow_template_list,)
+        # Workflow template state action
+
+        menu_object.bind_links(
+            links=(
+                link_workflow_template_state_action_edit,
+                link_workflow_template_state_action_delete,
+            ), sources=(WorkflowStateAction,)
         )
 
-        menu_tools.bind_links(
-            links=(link_tool_launch_workflows,)
+        # Workflow template transition
+
+        menu_object.bind_links(
+            links=(
+                link_workflow_template_transition_edit,
+                link_workflow_template_transition_delete
+            ), sources=(WorkflowTransition,)
+        )
+        menu_secondary.bind_links(
+            links=(link_workflow_template_transition_field_create,),
+            sources=(WorkflowTransition,)
+        )
+
+        # Workflow template transition field
+
+        menu_object.bind_links(
+            links=(
+                link_workflow_template_transition_field_delete,
+                link_workflow_template_transition_field_edit
+            ), sources=(WorkflowTransitionField,)
+        )
+        menu_secondary.bind_links(
+            links=(link_workflow_template_transition_create,), sources=(
+                WorkflowTransition,
+                'document_states:workflow_template_transition_create',
+                'document_states:workflow_template_transition_list'
+            )
         )
 
         post_migrate.connect(

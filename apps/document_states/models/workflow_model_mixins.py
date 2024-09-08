@@ -9,14 +9,14 @@ from django.core import serializers
 from django.db import IntegrityError
 from django.urls import reverse
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.file_caching.models import CachePartitionFile
 
 from ..events import event_workflow_template_edited
 from ..literals import (
-    STORAGE_NAME_WORKFLOW_CACHE, SYMBOL_MATH_CONDITIONAL,
-    WORKFLOW_ACTION_ON_ENTRY
+    GRAPHVIZ_RANKDIR, GRAPHVIZ_RANKSEP, GRAPHVIZ_SPLINES,
+    STORAGE_NAME_WORKFLOW_CACHE
 )
 
 logger = logging.getLogger(name=__name__)
@@ -37,6 +37,22 @@ class WorkflowBusinessLogicMixin:
             name='{}'.format(self.pk)
         )
         return partition
+
+    def do_diagram_generate(self):
+        diagram = Digraph(
+            name='finite_state_machine', graph_attr={
+                'rankdir': GRAPHVIZ_RANKDIR, 'ranksep': GRAPHVIZ_RANKSEP,
+                'splines': GRAPHVIZ_SPLINES
+            }, format='png'
+        )
+
+        for state in self.states.order_by('completion', 'label'):
+            state.do_diagram_generate(diagram=diagram)
+
+        for transition in self.transitions.all():
+            transition.do_diagram_generate(diagram=diagram)
+
+        return diagram.pipe()
 
     def document_types_add(self, queryset, user):
         for model_instance in queryset.all():
@@ -71,7 +87,7 @@ class WorkflowBusinessLogicMixin:
                 'workflow cache file "%s" not found', cache_filename
             )
 
-            image = self.render()
+            image = self.do_diagram_generate()
             with self.cache_partition.create_file(filename=cache_filename) as file_object:
                 file_object.write(image)
         else:
@@ -85,8 +101,8 @@ class WorkflowBusinessLogicMixin:
         final_url = furl()
         final_url.args = kwargs
         final_url.path = reverse(
-            viewname='rest_api:workflow-template-image',
-            kwargs={'workflow_template_id': self.pk}
+            kwargs={'workflow_template_id': self.pk},
+            viewname='rest_api:workflow-template-image'
         )
         final_url.args['_hash'] = self.get_hash()
 
@@ -124,10 +140,11 @@ class WorkflowBusinessLogicMixin:
             return self.states.get(initial=True)
         except self.states.model.DoesNotExist:
             return None
-    get_initial_state.short_description = _('Initial state')
+    get_initial_state.short_description = _(message='Initial state')
 
     def launch_for(self, document, user=None):
-        if document.document_type in self.document_types.all():
+        queryset = self.document_types.all()
+        if queryset.filter(pk=document.document_type.pk).exists():
             try:
                 logger.info(
                     'Launching workflow %s for document %s', self, document
@@ -144,17 +161,12 @@ class WorkflowBusinessLogicMixin:
 
                 initial_state = self.get_initial_state()
                 if initial_state:
-                    for action in initial_state.entry_actions.filter(enabled=True):
-                        context = workflow_instance.get_context()
-                        context.update(
-                            {
-                                'action': action
-                            }
-                        )
-                        action.execute(
-                            context=context,
-                            workflow_instance=workflow_instance
-                        )
+                    initial_state.do_active_set(
+                        workflow_instance=workflow_instance
+                    )
+                    # TODO: Update once initial entry log patch is merged.
+                    # Break pattern by passing `workflow_instance`
+                    # until initial entry logs patch is merged.
             except IntegrityError:
                 logger.info(
                     'Workflow %s already launched for document %s',
@@ -170,107 +182,3 @@ class WorkflowBusinessLogicMixin:
                 'This workflow is not valid for the document type of the '
                 'document.'
             )
-
-    def render(self):
-        diagram = Digraph(
-            name='finite_state_machine', graph_attr={
-                'rankdir': 'LR', 'splines': 'polyline'
-            }, format='png'
-        )
-
-        action_cache = {}
-        state_cache = {}
-        transition_cache = []
-
-        for state in self.states.all():
-            state_cache[
-                's{}'.format(state.pk)
-            ] = {
-                'connections': {'origin': 0, 'destination': 0},
-                'initial': state.initial,
-                'label': state.label,
-                'name': 's{}'.format(state.pk)
-            }
-
-            for action in state.actions.all():
-                if action.has_condition():
-                    action_label = '{} {}'.format(
-                        SYMBOL_MATH_CONDITIONAL, action.label
-                    )
-                else:
-                    action_label = action.label
-
-                action_cache[
-                    'a{}'.format(action.pk)
-                ] = {
-                    'label': action_label,
-                    'name': 'a{}'.format(action.pk),
-                    'state': 's{}'.format(state.pk),
-                    'when': action.when
-                }
-
-        for transition in self.transitions.all():
-            if transition.has_condition():
-                transition_label = '{} {}'.format(
-                    SYMBOL_MATH_CONDITIONAL, transition.label
-                )
-            else:
-                transition_label = transition.label
-
-            transition_cache.append(
-                {
-                    'label': transition_label,
-                    'head_name': 's{}'.format(
-                        transition.destination_state.pk
-                    ),
-                    'tail_name': 's{}'.format(transition.origin_state.pk)
-                }
-            )
-
-            state_cache[
-                's{}'.format(transition.origin_state.pk)
-            ]['connections']['origin'] = state_cache[
-                's{}'.format(transition.origin_state.pk)
-            ]['connections']['origin'] + 1
-
-            state_cache[
-                's{}'.format(transition.destination_state.pk)
-            ]['connections']['destination'] += 1
-
-        for key, value in state_cache.items():
-            kwargs = {
-                'fillcolor': '#eeeeee',
-                'label': value['label'],
-                'name': value['name'],
-                'shape': 'doublecircle' if value['connections']['origin'] == 0 or value['connections']['destination'] == 0 or value['initial'] else 'circle',
-                'style': 'filled' if value['initial'] else ''
-            }
-            diagram.node(**kwargs)
-
-        for transition in transition_cache:
-            diagram.edge(**transition)
-
-        for key, value in action_cache.items():
-            kwargs = {
-                'label': value['label'],
-                'name': value['name'],
-                'shape': 'box'
-            }
-            diagram.node(**kwargs)
-            diagram.edge(
-                **{
-                    'arrowhead': 'dot',
-                    'arrowtail': 'dot',
-                    'dir': 'both',
-                    'label': 'On entry' if value['when'] == WORKFLOW_ACTION_ON_ENTRY else 'On exit',
-                    'head_name': '{}'.format(
-                        value['name']
-                    ),
-                    'style': 'dashed',
-                    'tail_name': '{}'.format(
-                        value['state']
-                    )
-                }
-            )
-
-        return diagram.pipe()

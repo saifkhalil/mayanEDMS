@@ -1,6 +1,6 @@
 from mayan.apps.documents.permissions import (
-    permission_document_view, permission_document_file_view,
-    permission_document_version_view
+    permission_document_file_view, permission_document_version_view,
+    permission_document_view
 )
 from mayan.apps.documents.search import (
     search_model_document, search_model_document_file,
@@ -8,10 +8,14 @@ from mayan.apps.documents.search import (
     search_model_document_version_page
 )
 from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentViewTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentViewTestMixin
+)
 from mayan.apps.dynamic_search.literals import SEARCH_MODEL_NAME_KWARG
 from mayan.apps.dynamic_search.tests.mixins.base import SearchTestMixin
-from mayan.apps.dynamic_search.tests.mixins.view_mixins import SearchViewTestMixin
+from mayan.apps.dynamic_search.tests.mixins.search_view_mixins import (
+    SearchViewTestMixin
+)
 
 from ..permissions import permission_tag_view
 

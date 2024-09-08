@@ -1,60 +1,59 @@
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.databases.model_mixins import BackendModelMixin
-from mayan.apps.events.classes import EventManagerSave
+from mayan.apps.backends.model_mixins import BackendModelMixin
+from mayan.apps.databases.model_mixins import ExtraDataModelMixin
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerSave
 
-from .classes import NullBackend
-from .events import event_profile_created, event_profile_edited
+from .classes import MailerBackendNull
+from .events import (
+    event_mailing_profile_created, event_mailing_profile_edited
+)
 from .managers import UserMailerManager
 from .model_mixins import UserMailerBusinessLogicMixin
 
 
 class UserMailer(
-    BackendModelMixin, UserMailerBusinessLogicMixin, models.Model
+    BackendModelMixin, ExtraDataModelMixin, UserMailerBusinessLogicMixin,
+    models.Model
 ):
     """
-    This model is used to create mailing profiles that can be used from inside
-    the system. These profiles differ from the system mailing profile in that
-    they can be created at runtime and can be assigned ACLs to restrict
-    their use.
+    This model is used to create mailing profiles that can be used from
+    inside the system. These profiles differ from the system mailing
+    profile in that they can be created at runtime and can be assigned
+    ACLs to restrict their use.
     """
-    _backend_model_null_backend = NullBackend
+    _backend_model_null_backend = MailerBackendNull
+    _ordering_fields = ('default', 'enabled', 'label')
 
     label = models.CharField(
-        help_text=_('A short text describing the mailing profile.'),
-        max_length=128, unique=True, verbose_name=_('Label')
+        help_text=_(message='A short text describing the mailing profile.'),
+        max_length=128, unique=True, verbose_name=_(message='Label')
     )
     default = models.BooleanField(
         default=True, help_text=_(
-            'If default, this mailing profile will be pre-selected on the '
-            'document mailing form.'
-        ), verbose_name=_('Default')
+            message='If default, this mailing profile will be '
+            'pre-selected on the document mailing form.'
+        ), verbose_name=_(message='Default')
     )
-    enabled = models.BooleanField(default=True, verbose_name=_('Enabled'))
-    backend_path = models.CharField(
-        max_length=128,
-        help_text=_('The dotted Python path to the backend class.'),
-        verbose_name=_('Backend path')
-    )
-    backend_data = models.TextField(
-        blank=True, verbose_name=_('Backend data')
+    enabled = models.BooleanField(
+        default=True, verbose_name=_(message='Enabled')
     )
 
     objects = UserMailerManager()
 
     class Meta:
         ordering = ('label',)
-        verbose_name = _('Mailing profile')
-        verbose_name_plural = _('Mailing profiles')
+        verbose_name = _(message='Mailing profile')
+        verbose_name_plural = _(message='Mailing profiles')
 
     def __str__(self):
         return self.label
 
     def get_absolute_url(self):
-        return reverse(viewname='mailer:user_mailer_list')
+        return reverse(viewname='mailer:mailing_profile_list')
 
     def natural_key(self):
         return (self.label,)
@@ -62,11 +61,11 @@ class UserMailer(
     @method_event(
         event_manager_class=EventManagerSave,
         created={
-            'event': event_profile_created,
+            'event': event_mailing_profile_created,
             'target': 'self'
         },
         edited={
-            'event': event_profile_edited,
+            'event': event_mailing_profile_edited,
             'target': 'self'
         }
     )

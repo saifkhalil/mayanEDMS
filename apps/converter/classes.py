@@ -5,20 +5,20 @@ import os
 import shutil
 
 import PIL
-from PIL import Image
+from PIL import Image, ImageFile
 import sh
 
 from django.apps import apps
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
+from django.template import loader
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.appearance.classes import Icon
 from mayan.apps.mime_types.classes import MIMETypeBackend
-from mayan.apps.navigation.classes import Link
+from mayan.apps.navigation.links import Link
 from mayan.apps.storage.compressed_files import MsgArchive
 from mayan.apps.storage.literals import MSG_MIME_TYPES
 from mayan.apps.storage.settings import setting_temporary_directory
@@ -27,14 +27,16 @@ from mayan.apps.storage.utils import (
 )
 
 from .exceptions import (
-    InvalidOfficeFormat, LayerError, OfficeConversionError
+    AppImageError, InvalidOfficeFormat, LayerError, OfficeConversionError
 )
 from .literals import (
     CONVERTER_OFFICE_FILE_MIMETYPES, DEFAULT_LIBREOFFICE_PATH,
-    DEFAULT_PAGE_NUMBER, DEFAULT_PILLOW_FORMAT
+    DEFAULT_PAGE_NUMBER, DEFAULT_PILLOW_FORMAT, MAP_PILLOW_FORMAT_TO_MIME_TYPE
 )
+from .literals import IMAGE_ERROR_BROKEN_FILE
 from .settings import (
-    setting_graphics_backend, setting_graphics_backend_arguments
+    setting_graphics_backend, setting_graphics_backend_arguments,
+    setting_load_truncated_images
 )
 
 logger = logging.getLogger(name=__name__)
@@ -51,6 +53,10 @@ class AppImageErrorImage:
     _registry = {}
 
     @classmethod
+    def all(cls):
+        return cls._registry.values()
+
+    @classmethod
     def get(cls, name):
         return cls._registry[name]
 
@@ -63,11 +69,15 @@ class AppImageErrorImage:
         self.name = name
         self.image_path = image_path
         self.template_name = template_name
+        self.template = loader.get_template(template_name=self.template_name)
 
         self.__class__._registry[name] = self
 
     def open(self):
         return staticfiles_storage.open(name=self.image_path, mode='rb')
+
+    def render(self, context=None):
+        return self.template.render(context=context)
 
 
 class ConverterBase:
@@ -75,7 +85,17 @@ class ConverterBase:
     def get_converter_class():
         return import_string(dotted_path=setting_graphics_backend.value)
 
+    @staticmethod
+    def get_output_content_type():
+        output_format = setting_graphics_backend_arguments.value.get(
+            'pillow_format', DEFAULT_PILLOW_FORMAT
+        )
+
+        return MAP_PILLOW_FORMAT_TO_MIME_TYPE.get(output_format)
+
     def __init__(self, file_object, mime_type=None):
+        ImageFile.LOAD_TRUNCATED_IMAGES = setting_load_truncated_images.value
+
         self.file_object = file_object
         self.image = None
 
@@ -141,16 +161,36 @@ class ConverterBase:
             # Cannot identify image file.
             self.image = self.convert(page_number=page_number)
         except PIL.Image.DecompressionBombError as exception:
-            logger.error(
-                msg='Unable to seek document page. Increase the value of '
-                'the argument "pillow_maximum_image_pixels" in the '
-                'CONVERTER_GRAPHICS_BACKEND_ARGUMENTS setting; %s',
-                args=(exception,)
+            error_message = 'Unable to seek document page. Increase the '
+            'value of the argument "pillow_maximum_image_pixels" in the '
+            'CONVERTER_GRAPHICS_BACKEND_ARGUMENTS setting; {}'.format(
+                exception
             )
-            raise
+            logger.error(error_message)
+            raise AppImageError(
+                details=error_message, error_name=IMAGE_ERROR_BROKEN_FILE
+            )
         else:
-            self.image.seek(frame=page_number)
-            self.image.load()
+            try:
+                self.image.seek(frame=page_number)
+            except Exception as exception:
+                error_message = 'Unable to seek document page; {}'.format(
+                    exception
+                )
+                raise AppImageError(
+                    details=error_message, error_name=IMAGE_ERROR_BROKEN_FILE
+                )
+            else:
+                try:
+                    self.image.load()
+                except Exception as exception:
+                    error_message = 'Unable to load document page; {}'.format(
+                        exception
+                    )
+                    raise AppImageError(
+                        details=error_message,
+                        error_name=IMAGE_ERROR_BROKEN_FILE
+                    )
 
     def soffice(self):
         """
@@ -158,7 +198,7 @@ class ConverterBase:
         """
         if not self.command_libreoffice:
             raise OfficeConversionError(
-                _('LibreOffice not installed or not found.')
+                _(message='LibreOffice not installed or not found.')
             )
 
         with NamedTemporaryFile() as temporary_file_object:
@@ -264,7 +304,7 @@ class ConverterBase:
             return self.soffice()
         else:
             raise InvalidOfficeFormat(
-                _('Not an office file format.')
+                _(message='Not an office file format.')
             )
 
     def transform(self, transformation):
@@ -309,16 +349,16 @@ class Layer:
             layer.stored_layer
 
     def __init__(
-        self, label, name, order, permissions, default=False,
-        empty_results_text=None, symbol=None
+        self, label, name, order, permission_map, default=False,
+        empty_results_text=None, icon=None
     ):
         self.default = default
         self.empty_results_text = empty_results_text
         self.label = label
         self.name = name
         self.order = order
-        self.permissions = permissions
-        self.symbol = symbol
+        self.permission_map = permission_map
+        self.icon = icon
 
         # Check order
         layer = self.__class__.get_by_value(key='order', value=self.order)
@@ -400,13 +440,10 @@ class Layer:
             return self.empty_results_text
         else:
             return _(
-                'Transformations allow changing the visual appearance '
+                message='Transformations allow changing the visual appearance '
                 'of documents without making permanent changes to the '
                 'document file themselves.'
             )
-
-    def get_icon(self):
-        return Icon(driver_name='fontawesome', symbol=self.symbol)
 
     def get_model_instance(self):
         StoredLayer = apps.get_model(
@@ -419,7 +456,7 @@ class Layer:
         return stored_layer
 
     def get_permission(self, action):
-        return self.permissions.get(action, None)
+        return self.permission_map.get(action, None)
 
     def get_transformations_for(self, obj, as_classes=False):
         """
@@ -460,8 +497,8 @@ class LayerLink(Link):
     def get_icon(self, context):
         if self.action == 'view':
             layer = self.get_layer(context=context)
-            if layer and layer.symbol:
-                return layer.get_icon()
+            if layer and layer.icon:
+                return layer.icon
 
         return super().get_icon(context=context)
 
@@ -517,11 +554,11 @@ class LayerLink(Link):
             except KeyError:
                 return None
 
-    def get_permissions(self, context):
+    def get_permission(self, context):
         layer = self.get_layer(context=context)
         permission = layer.get_permission(action=self.action)
 
         if permission:
-            return (permission,)
+            return permission
         else:
-            return ()
+            return None

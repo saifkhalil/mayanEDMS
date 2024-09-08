@@ -1,11 +1,13 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.acls.permissions import permission_acl_edit, permission_acl_view
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.acls.permissions import (
+    permission_acl_edit, permission_acl_view
+)
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import menu_object, menu_tools
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 
 from .classes import DefinedStorage
 from .events import event_download_file_downloaded
@@ -22,9 +24,10 @@ from .permissions import (
 class StorageApp(MayanAppConfig):
     app_namespace = 'storage'
     app_url = 'storage'
+    has_rest_api = True
     has_tests = True
     name = 'mayan.apps.storage'
-    verbose_name = _('Storage')
+    verbose_name = _(message='Storage')
 
     def ready(self):
         super().ready()
@@ -76,4 +79,6 @@ class StorageApp(MayanAppConfig):
                 link_download_file_delete, link_download_file_download,
             ), sources=(DownloadFile,)
         )
-        menu_tools.bind_links(links=(link_download_file_list,))
+        menu_tools.bind_links(
+            links=(link_download_file_list,)
+        )

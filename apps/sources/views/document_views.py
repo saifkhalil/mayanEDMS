@@ -3,47 +3,60 @@ import logging
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.acls.models import AccessControlList
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.documents.models.document_type_models import DocumentType
 from mayan.apps.documents.permissions import permission_document_create
+from mayan.apps.views.utils import request_is_ajax
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from ..forms import NewDocumentForm
-from ..icons import icon_document_create_multiple
-from ..models import Source
+from ..icons import icon_document_upload_wizard
 
 from .base import UploadBaseView
 
-__all__ = ('DocumentUploadInteractiveView',)
 logger = logging.getLogger(name=__name__)
 
 
-class DocumentUploadInteractiveView(ExternalObjectViewMixin, UploadBaseView):
+class DocumentUploadView(ExternalObjectViewMixin, UploadBaseView):
+    document_form = NewDocumentForm
     external_object_class = DocumentType
     external_object_permission = permission_document_create
-    document_form = NewDocumentForm
     object_permission = permission_document_create
-    view_icon = icon_document_create_multiple
+    source_link_view_name = 'sources:document_upload'
+    view_icon = icon_document_upload_wizard
+    view_source_action = 'document_upload'
 
     def forms_valid(self, forms):
-        source_backend_instance = self.source.get_backend_instance()
+        action = self.source.get_action(name='document_upload')
+
+        interface_load_kwargs = {
+            'document_type': self.external_object, 'forms': forms,
+            'request': self.request, 'view': self
+        }
 
         try:
-            source_backend_instance.process_documents(
-                document_type=self.external_object, forms=forms,
-                request=self.request
+            Document.execute_pre_create_hooks(
+                kwargs={
+                    'document_type': self.external_object,
+                    'file_object': None,
+                    'user': self.request.user
+                }
+            )
+            action.execute(
+                interface_name='View',
+                interface_load_kwargs=interface_load_kwargs
             )
         except Exception as exception:
             message = _(
-                'Error processing source document upload; '
+                message='Error processing source document upload; '
                 '%(exception)s'
             ) % {
-                'exception': exception
+                'exception': exception,
             }
             logger.critical(msg=message, exc_info=True)
-            if self.request.is_ajax():
+            if request_is_ajax(request=self.request):
                 return JsonResponse(
                     data={
                         'error': str(message)
@@ -54,34 +67,23 @@ class DocumentUploadInteractiveView(ExternalObjectViewMixin, UploadBaseView):
                     message=message.replace('\n', ' '),
                     request=self.request
                 )
-                raise type(exception)(message)
+                raise type(exception)(message) from exception
         else:
             messages.success(
                 message=_(
-                    'New document queued for upload and will be '
+                    message='New document queued for upload and will be '
                     'available shortly.'
                 ), request=self.request
             )
 
-        return HttpResponseRedirect(
-            redirect_to='{}?{}'.format(
-                reverse(
-                    viewname=self.request.resolver_match.view_name,
-                    kwargs=self.request.resolver_match.kwargs
-                ), self.request.META['QUERY_STRING']
+            return HttpResponseRedirect(
+                redirect_to='{}?{}'.format(
+                    reverse(
+                        kwargs=self.request.resolver_match.kwargs,
+                        viewname=self.request.resolver_match.view_name
+                    ), self.request.META['QUERY_STRING']
+                ),
             )
-        )
-
-    def get_active_tab_links(self):
-        sources = AccessControlList.objects.restrict_queryset(
-            permission=permission_document_create,
-            queryset=Source.objects.interactive().filter(enabled=True),
-            user=self.request.user
-        )
-        return [
-            UploadBaseView.get_tab_link_for_source(source=source)
-            for source in sources
-        ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -89,8 +91,8 @@ class DocumentUploadInteractiveView(ExternalObjectViewMixin, UploadBaseView):
             {
                 'document_type': self.external_object,
                 'title': _(
-                    'Upload a document of type "%(document_type)s" from '
-                    'source: %(source)s'
+                    message='Upload a document of type "%(document_type)s" '
+                    'from source: %(source)s'
                 ) % {
                     'document_type': self.external_object,
                     'source': self.source.label
@@ -101,14 +103,10 @@ class DocumentUploadInteractiveView(ExternalObjectViewMixin, UploadBaseView):
         return context
 
     def get_form_extra_kwargs__document_form(self):
-        return {
-            'document_type': self.external_object
-        }
+        return {'document_type': self.external_object}
 
     def get_form_extra_kwargs__source_form(self):
-        return {
-            'source': self.source
-        }
+        return {'source': self.source}
 
     def get_pk_url_kwargs(self):
         return {

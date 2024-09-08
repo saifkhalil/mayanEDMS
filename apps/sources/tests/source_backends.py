@@ -1,37 +1,21 @@
-from ..classes import SourceBackend
-from ..source_backends.email_backends import SourceBackendEmailMixin
-from ..source_backends.mixins import (
-    SourceBaseMixin, SourceBackendPeriodicMixin
-)
+from ..source_backends.base import SourceBackend
 
-__all__ = (
-    'SourceBackendSimple', 'SourceBackendTestPeriodic',
-    'SourceBackendTestEmail'
+from .source_backend_actions import (
+    SourceBackendActionDocumentUploadBasicInteractive,
+    SourceBackendActionTestConfirmFalse, SourceBackendActionTestConfirmTrue
 )
 
 
-class SourceBackendSimple(SourceBaseMixin, SourceBackend):
+class SourceBackendDocumentUploadTest(SourceBackend):
+    action_class_list = (
+        SourceBackendActionDocumentUploadBasicInteractive,
+    )
+    label = 'Test source backend document upload'
+
+
+class SourceBackendTest(SourceBackend):
+    action_class_list = (
+        SourceBackendActionTestConfirmFalse,
+        SourceBackendActionTestConfirmTrue
+    )
     label = 'Test source backend'
-
-    def process_documents(self, dry_run=False):
-        """Do nothing. This method is added to allow view testing."""
-
-
-class SourceBackendTestPeriodic(
-    SourceBackendPeriodicMixin, SourceBaseMixin, SourceBackend
-):
-    label = 'Test periodic source backend'
-
-
-class SourceBackendTestEmail(
-    SourceBackendEmailMixin, SourceBackendPeriodicMixin, SourceBaseMixin,
-    SourceBackend
-):
-    label = 'Test email source backend'
-
-    def get_shared_uploaded_files(self):
-        data = self.get_model_instance().get_backend_data()
-
-        message = getattr(self, 'content', data.get('_test_content'))
-
-        return self.process_message(message=message)

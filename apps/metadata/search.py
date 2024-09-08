@@ -1,9 +1,7 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.search import (
-    search_model_document_file, search_model_document_file_page, search_model_document,
-    search_model_document_version, search_model_document_version_page
-)
+from mayan.apps.documents.permissions import permission_document_view
+from mayan.apps.documents.search import search_model_document
 from mayan.apps.dynamic_search.search_models import SearchModel
 
 from .permissions import permission_metadata_type_view
@@ -11,55 +9,38 @@ from .permissions import permission_metadata_type_view
 # Document
 
 search_model_document.add_model_field(
-    field='metadata__metadata_type__name', label=_('Metadata type')
+    field='metadata__metadata_type__name', label=_(message='Metadata type')
 )
 search_model_document.add_model_field(
-    field='metadata__value', label=_('Metadata value')
+    field='metadata__value', label=_(message='Metadata value')
 )
 
-# Document file
+# Document metadata
 
-search_model_document_file.add_model_field(
-    field='document__metadata__metadata_type__name',
-    label=_('Document metadata type')
-)
-search_model_document_file.add_model_field(
-    field='document__metadata__value',
-    label=_('Document metadata value')
+search_model_document_metadata = SearchModel(
+    app_label='metadata', label=_(message='Document metadata'),
+    model_name='DocumentMetadataSearchResult',
+    permission=permission_document_view,
+    serializer_path='mayan.apps.metadata.serializers.DocumentMetadataSerializer'
 )
 
-# Document file page
-
-search_model_document_file_page.add_model_field(
-    field='document_file__document__metadata__metadata_type__name',
-    label=_('Document metadata type')
-)
-search_model_document_file_page.add_model_field(
-    field='document_file__document__metadata__value',
-    label=_('Document metadata value')
+search_model_document_metadata.add_proxy_model(
+    app_label='metadata', model_name='DocumentMetadata'
 )
 
-# Document version
-
-search_model_document_version.add_model_field(
-    field='document__metadata__metadata_type__name',
-    label=_('Document metadata type')
+search_model_document_metadata.add_model_field(
+    field='document__document_type__id',
+    label=_(message='Document type ID')
 )
-search_model_document_version.add_model_field(
-    field='document__metadata__value',
-    label=_('Document metadata value')
+search_model_document_metadata.add_model_field(
+    field='document__document_type__label',
+    label=_(message='Document type label')
 )
-
-# Document version page
-
-search_model_document_version_page.add_model_field(
-    field='document_version__document__metadata__metadata_type__name',
-    label=_('Document metadata type')
+search_model_document_metadata.add_model_field(
+    field='metadata_type__id', label=_(message='Metadata type ID')
 )
-search_model_document_version_page.add_model_field(
-    field='document_version__document__metadata__value',
-    label=_('Document metadata value')
-)
+search_model_document_metadata.add_model_field(field='metadata_type__name')
+search_model_document_metadata.add_model_field(field='value')
 
 # Metadata type
 

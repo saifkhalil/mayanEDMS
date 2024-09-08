@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import FormView, SingleObjectListView
 from mayan.apps.views.view_mixins import ExternalContentTypeObjectViewMixin
@@ -35,12 +35,12 @@ class EventTypeSubscriptionListView(FormView):
         except Exception as exception:
             messages.error(
                 message=_(
-                    'Error updating event subscription; %s'
+                    message='Error updating event subscription; %s'
                 ) % exception, request=self.request
             )
         else:
             messages.success(
-                message=_('Event subscriptions updated successfully'),
+                message=_(message='Event subscriptions updated successfully'),
                 request=self.request
             )
 
@@ -51,7 +51,7 @@ class EventTypeSubscriptionListView(FormView):
             'form_display_mode_table': True,
             'object': self.get_object(),
             'title': _(
-                'Event subscriptions'
+                message='Event subscriptions'
             ) % self.get_object()
         }
 
@@ -114,13 +114,13 @@ class ObjectEventTypeSubscriptionListView(
         except Exception as exception:
             messages.error(
                 message=_(
-                    'Error updating object event subscription; %s'
+                    message='Error updating object event subscription; %s'
                 ) % exception, request=self.request
             )
         else:
             messages.success(
                 message=_(
-                    'Object event subscriptions updated successfully'
+                    message='Object event subscriptions updated successfully'
                 ), request=self.request
             )
 
@@ -131,7 +131,7 @@ class ObjectEventTypeSubscriptionListView(
             'form_display_mode_table': True,
             'object': self.external_object,
             'title': _(
-                'Event subscriptions for: %s'
+                message='Event subscriptions for: %s'
             ) % self.external_object
         }
 
@@ -161,12 +161,12 @@ class UserObjectSubscriptionList(SingleObjectListView):
             'hide_object': True,
             'no_results_icon': icon_user_object_subscriptions_list,
             'no_results_text': _(
-                'Subscribe to the events of an object to received '
+                message='Subscribe to the events of an object to receive '
                 'notifications when those events occur.'
             ),
-            'no_results_title': _('There are no object event subscriptions'),
+            'no_results_title': _(message='There are no object event subscriptions'),
             'object': self.request.user,
-            'title': _('Object event subscriptions')
+            'title': _(message='Object event subscriptions')
         }
 
     def get_source_queryset(self):

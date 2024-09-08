@@ -1,32 +1,39 @@
 import hashlib
+from itertools import islice
 import logging
 import shutil
 
 from django.apps import apps
+from django.template.defaultfilters import filesizeformat
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.databases.classes import ModelQueryFields
+from mayan.apps.common.signals import signal_mayan_pre_save
 from mayan.apps.converter.classes import ConverterBase
 from mayan.apps.converter.exceptions import (
-    InvalidOfficeFormat, PageCountError
+    AppImageError, InvalidOfficeFormat, PageCountError
 )
-from mayan.apps.events.classes import EventManagerMethodAfter
+from mayan.apps.databases.classes import ModelQueryFields
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerMethodAfter
 from mayan.apps.file_caching.models import CachePartitionFile
 from mayan.apps.mime_types.classes import MIMETypeBackend
+from mayan.apps.storage.model_mixins import ModelMixinFileFieldOpen
 
+from ..classes import DocumentFileAction
 from ..events import event_document_file_created, event_document_file_edited
-from ..literals import STORAGE_NAME_DOCUMENT_FILE_PAGE_IMAGE_CACHE
-from ..settings import setting_hash_block_size
-from ..signals import (
-    signal_post_document_created, signal_post_document_file_upload
+from ..literals import (
+    DOCUMENT_FILE_PAGE_CREATE_BATCH_SIZE, ERROR_LOG_DOMAIN_NAME,
+    IMAGE_ERROR_DOCUMENT_FILE_HAS_NO_PAGES,
+    STORAGE_NAME_DOCUMENT_FILE_PAGE_IMAGE_CACHE
 )
+from ..settings import setting_hash_block_size
+from ..signals import signal_post_document_file_upload
 
 logger = logging.getLogger(name=__name__)
 
 
-class DocumentFileBusinessLogicMixin:
+class DocumentFileBusinessLogicMixin(ModelMixinFileFieldOpen):
     @staticmethod
     def hash_function():
         return hashlib.sha256()
@@ -97,13 +104,16 @@ class DocumentFileBusinessLogicMixin:
                 self, self.document
             )
 
+            self.document.file_latest = self
             self.document.is_stub = False
+
             if not self.document.label:
-                self.document.label = str(self.file)
+                self.document.label = str(self)
 
             self.document._event_ignore = True
-            self.document.save(update_fields=('is_stub', 'label'))
-
+            self.document.save(
+                update_fields=('file_latest', 'is_stub', 'label')
+            )
         except Exception as exception:
             logger.error(
                 'Error creating new document file for document "%s"; %s',
@@ -113,20 +123,8 @@ class DocumentFileBusinessLogicMixin:
         else:
             return result
 
-    @method_event(
-        action_object='document',
-        event_manager_class=EventManagerMethodAfter,
-        event=event_document_file_edited,
-        target='self'
-    )
     def _introspect(self):
-        Document = apps.get_model(
-            app_label='documents', model_name='Document'
-        )
-
-        DocumentFile = apps.get_model(
-            app_label='documents', model_name='DocumentFile'
-        )
+        actor = getattr(self, '_event_actor', None)
 
         try:
             self.checksum_update(save=False)
@@ -147,19 +145,75 @@ class DocumentFileBusinessLogicMixin:
             self.page_count_update(save=False)
         except Exception as exception:
             logger.error(
-                'Error introspecting new document file for document "%s"; %s',
+                'Error introspecting new document file for document '
+                '"%s"; %s', self.document, exception, exc_info=True
+            )
+            raise
+        else:
+            event_document_file_edited.commit(
+                action_object=self.document, actor=actor, target=self
+            )
+
+            self.upload_complete()
+
+    def _open(self, raw=False, **kwargs):
+        """
+        Return a file descriptor to a document file's file irrespective of
+        the storage backend.
+        """
+        DocumentFile = apps.get_model(
+            app_label='documents', model_name='DocumentFile'
+        )
+
+        if raw:
+            return self.file.storage.open(**kwargs)
+        else:
+            file_object = self.file.storage.open(**kwargs)
+
+            result = DocumentFile._execute_hooks(
+                hook_list=DocumentFile._pre_open_hooks,
+                instance=self, file_object=file_object
+            )
+
+            if result:
+                return result['file_object']
+            else:
+                return file_object
+
+    @method_event(
+        action_object='document',
+        event_manager_class=EventManagerMethodAfter,
+        event=event_document_file_edited,
+        target='self'
+    )
+    def _save(self, *args, **kwargs):
+        DocumentFile = apps.get_model(
+            app_label='documents', model_name='DocumentFile'
+        )
+
+        user = getattr(self, '_event_actor', None)
+
+        try:
+            self.execute_pre_save_hooks()
+
+            signal_mayan_pre_save.send(
+                instance=self, sender=DocumentFile, user=user
+            )
+
+            result = super().save(*args, **kwargs)
+
+            DocumentFile._execute_hooks(
+                hook_list=DocumentFile._post_save_hooks,
+                instance=self
+            )
+        except Exception as exception:
+            logger.error(
+                'Error saving document file for document "%s"; %s',
                 self.document, exception, exc_info=True
             )
             raise
         else:
-            signal_post_document_file_upload.send(
-                sender=DocumentFile, instance=self
-            )
-
-            if tuple(self.document.files.all()) == (self,):
-                signal_post_document_created.send(
-                    instance=self.document, sender=Document
-                )
+            return result
 
     @cached_property
     def cache(self):
@@ -186,9 +240,9 @@ class DocumentFileBusinessLogicMixin:
 
         block_size = setting_hash_block_size.value
         if block_size == 0:
-            # If the setting value is 0 that means disable read limit. To disable
-            # the read limit passing None won't work, we pass -1 instead as per
-            # the Python documentation.
+            # If the setting value is 0 that means disable read limit.
+            # To disable the read limit passing None won't work, we pass
+            # -1 instead as per the Python documentation.
             # https://docs.python.org/2/tutorial/inputoutput.html#methods-of-file-objects
             block_size = -1
 
@@ -202,9 +256,14 @@ class DocumentFileBusinessLogicMixin:
 
                     hash_object.update(data)
 
-            self.checksum = str(hash_object.hexdigest())
+            self.checksum = str(
+                hash_object.hexdigest()
+            )
+
             if save:
-                self.save(update_fields=('checksum',))
+                self.save(
+                    update_fields=('checksum',)
+                )
 
             return self.checksum
 
@@ -245,6 +304,10 @@ class DocumentFileBusinessLogicMixin:
                 transformation_instance_list=transformation_instance_list,
                 user=user
             )
+        else:
+            raise AppImageError(
+                error_name=IMAGE_ERROR_DOCUMENT_FILE_HAS_NO_PAGES
+            )
 
     def get_cache_partitions(self):
         result = [self.cache_partition]
@@ -253,11 +316,16 @@ class DocumentFileBusinessLogicMixin:
 
         return result
 
+    def get_document_file_latest(self):
+        return self.document.files.exclude(pk=self.pk).order_by('timestamp').only('id').last()
+
     def get_intermediate_file(self):
         cache_filename = 'intermediate_file'
 
         try:
-            cache_file = self.cache_partition.get_file(filename=cache_filename)
+            cache_file = self.cache_partition.get_file(
+                filename=cache_filename
+            )
         except CachePartitionFile.DoesNotExist:
             logger.debug(msg='Intermediate file not found.')
 
@@ -295,7 +363,12 @@ class DocumentFileBusinessLogicMixin:
 
     def get_label(self):
         return self.filename
-    get_label.short_description = _('Label')
+    get_label.short_description = _(message='Label')
+
+    def get_size_display(self):
+        return filesizeformat(bytes_=self.size)
+
+    get_size_display.short_description = _(message='Size')
 
     @property
     def is_in_trash(self):
@@ -303,7 +376,7 @@ class DocumentFileBusinessLogicMixin:
 
     def mimetype_update(self, save=True):
         """
-        Read a document verions's file and determine the mimetype by using
+        Read a document version's file and determine the mime type by using
         the MIME type backend.
         """
         if self.exists():
@@ -314,59 +387,62 @@ class DocumentFileBusinessLogicMixin:
                         file_object=file_object
                     )
             except Exception:
-                self.mimetype = ''
                 self.encoding = ''
+                self.mimetype = ''
             finally:
                 if save:
                     self.save(
                         update_fields=('encoding', 'mimetype')
                     )
 
-    def open(self, raw=False):
-        """
-        Return a file descriptor to a document file's file irrespective of
-        the storage backend.
-        """
-        DocumentFile = apps.get_model(
-            app_label='documents', model_name='DocumentFile'
-        )
-
-        name = self.file.name
-        self.file.close()
-        if raw:
-            return self.file.storage.open(name=name)
-        else:
-            file_object = self.file.storage.open(name=name)
-
-            result = DocumentFile._execute_hooks(
-                hook_list=DocumentFile._pre_open_hooks,
-                instance=self, file_object=file_object
-            )
-
-            if result:
-                return result['file_object']
-            else:
-                return file_object
-
     def page_count_update(self, save=True, user=None):
         try:
             with self.open() as file_object:
-                converter = ConverterBase.get_converter_class()(
+                converter_class = ConverterBase.get_converter_class()
+                converter = converter_class(
                     file_object=file_object, mime_type=self.mimetype
                 )
                 detected_pages = converter.get_page_count()
-        except PageCountError:
+        except PageCountError as exception:
             """Converter backend doesn't understand the format."""
+            self.error_log.create(
+                domain_name=ERROR_LOG_DOMAIN_NAME, text=exception
+            )
         else:
             DocumentFilePage = apps.get_model(
                 app_label='documents', model_name='DocumentFilePage'
             )
 
-            self.pages.all().delete()
+            queryset_error_logs = self.error_log.filter(
+                domain_name=ERROR_LOG_DOMAIN_NAME
+            )
+            queryset_error_logs.delete()
 
-            for page_number in range(detected_pages):
-                DocumentFilePage.objects.create(
+            for page in self.pages.all():
+                page._event_actor = user
+                page._event_ignore = True
+                page.delete()
+
+            document_file_pages = (
+                DocumentFilePage(
                     document_file=self, page_number=page_number + 1
+                ) for page_number in range(detected_pages)
+            )
+
+            while True:
+                batch = list(
+                    islice(
+                        document_file_pages,
+                        DOCUMENT_FILE_PAGE_CREATE_BATCH_SIZE
+                    )
+                )
+
+                if not batch:
+                    break
+
+                DocumentFilePage.objects.bulk_create(
+                    batch_size=DOCUMENT_FILE_PAGE_CREATE_BATCH_SIZE,
+                    objs=batch
                 )
 
             if save:
@@ -399,7 +475,7 @@ class DocumentFileBusinessLogicMixin:
 
     def size_update(self, save=True):
         """
-        Get a document version's file size from the storage layer and store
+        Get a document file's disk file size from the storage layer and store
         it into the model.
         """
         if self.exists():
@@ -412,7 +488,26 @@ class DocumentFileBusinessLogicMixin:
                     update_fields=('size',)
                 )
 
+    def upload_complete(self):
+        DocumentFile = apps.get_model(
+            app_label='documents', model_name='DocumentFile'
+        )
+
+        signal_post_document_file_upload.send(
+            sender=DocumentFile, instance=self
+        )
+
     @property
     def uuid(self):
         # Make cache UUID a mix of document UUID, file ID.
         return '{}-{}'.format(self.document.uuid, self.pk)
+
+    def versions_new(self, action_name, comment=None, user=None):
+        DocumentFileAction.get(name=action_name).execute(
+            comment=comment, document=self.document, document_file=self,
+            user=user
+        )
+
+    versions_new.help_text = _(
+        'Controls what happens when a new document file is uploaded.'
+    )

@@ -1,5 +1,5 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 def method_document_get_metadata(self, permission, user):
@@ -17,6 +17,6 @@ def method_document_get_metadata(self, permission, user):
 
 
 method_document_get_metadata.help_text = _(
-    'Return the metadata of the document.'
+    message='Return the metadata of the document.'
 )
 method_document_get_metadata.short_description = 'get_metadata()'

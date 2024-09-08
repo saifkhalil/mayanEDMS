@@ -1,24 +1,28 @@
-from django import forms
-from django.forms.formsets import formset_factory
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
+
+from mayan.apps.forms import form_fields, form_widgets, forms, formsets
 
 from .models import EventSubscription, ObjectEventSubscription
 
 
 class EventTypeUserRelationshipForm(forms.Form):
-    namespace = forms.CharField(
-        label=_('Namespace'), required=False,
-        widget=forms.TextInput(attrs={'readonly': 'readonly'})
+    namespace = form_fields.CharField(
+        label=_(message='Namespace'), required=False,
+        widget=forms.TextInput(
+            attrs={'readonly': 'readonly'}
+        )
     )
-    label = forms.CharField(
-        label=_('Label'), required=False,
-        widget=forms.TextInput(attrs={'readonly': 'readonly'})
+    label = form_fields.CharField(
+        label=_(message='Label'), required=False,
+        widget=forms.TextInput(
+            attrs={'readonly': 'readonly'}
+        )
     )
-    subscription = forms.ChoiceField(
-        label=_('Subscription'),
+    subscription = form_fields.ChoiceField(
+        label=_(message='Subscription'),
         widget=forms.RadioSelect(), choices=(
-            ('none', _('No')),
-            ('subscribed', _('Subscribed'))
+            ('none', _(message='No')),
+            ('subscribed', _(message='Subscribed'))
         )
     )
 
@@ -57,25 +61,29 @@ class EventTypeUserRelationshipForm(forms.Form):
                 )
 
 
-EventTypeUserRelationshipFormSet = formset_factory(
+EventTypeUserRelationshipFormSet = formsets.formset_factory(
     form=EventTypeUserRelationshipForm, extra=0
 )
 
 
 class ObjectEventTypeUserRelationshipForm(forms.Form):
-    namespace = forms.CharField(
-        label=_('Namespace'), required=False,
-        widget=forms.TextInput(attrs={'readonly': 'readonly'})
+    namespace = form_fields.CharField(
+        label=_(message='Namespace'), required=False,
+        widget=form_widgets.TextInput(
+            attrs={'readonly': 'readonly'}
+        )
     )
-    label = forms.CharField(
-        label=_('Label'), required=False,
-        widget=forms.TextInput(attrs={'readonly': 'readonly'})
+    label = form_fields.CharField(
+        label=_(message='Label'), required=False,
+        widget=form_widgets.TextInput(
+            attrs={'readonly': 'readonly'}
+        )
     )
-    subscription = forms.ChoiceField(
-        label=_('Subscription'),
-        widget=forms.RadioSelect(), choices=(
-            ('none', _('No')),
-            ('subscribed', _('Subscribed'))
+    subscription = form_fields.ChoiceField(
+        label=_(message='Subscription'),
+        widget=form_widgets.RadioSelect(), choices=(
+            ('none', _(message='No')),
+            ('subscribed', _(message='Subscribed'))
         )
     )
 
@@ -116,6 +124,6 @@ class ObjectEventTypeUserRelationshipForm(forms.Form):
                 )
 
 
-ObjectEventTypeUserRelationshipFormSet = formset_factory(
+ObjectEventTypeUserRelationshipFormSet = formsets.formset_factory(
     form=ObjectEventTypeUserRelationshipForm, extra=0
 )

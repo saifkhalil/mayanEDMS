@@ -5,10 +5,11 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document, DocumentType
+from mayan.apps.documents.models.document_models import Document
+from mayan.apps.documents.models.document_type_models import DocumentType
 from mayan.apps.documents.permissions import permission_document_type_edit
 from mayan.apps.documents.views.document_views import DocumentListView
 from mayan.apps.views.generics import (
@@ -47,7 +48,7 @@ class DocumentResolvedSmartLinkDocumentListView(
     def dispatch(self, request, *args, **kwargs):
         self.resolved_smart_link = self.get_resolved_smart_link()
 
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request=request, *args, **kwargs)
 
     def get_document_queryset(self):
         try:
@@ -62,7 +63,7 @@ class DocumentResolvedSmartLinkDocumentListView(
             try:
                 AccessControlList.objects.check_access(
                     obj=self.resolved_smart_link,
-                    permissions=(permission_smart_link_edit,),
+                    permission=permission_smart_link_edit,
                     user=self.request.user
                 )
             except PermissionDenied:
@@ -70,7 +71,7 @@ class DocumentResolvedSmartLinkDocumentListView(
             else:
                 messages.error(
                     message=_(
-                        'Resolved smart link query error: %s' % exception
+                        message='Resolved smart link query error: %s' % exception
                     ), request=self.request
                 )
 
@@ -89,7 +90,7 @@ class DocumentResolvedSmartLinkDocumentListView(
             try:
                 AccessControlList.objects.check_access(
                     obj=self.resolved_smart_link,
-                    permissions=(permission_smart_link_edit,),
+                    permission=permission_smart_link_edit,
                     user=self.request.user
                 )
             except PermissionDenied:
@@ -97,12 +98,12 @@ class DocumentResolvedSmartLinkDocumentListView(
             else:
                 messages.error(
                     message=_(
-                        'Resolved smart link dynamic label error: %s' % exception
+                        message='Resolved smart link dynamic label error: %s' % exception
                     ), request=self.request
                 )
 
         title = _(
-            'Documents in resolved smart link "%(resolved_smart_link)s" for '
+            message='Documents in resolved smart link "%(resolved_smart_link)s" for '
             '"%(document)s"'
         ) % {
             'document': self.external_object,
@@ -144,16 +145,16 @@ class SmartLinkListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Indexes group documents into units, usually with similar '
+                message='Indexes group documents into units, usually with similar '
                 'properties and of equal or similar types. Smart links '
                 'allow defining relationships between documents even '
                 'if they are in different indexes and are of different '
                 'types.'
             ),
             'no_results_title': _(
-                'There are no smart links'
+                message='There are no smart links'
             ),
-            'title': _('Smart links')
+            'title': _(message='Smart links')
         }
 
 
@@ -173,16 +174,16 @@ class DocumentResolvedSmartLinkListView(
             'hide_object': True,
             'no_results_icon': icon_smart_link_setup,
             'no_results_text': _(
-                'Smart links allow defining relationships between '
+                message='Smart links allow defining relationships between '
                 'documents even if they are in different indexes and '
                 'are of different types.'
             ),
             'no_results_title': _(
-                'There are no resolved smart links for this document'
+                message='There are no resolved smart links for this document'
             ),
             'object': self.external_object,
             'title': _(
-                'Resolved smart links for document: %s'
+                message='Resolved smart links for document: %s'
             ) % self.external_object
         }
 
@@ -200,8 +201,8 @@ class DocumentTypeSmartLinkAddRemoveView(AddRemoveView):
     main_object_pk_url_kwarg = 'document_type_id'
     secondary_object_model = SmartLink
     secondary_object_permission = permission_smart_link_edit
-    list_available_title = _('Available smart links')
-    list_added_title = _('Smart links enabled')
+    list_available_title = _(message='Available smart links')
+    list_added_title = _(message='Smart links enabled')
     related_field = 'smart_links'
     view_icon = icon_document_type_smart_links
 
@@ -212,7 +213,7 @@ class DocumentTypeSmartLinkAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'title': _(
-                'Smart links to enable for document type: %s'
+                message='Smart links to enable for document type: %s'
             ) % self.main_object
         }
 
@@ -225,8 +226,8 @@ class SmartLinkDocumentTypeAddRemoveView(AddRemoveView):
     main_object_pk_url_kwarg = 'smart_link_id'
     secondary_object_model = DocumentType
     secondary_object_permission = permission_document_type_edit
-    list_available_title = _('Available document types')
-    list_added_title = _('Document types enabled')
+    list_available_title = _(message='Available document types')
+    list_added_title = _(message='Document types enabled')
     related_field = 'document_types'
     view_icon = icon_smart_link_document_type_list
 
@@ -237,13 +238,15 @@ class SmartLinkDocumentTypeAddRemoveView(AddRemoveView):
         return {
             'object': self.main_object,
             'title': _(
-                'Document type for which to enable smart link: %s'
+                message='Document type for which to enable smart link: %s'
             ) % self.main_object
         }
 
 
 class SmartLinkCreateView(SingleObjectCreateView):
-    extra_context = {'title': _('Create new smart link')}
+    extra_context = {
+        'title': _(message='Create new smart link')
+    }
     form_class = SmartLinkForm
     post_action_redirect = reverse_lazy(
         viewname='linking:smart_link_list'
@@ -267,7 +270,7 @@ class SmartLinkDeleteView(SingleObjectDeleteView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Delete smart link: %s') % self.object
+            'title': _(message='Delete smart link: %s') % self.object
         }
 
 
@@ -284,7 +287,7 @@ class SmartLinkEditView(SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit smart link: %s') % self.object
+            'title': _(message='Edit smart link: %s') % self.object
         }
 
     def get_instance_extra_data(self):

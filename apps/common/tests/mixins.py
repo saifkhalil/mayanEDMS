@@ -1,6 +1,8 @@
 from io import StringIO
 
+from django.contrib.contenttypes.models import ContentType
 from django.core import management
+from django.test import tag
 
 from mayan.apps.testing.tests.utils import mute_stdout
 
@@ -9,8 +11,19 @@ from ..links import link_object_copy
 
 
 class CommonAPITestMixin:
+    def setUp(self):
+        self._test_content_type = ContentType.objects.order_by('?').first()
+
+        super().setUp()
+
+    def _request_content_type_detail_api_view(self):
+        return self.get(
+            kwargs={'content_type_id': self._test_content_type.pk},
+            viewname='rest_api:content_type-detail'
+        )
+
     def _request_content_type_list_api_view(self):
-        return self.get(viewname='rest_api:content-type-list')
+        return self.get(viewname='rest_api:content_type-list')
 
 
 class CommonViewTestMixin:
@@ -66,7 +79,9 @@ class ObjectCopyTestMixin:
                 getattr(test_object_copy, self._test_copy_method)()
             )
         else:
-            test_objects = ((test_object, test_object_copy),)
+            test_objects = (
+                (test_object, test_object_copy),
+            )
 
         for test_object, test_object_copy in test_objects:
             for field in model_copy.fields:
@@ -159,3 +174,10 @@ class ObjectCopyViewTestMixin:
         return self.post(
             kwargs=self._test_object_view_kwargs, viewname='common:object_copy'
         )
+
+
+@tag('classes_property_helper')
+class PropertyHelperTestMixin:
+    """
+    Barebones test mixin used for tagging `PropertyHelper` tests.
+    """

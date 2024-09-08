@@ -1,7 +1,7 @@
 from django.http import Http404, HttpResponseRedirect
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     FormView, SingleObjectDeleteView, SingleObjectDynamicFormCreateView,
@@ -17,14 +17,14 @@ from .icons import (
 from .links import link_quota_create
 from .models import Quota
 from .permissions import (
-    permission_quota_create, permission_quota_delete,
-    permission_quota_edit, permission_quota_view
+    permission_quota_create, permission_quota_delete, permission_quota_edit,
+    permission_quota_view
 )
 
 
 class QuotaBackendSelectionView(FormView):
     extra_context = {
-        'title': _('New quota backend selection'),
+        'title': _(message='New quota backend selection')
     }
     form_class = QuotaBackendSelectionForm
     view_icon = icon_quota_backend_selection
@@ -34,9 +34,8 @@ class QuotaBackendSelectionView(FormView):
         backend = form.cleaned_data['backend']
         return HttpResponseRedirect(
             reverse(
-                viewname='quotas:quota_create', kwargs={
-                    'class_path': backend
-                }
+                kwargs={'class_path': backend},
+                viewname='quotas:quota_create'
             )
         )
 
@@ -62,14 +61,12 @@ class QuotaCreateView(SingleObjectDynamicFormCreateView):
     def get_extra_context(self):
         return {
             'title': _(
-                'Create a "%s" quota'
+                message='Create a "%s" quota'
             ) % self.get_backend().label
         }
 
     def get_form_extra_kwargs(self):
-        return {
-            'user': self.request.user
-        }
+        return {'user': self.request.user}
 
     def get_form_schema(self):
         backend = self.get_backend()
@@ -95,7 +92,7 @@ class QuotaDeleteView(SingleObjectDeleteView):
 
     def get_extra_context(self):
         return {
-            'title': _('Delete quota: %s') % self.object
+            'title': _(message='Delete quota: %s') % self.object
         }
 
 
@@ -111,13 +108,11 @@ class QuotaEditView(SingleObjectDynamicFormEditView):
 
     def get_extra_context(self):
         return {
-            'title': _('Edit quota: %s') % self.object
+            'title': _(message='Edit quota: %s') % self.object
         }
 
     def get_form_extra_kwargs(self):
-        return {
-            'user': self.request.user
-        }
+        return {'user': self.request.user}
 
     def get_form_schema(self):
         backend = self.object.get_backend_class()
@@ -144,8 +139,8 @@ class QuotaListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Quotas restrict usage of system resources. '
+                message='Quotas restrict usage of system resources. '
             ),
-            'no_results_title': _('No quotas available'),
-            'title': _('Quotas')
+            'no_results_title': _(message='No quotas available'),
+            'title': _(message='Quotas')
         }

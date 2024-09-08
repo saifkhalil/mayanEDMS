@@ -2,7 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
 from mayan.apps.common.settings import setting_home_view
@@ -18,11 +18,14 @@ from ..icons import (
 from ..models.document_models import Document
 from ..models.trashed_document_models import TrashedDocument
 from ..permissions import (
-    permission_trashed_document_delete, permission_trashed_document_restore,
     permission_document_trash, permission_document_view,
-    permission_trash_empty
+    permission_trash_empty, permission_trashed_document_delete,
+    permission_trashed_document_restore
 )
-from ..tasks import task_trashed_document_delete, task_trash_can_empty
+from ..tasks import (
+    task_document_move_to_trash, task_trash_can_empty,
+    task_trashed_document_delete
+)
 
 from .document_views import DocumentListView
 
@@ -34,17 +37,19 @@ class DocumentTrashView(MultipleObjectConfirmActionView):
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message_single = _(
-        'Document "%(object)s" moved to trash.'
+        message='Document "%(object)s" queued for trashing.'
     )
     success_message_singular = _(
-        '%(count)d document moved to the trash.'
+        message='%(count)d documents queued for trashing.'
     )
     success_message_plural = _(
-        '%(count)d documents moved to the trash.'
+        message='%(count)d documents queued for trashing.'
     )
-    title_single = _('Move the document "%(object)s" to trash?')
-    title_singular = _('Move the selected document to the trash?')
-    title_plural = _('Move the %(count)d selected documents to trash?')
+    title_single = _(message='Move the document "%(object)s" to trash?')
+    title_singular = _(message='Move the selected document to the trash?')
+    title_plural = _(
+        message='Move the %(count)d selected documents to trash?'
+    )
     view_icon = icon_document_trash_send
 
     def get_extra_context(self):
@@ -66,8 +71,11 @@ class DocumentTrashView(MultipleObjectConfirmActionView):
             return None
 
     def object_action(self, form, instance):
-        instance._event_actor = self.request.user
-        instance.delete()
+        task_document_move_to_trash.apply_async(
+            kwargs={
+                'document_id': instance.pk, 'user_id': self.request.user.pk
+            }
+        )
 
 
 class EmptyTrashCanView(ConfirmView):
@@ -75,7 +83,7 @@ class EmptyTrashCanView(ConfirmView):
         'documents:document_list_deleted'
     )
     extra_context = {
-        'title': _('Empty trash?')
+        'title': _(message='Empty trash?')
     }
     view_icon = icon_trash_can_empty
     view_permission = permission_trash_empty
@@ -88,7 +96,7 @@ class EmptyTrashCanView(ConfirmView):
         )
 
         messages.success(
-            message=_('The trash emptying task has been queued.'),
+            message=_(message='The trash emptying task has been queued.'),
             request=self.request
         )
 
@@ -98,17 +106,17 @@ class TrashedDocumentDeleteView(MultipleObjectConfirmActionView):
     object_permission = permission_trashed_document_delete
     pk_url_kwarg = 'document_id'
     success_message_plural = _(
-        '%(count)d trashed documents submitted for deletion.'
+        message='%(count)d trashed documents submitted for deletion.'
     )
     success_message_single = _(
-        'Trash document "%(object)s" submitted for deletion.'
+        message='Trash document "%(object)s" submitted for deletion.'
     )
     success_message_singular = _(
-        '%(count)d trashed document submitted for deletion.'
+        message='%(count)d trashed document submitted for deletion.'
     )
-    title_plural = _('Delete the %(count)d selected trashed documents?')
-    title_single = _('Delete the trashed document "%(object)s"?')
-    title_singular = _('Delete the selected trashed document?')
+    title_plural = _(message='Delete the %(count)d selected trashed documents?')
+    title_single = _(message='Delete the trashed document "%(object)s"?')
+    title_singular = _(message='Delete the selected trashed document?')
     view_icon = icon_trashed_document_delete
 
     def get_extra_context(self):
@@ -152,14 +160,14 @@ class TrashedDocumentListView(DocumentListView):
                 'hide_link': True,
                 'no_results_icon': icon_trashed_document_list,
                 'no_results_text': _(
-                    'To avoid loss of data, documents are not deleted '
+                    message='To avoid loss of data, documents are not deleted '
                     'instantly. First, they are placed in the trash can. '
                     'From here they can be then finally deleted or restored.'
                 ),
                 'no_results_title': _(
-                    'There are no documents in the trash can'
+                    message='There are no documents in the trash can'
                 ),
-                'title': _('Documents in trash')
+                'title': _(message='Documents in trash')
             }
         )
         return context
@@ -170,17 +178,17 @@ class TrashedDocumentRestoreView(MultipleObjectConfirmActionView):
     object_permission = permission_trashed_document_restore
     pk_url_kwarg = 'document_id'
     success_message_plural = _(
-        '%(count)d trashed documents restored.'
+        message='%(count)d trashed documents restored.'
     )
     success_message_single = _(
-        'Trashed document "%(object)s" restored.'
+        message='Trashed document "%(object)s" restored.'
     )
     success_message_singular = _(
-        '%(count)d trashed document restored.'
+        message='%(count)d trashed document restored.'
     )
-    title_plural = _('Restore the %(count)d selected trashed documents?')
-    title_single = _('Restore the trashed document: %(object)s')
-    title_singular = _('Restore the selected trashed document?')
+    title_plural = _(message='Restore the %(count)d selected trashed documents?')
+    title_single = _(message='Restore the trashed document: %(object)s')
+    title_singular = _(message='Restore the selected trashed document?')
     view_icon = icon_trashed_document_restore
 
     def get_extra_context(self):

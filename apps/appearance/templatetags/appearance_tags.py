@@ -6,7 +6,7 @@ from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ..literals import COMMENT_APP_TEMPLATE_CACHE_DISABLE
 
@@ -54,9 +54,19 @@ def appearance_app_templates(context, template_name):
 
 
 @register.filter
+def appearance_form_get_visile_fields_map(form):
+    field_map = {
+        field.name: field for field in form.visible_fields()
+    }
+    return field_map
+
+
+@register.filter
 def appearance_get_choice_value(field):
     try:
-        return dict(field.field.choices)[field.value()]
+        return dict(field.field.choices)[
+            field.value()
+        ]
     except TypeError:
         return ', '.join(
             [
@@ -64,32 +74,38 @@ def appearance_get_choice_value(field):
             ]
         )
     except KeyError:
-        return _('None')
+        return _(message='None')
 
 
 @register.filter
-def appearance_get_form_media_js(form):
-    return [form.media.absolute_path(path) for path in form.media._js]
+def appearance_get_form_media_js(form=None):
+    if form:
+        return [
+            form.media.absolute_path(path) for path in form.media._js
+        ]
 
 
 @register.simple_tag
 def appearance_get_icon(icon_path, **kwargs):
-    clean_kwargs = {}
+    extra_context = {}
 
     for key, value in kwargs.items():
         if '__' in key:
-            subdictionary = clean_kwargs
+            subdictionary = extra_context
             parts = key.split('__')
             for part in parts:
-                subdictionary.setdefault(part, {})
+                subdictionary.setdefault(
+                    part, {}
+                )
                 dictionary_pointer = subdictionary
                 subdictionary = subdictionary[part]
 
             dictionary_pointer[part] = value
         else:
-            clean_kwargs[key] = value
+            extra_context[key] = value
 
-    return import_string(dotted_path=icon_path).render(**clean_kwargs)
+    icon_class = import_string(dotted_path=icon_path)
+    return icon_class.render(**extra_context)
 
 
 @register.simple_tag

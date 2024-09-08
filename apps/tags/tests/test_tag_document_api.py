@@ -1,16 +1,18 @@
 from rest_framework import status
 
 from mayan.apps.documents.permissions import permission_document_view
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..permissions import permission_tag_view
 
-from .mixins import TagAPIViewTestMixin, TagTestMixin
+from .mixins import TagAPIViewTestMixin
 
 
 class TagDocumentAPIViewTestCase(
-    DocumentTestMixin, TagAPIViewTestMixin, TagTestMixin, BaseAPITestCase
+    DocumentTestMixin, TagAPIViewTestMixin, BaseAPITestCase
 ):
     auto_upload_test_document = False
 
@@ -44,7 +46,9 @@ class TagDocumentAPIViewTestCase(
         response = self._request_test_tag_document_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -108,7 +112,9 @@ class TagDocumentAPIViewTestCase(
         response = self._request_test_tag_document_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

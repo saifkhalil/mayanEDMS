@@ -1,38 +1,34 @@
-from django.utils.translation import ugettext_lazy as _
-
-from mayan.apps.acls.models import AccessControlList
+from django.utils.translation import gettext_lazy as _
 
 from .models import UserMailer
-from .permissions import permission_user_mailer_use
+from .permissions import permission_mailing_profile_use
 
 
 class ObjectEmailActionMixin:
-    fields = {
-        'mailing_profile': {
-            'label': _('Mailing profile'),
-            'class': 'django.forms.ModelChoiceField', 'kwargs': {
-                'help_text': _(
-                    'Mailing profile to use when sending the email.'
-                ), 'queryset': UserMailer.objects.none(), 'required': True
-            }
-        },
+    form_field_widgets = {
+        'body': {
+            'class': 'django.forms.widgets.Textarea', 'kwargs': {}
+        }
+    }
+    form_fields = {
         'recipient': {
-            'label': _('Recipient'),
+            'label': _(message='Recipient'),
             'class': 'django.forms.CharField', 'kwargs': {
                 'help_text': _(
-                    'Email address of the recipient. Can be multiple '
-                    'addresses separated by comma or semicolon. A template '
-                    'can be used to reference properties of the document.'
+                    message='Email address of the recipient. Can be '
+                    'multiple addresses separated by comma or semicolon. '
+                    'A template can be used to reference properties of '
+                    'the document.'
                 ),
                 'required': True
             }
         },
         'cc': {
-            'label': _('CC'),
+            'label': _(message='CC'),
             'class': 'django.forms.CharField', 'kwargs': {
                 'help_text': _(
-                    'Address used in the "Bcc" header when sending the '
-                    'email. Can be multiple addresses '
+                    message='Address used in the "Bcc" header when '
+                    'sending the email. Can be multiple addresses '
                     'separated by comma or semicolon. A template can be '
                     'used to reference properties of the document.'
                 ),
@@ -40,11 +36,11 @@ class ObjectEmailActionMixin:
             }
         },
         'bcc': {
-            'label': _('BCC'),
+            'label': _(message='BCC'),
             'class': 'django.forms.CharField', 'kwargs': {
                 'help_text': _(
-                    'Address used in the "Bcc" header when sending the '
-                    'email. Can be multiple addresses '
+                    message='Address used in the "Bcc" header when '
+                    'sending the email. Can be multiple addresses '
                     'separated by comma or semicolon. A template can be '
                     'used to reference properties of the document.'
                 ),
@@ -52,60 +48,98 @@ class ObjectEmailActionMixin:
             }
         },
         'reply_to': {
-            'label': _('Reply to'),
+            'label': _(message='Reply to'),
             'class': 'django.forms.CharField', 'kwargs': {
                 'help_text': _(
-                    'Address used in the "Reply-To" header when sending '
-                    'the email. Can be multiple addresses separated by '
-                    'comma or semicolon. A template can be used to '
-                    'reference properties of the document.'
+                    message='Address used in the "Reply-To" header '
+                    'when sending the email. Can be multiple addresses '
+                    'separated by comma or semicolon. A template can '
+                    'be used to reference properties of the document.'
                 ),
                 'required': False
             }
         },
         'subject': {
-            'label': _('Subject'),
+            'label': _(message='Subject'),
             'class': 'django.forms.CharField', 'kwargs': {
                 'help_text': _(
-                    'Subject of the email. Can be a string or a template.'
+                    message='Subject of the email. Can be a string '
+                    'or a template.'
                 ),
                 'required': False
             }
         },
         'body': {
-            'label': _('Body'),
+            'label': _(message='Body'),
             'class': 'django.forms.CharField', 'kwargs': {
                 'help_text': _(
-                    'Body of the email to send. Can be a string or '
+                    message='Body of the email to send. Can be a string or '
                     'a template.'
                 ),
                 'required': False
             }
         },
         'attachment': {
-            'label': _('Attachment'),
+            'label': _(message='Attachment'),
             'class': 'django.forms.BooleanField', 'default': False,
             'help_text': _(
-                'Attach an object to the email.'
+                message='Attach an object to the email.'
             ),
             'required': False
         }
     }
-    field_order = (
-        'mailing_profile', 'recipient', 'cc', 'bcc', 'reply_to', 'subject',
-        'body'
-    )
-    label = _('Send object via email')
-    widgets = {
-        'body': {
-            'class': 'django.forms.widgets.Textarea', 'kwargs': {}
-        }
-    }
-    permission = permission_user_mailer_use
+    label = _(message='Send object via email')
+    permission = permission_mailing_profile_use
+
+    @classmethod
+    def get_form_fields(cls, *args, **kwargs):
+        fields = super().get_form_fields(*args, **kwargs)
+
+        fields.update(
+            {
+                'mailing_profile': {
+                    'class': 'mayan.apps.forms.form_fields.FormFieldFilteredModelChoice',
+                    'help_text': _(
+                        message='Mailing profile to use when sending '
+                        'the email.'
+                    ),
+                    'kwargs': {
+                        'source_queryset': UserMailer.objects.filter(
+                            enabled=True
+                        ), 'permission': cls.permission
+                    },
+                    'label': _(message='Mailing profile'),
+                    'required': True
+                }
+            }
+        )
+
+        return fields
+
+    @classmethod
+    def get_form_fieldsets(cls):
+        fieldsets = super().get_form_fieldsets()
+
+        fieldsets += (
+            (
+                _(message='Mailing profile'), {
+                    'fields': ('mailing_profile',)
+                }
+            ), (
+                _(message='Parties'), {
+                    'fields': ('recipient', 'cc', 'bcc', 'reply_to')
+                },
+            ), (
+                _(message='Content'), {
+                    'fields': ('subject', 'attachment', 'body')
+                },
+            )
+        )
+        return fieldsets
 
     def execute(self, context):
-        user_mailer = self.get_user_mailer()
-        user_mailer.send_object(
+        mailing_profile = self.get_mailing_profile()
+        mailing_profile.send_object(
             **self.get_execute_data(context=context)
         )
 
@@ -113,47 +147,28 @@ class ObjectEmailActionMixin:
         recipient = self.render_field(
             field_name='recipient', context=context
         )
-        cc = self.render_field(
-            field_name='cc', context=context
-        )
-        bcc = self.render_field(
-            field_name='bcc', context=context
-        )
+        cc = self.render_field(field_name='cc', context=context)
+        bcc = self.render_field(field_name='bcc', context=context)
         reply_to = self.render_field(
             field_name='reply_to', context=context
         )
         subject = self.render_field(
             field_name='subject', context=context
         )
-        body = self.render_field(
-            field_name='body', context=context
-        )
+        body = self.render_field(field_name='body', context=context)
+        obj = self.get_object(context=context)
 
         kwargs = {
-            'bcc': bcc, 'body': body, 'cc': cc,
-            'obj': self.get_object(context=context), 'reply_to': reply_to,
-            'subject': subject, 'to': recipient
+            'bcc': bcc, 'body': body, 'cc': cc, 'obj': obj,
+            'reply_to': reply_to, 'subject': subject, 'to': recipient
         }
 
         return kwargs
 
-    def get_form_schema(self, **kwargs):
-        result = super().get_form_schema(**kwargs)
-
-        queryset = AccessControlList.objects.restrict_queryset(
-            permission=self.permission,
-            queryset=UserMailer.objects.filter(enabled=True),
-            user=kwargs['request'].user
+    def get_mailing_profile(self):
+        return UserMailer.objects.get(
+            pk=self.kwargs['mailing_profile']
         )
-
-        result['fields']['mailing_profile']['kwargs']['queryset'] = queryset
-
-        return result
 
     def get_object(self, context):
         return NotImplementedError
-
-    def get_user_mailer(self):
-        return UserMailer.objects.get(
-            pk=self.form_data['mailing_profile']
-        )

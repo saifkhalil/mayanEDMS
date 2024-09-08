@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.template import Variable, VariableDoesNotExist
 from django.urls import Resolver404, resolve
 
-from mayan.apps.permissions import Permission
+from mayan.apps.permissions.classes import Permission
 
 logger = logging.getLogger(name=__name__)
 
@@ -19,7 +19,8 @@ def factory_condition_queryset_access(
     permission. If not, then filters the objects with the object permission
     and return True if there is at least one item in the filtered queryset.
     This is used to avoid showing a link that ends up in a view with an
-    empty results set.
+    empty results set because the user doesn't have access to any of the
+    objects in the queryset.
     """
     def function_condition(context, resolved_object):
         AccessControlList = apps.get_model(
@@ -48,8 +49,8 @@ def factory_condition_queryset_access(
         if view_permission:
             if user.is_authenticated:
                 try:
-                    Permission.check_user_permissions(
-                        permissions=(view_permission,), user=user
+                    Permission.check_user_permission(
+                        permission=view_permission, user=user
                     )
                 except PermissionDenied:
                     """

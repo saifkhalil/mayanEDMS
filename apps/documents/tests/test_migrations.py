@@ -6,7 +6,9 @@ from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from django.db.models.signals import post_migrate, post_save
 
-from mayan.apps.databases.literals import DJANGO_POSITIVE_INTEGER_FIELD_MAX_VALUE
+from mayan.apps.databases.literals import (
+    DJANGO_POSITIVE_INTEGER_FIELD_MAX_VALUE
+)
 from mayan.apps.documents.signals import signal_post_document_file_upload
 from mayan.apps.documents.tests.literals import TEST_FILE_PDF_PATH
 from mayan.apps.testing.tests.base import MayanMigratorTestCase
@@ -235,19 +237,19 @@ class DocumentVersionActiveMigrationTestCase(
             document_type=self._test_document_type, label='test document'
         )
 
-        self._test_document_versions = []
-        self._test_document_versions.append(
+        self._test_document_version_list = []
+        self._test_document_version_list.append(
             DocumentVersion.objects.create(document_id=self._test_document.pk)
         )
-        self._test_document_versions.append(
+        self._test_document_version_list.append(
             DocumentVersion.objects.create(document_id=self._test_document.pk)
         )
 
         DocumentPage.objects.create(
-            document_version_id=self._test_document_versions[0].pk
+            document_version_id=self._test_document_version_list[0].pk
         )
         DocumentPage.objects.create(
-            document_version_id=self._test_document_versions[1].pk
+            document_version_id=self._test_document_version_list[1].pk
         )
 
     def test_single_active_version(self):
@@ -258,9 +260,13 @@ class DocumentVersionActiveMigrationTestCase(
             app_label='documents', model_name='DocumentVersion'
         )
 
-        self.assertEqual(DocumentFile.objects.count(), 2)
+        self.assertEqual(
+            DocumentFile.objects.count(), 2
+        )
 
-        self.assertEqual(DocumentVersion.objects.count(), 2)
+        self.assertEqual(
+            DocumentVersion.objects.count(), 2
+        )
 
         self.assertEqual(
             DocumentVersion.objects.filter(active=True).count(), 1

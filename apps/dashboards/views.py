@@ -1,6 +1,6 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.views.generics import SingleObjectListView, SimpleView
+from mayan.apps.views.generics import SimpleView, SingleObjectListView
 
 from .classes import Dashboard
 from .icons import icon_dashboard_detail, icon_dashboard_list
@@ -9,7 +9,7 @@ from .icons import icon_dashboard_detail, icon_dashboard_list
 class DashboardListView(SingleObjectListView):
     extra_context = {
         'hide_object': True,
-        'title': _('Dashboards'),
+        'title': _(message='Dashboards')
     }
     view_icon = icon_dashboard_list
 
@@ -18,14 +18,16 @@ class DashboardListView(SingleObjectListView):
 
 
 class DashboardDetailView(SimpleView):
-    template_name = 'appearance/generic_template.html'
+    template_name = 'appearance/content_container.html'
     view_icon = icon_dashboard_detail
 
     def get_extra_context(self):
-        dashboard = Dashboard.get(name=self.kwargs['dashboard_name'])
+        dashboard = Dashboard.get(
+            name=self.kwargs['dashboard_name']
+        )
 
         return {
             'content': dashboard.render(request=self.request),
             'object': dashboard,
-            'title': _('Dashboard detail')
+            'title': _(message='Dashboard detail')
         }

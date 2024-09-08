@@ -1,35 +1,32 @@
-from django import forms
 from django.core.exceptions import ValidationError
-from django.forms.formsets import formset_factory
-from django.utils.text import format_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
+from mayan.apps.forms import form_fields, form_widgets, forms, formsets
 from mayan.apps.templating.fields import TemplateField
-from mayan.apps.views.forms import ModelForm, RelationshipForm
 
-from .classes import MetadataLookup, MetadataParser, MetadataValidator
-from .models import MetadataType
+from .classes import MetadataParser, MetadataValidator
+from .models.metadata_type_models import MetadataType
 
 
 class DocumentMetadataForm(forms.Form):
-    metadata_type_id = forms.CharField(
-        label=_('ID'), widget=forms.HiddenInput
+    metadata_type_id = form_fields.CharField(
+        label=_(message='ID'), widget=form_widgets.HiddenInput
     )
-    metadata_type_name = forms.CharField(
-        label=_('Name'), required=False,
-        widget=forms.TextInput(
+    metadata_type_name = form_fields.CharField(
+        label=_(message='Name'), required=False,
+        widget=form_widgets.TextInput(
             attrs={
                 'readonly': 'readonly'
             }
         )
     )
-    value = forms.CharField(
-        label=_('Value'), required=False, widget=forms.TextInput(
+    value = form_fields.CharField(
+        label=_(message='Value'), required=False, widget=form_widgets.TextInput(
             attrs={'class': 'metadata-value'}
         )
     )
-    update = forms.BooleanField(
-        initial=True, label=_('Update'), required=False
+    update = form_fields.BooleanField(
+        initial=True, label=_(message='Update'), required=False
     )
 
     class Media:
@@ -49,7 +46,7 @@ class DocumentMetadataForm(forms.Form):
             )
 
             if required:
-                required_string = ' (%s)' % _('Required')
+                required_string = ' (%s)' % _(message='Required')
             else:
                 self.fields['update'].initial = False
 
@@ -63,7 +60,7 @@ class DocumentMetadataForm(forms.Form):
 
             if self.metadata_type.lookup:
                 try:
-                    self.fields['value'] = forms.ChoiceField(
+                    self.fields['value'] = form_fields.ChoiceField(
                         label=self.fields['value'].label
                     )
                     choices = self.metadata_type.get_lookup_values()
@@ -81,9 +78,9 @@ class DocumentMetadataForm(forms.Form):
                     )
                 except Exception as exception:
                     self.fields['value'].initial = _(
-                        'Lookup value error: %s'
+                        message='Lookup value error: %s'
                     ) % exception
-                    self.fields['value'].widget = forms.TextInput(
+                    self.fields['value'].widget = form_widgets.TextInput(
                         attrs={'readonly': 'readonly'}
                     )
 
@@ -94,9 +91,9 @@ class DocumentMetadataForm(forms.Form):
                     ].initial = self.metadata_type.get_default_value()
                 except Exception as exception:
                     self.fields['value'].initial = _(
-                        'Default value error: %s'
+                        message='Default value error: %s'
                     ) % exception
-                    self.fields['value'].widget = forms.TextInput(
+                    self.fields['value'].widget = form_widgets.TextInput(
                         attrs={'readonly': 'readonly'}
                     )
 
@@ -115,7 +112,7 @@ class DocumentMetadataForm(forms.Form):
                     raise ValidationError(
                         message={
                             'value': _(
-                                '"%s" is required for this document type.'
+                                message='"%s" is required for this document type.'
                             ) % metadata_type.label
                         }
                     )
@@ -129,14 +126,16 @@ class DocumentMetadataForm(forms.Form):
         return self.cleaned_data
 
 
-DocumentMetadataFormSet = formset_factory(form=DocumentMetadataForm, extra=0)
+DocumentMetadataFormSet = formsets.formset_factory(
+    form=DocumentMetadataForm, extra=0
+)
 
 
 class DocumentMetadataAddForm(forms.Form):
-    metadata_type = forms.ModelMultipleChoiceField(
-        help_text=_('Metadata types to be added to the selected documents.'),
-        label=_('Metadata type'), queryset=MetadataType.objects.all(),
-        widget=forms.SelectMultiple(
+    metadata_type = form_fields.ModelMultipleChoiceField(
+        help_text=_(message='Metadata types to be added to the selected documents.'),
+        label=_(message='Metadata type'), queryset=MetadataType.objects.all(),
+        widget=form_widgets.SelectMultiple(
             attrs={'class': 'select2'}
         )
     )
@@ -159,8 +158,8 @@ class DocumentMetadataAddForm(forms.Form):
 
 
 class DocumentMetadataRemoveForm(DocumentMetadataForm):
-    update = forms.BooleanField(
-        initial=False, label=_('Remove'), required=False
+    update = form_fields.BooleanField(
+        initial=False, label=_(message='Remove'), required=False
     )
 
     def __init__(self, *args, **kwargs):
@@ -171,27 +170,27 @@ class DocumentMetadataRemoveForm(DocumentMetadataForm):
         return super(forms.Form, self).clean()
 
 
-DocumentMetadataRemoveFormSet = formset_factory(
+DocumentMetadataRemoveFormSet = formsets.formset_factory(
     form=DocumentMetadataRemoveForm, extra=0
 )
 
 
-class MetadataTypeForm(ModelForm):
+class MetadataTypeForm(forms.ModelForm):
     fieldsets = (
         (
-            _('Basic'), {
+            _(message='Basic'), {
                 'fields': ('name', 'label')
             }
         ), (
-            _('Values'), {
+            _(message='Values'), {
                 'fields': ('default', 'lookup')
             }
         ), (
-            _('Validation'), {
+            _(message='Validation'), {
                 'fields': ('validation', 'validation_arguments')
             }
         ), (
-            _('Parsing'), {
+            _(message='Parsing'), {
                 'fields': ('parser', 'parser_arguments')
             }
         )
@@ -204,17 +203,14 @@ class MetadataTypeForm(ModelForm):
             required=False
         )
         self.fields['lookup'] = TemplateField(
-            initial_help_text=format_lazy(
-                '{}{}{}',
-                self.fields['lookup'].help_text,
-                _(' Available template context variables: '),
-                MetadataLookup.get_as_help_text()
-            ), required=False
+            context_entry_name_list=('groups', 'users'),
+            initial_help_text=self.fields['lookup'].help_text,
+            required=False
         )
-        self.fields['parser'].widget = forms.widgets.Select(
+        self.fields['parser'].widget = form_widgets.Select(
             choices=MetadataParser.get_choices(add_blank=True)
         )
-        self.fields['validation'].widget = forms.widgets.Select(
+        self.fields['validation'].widget = form_widgets.Select(
             choices=MetadataValidator.get_choices(add_blank=True)
         )
 
@@ -226,21 +222,21 @@ class MetadataTypeForm(ModelForm):
         model = MetadataType
 
 
-class DocumentTypeMetadataTypeRelationshipForm(RelationshipForm):
+class DocumentTypeMetadataTypeRelationshipForm(forms.RelationshipForm):
     RELATIONSHIP_TYPE_NONE = 'none'
     RELATIONSHIP_TYPE_OPTIONAL = 'optional'
     RELATIONSHIP_TYPE_REQUIRED = 'required'
     RELATIONSHIP_CHOICES = (
-        (RELATIONSHIP_TYPE_NONE, _('None')),
-        (RELATIONSHIP_TYPE_OPTIONAL, _('Optional')),
-        (RELATIONSHIP_TYPE_REQUIRED, _('Required')),
+        (RELATIONSHIP_TYPE_NONE, _(message='None')),
+        (RELATIONSHIP_TYPE_OPTIONAL, _(message='Optional')),
+        (RELATIONSHIP_TYPE_REQUIRED, _(message='Required')),
     )
 
     def get_relationship_type(self):
-        relationship_queryset = self.get_relationship_queryset()
+        queryset_relationship = self.get_queryset_relationship()
 
-        if relationship_queryset.exists():
-            if relationship_queryset.get().required:
+        if queryset_relationship.exists():
+            if queryset_relationship.get().required:
                 return self.RELATIONSHIP_TYPE_REQUIRED
             else:
                 return self.RELATIONSHIP_TYPE_OPTIONAL
@@ -265,7 +261,7 @@ class DocumentTypeMetadataTypeRelationshipForm(RelationshipForm):
         instance.save()
 
 
-DocumentTypeMetadataTypeRelationshipFormSetBase = formset_factory(
+DocumentTypeMetadataTypeRelationshipFormSetBase = formsets.formset_factory(
     form=DocumentTypeMetadataTypeRelationshipForm, extra=0
 )
 

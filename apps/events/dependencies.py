@@ -1,7 +1,7 @@
 from mayan.apps.dependencies.classes import PythonDependency
 
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         Copyright (c) 2010-2015, Justin Quick
         All rights reserved.
 
@@ -31,5 +31,5 @@ PythonDependency(
         (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
         OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     ''', module=__name__, name='django-activity-stream',
-    version_string='==1.4.0'
+    version_string='==2.0.0'
 )

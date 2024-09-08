@@ -54,7 +54,7 @@ def platform_gitlab_ci_cache_before_script(indent, apk=False, apt=False):
                 'export APT_STATE_LISTS=${APT_CACHE_DIR}/lists && export APT_CACHE_ARCHIVES=${APT_CACHE_DIR}/archives',
                 'mkdir --parents "${APT_STATE_LISTS}/partial" && mkdir --parents "${APT_CACHE_ARCHIVES}/partial"',
                 'printf "dir::state::lists    ${APT_STATE_LISTS};\\ndir::cache::archives    ${APT_CACHE_ARCHIVES};\\n" > /etc/apt/apt.conf.d/99gitlab-ci-cache',
-                'if [ "${APT_PROXY}" ]; then echo "Acquire::http { Proxy \"http://${APT_PROXY}\"; };" > /etc/apt/apt.conf.d/01proxy; fi',
+                'if [ "${APT_PROXY}" ]; then echo "Acquire::http { Proxy \\"http://${APT_PROXY}\\"; };" > /etc/apt/apt.conf.d/01proxy; fi',
                 'apt-get update'
             ]
         )
@@ -66,14 +66,16 @@ def platform_gitlab_ci_cache_before_script(indent, apk=False, apt=False):
 def platform_gitlab_ci_cache_paths(indent, apk=False, apt=False, pip=False):
     cache_list = []
 
-    version = Version(version_string=mayan.__version__)
+    version_base = Version(version_string=mayan.__version__)
+    version_upstream = Version(
+        version_string=version_base.as_upstream()
+    )
+    version_final = version_upstream.as_minor()
 
     if apk:
         cache_list.append(
             {
-                'key': 'apk-cache-{}'.format(
-                    version.as_minor()
-                ),
+                'key': 'apk-cache-{}'.format(version_final),
                 'paths': ['${APK_CACHE_DIR}']
             }
         )
@@ -81,9 +83,7 @@ def platform_gitlab_ci_cache_paths(indent, apk=False, apt=False, pip=False):
     if apt:
         cache_list.append(
             {
-                'key': 'apt-cache-{}'.format(
-                    version.as_minor()
-                ),
+                'key': 'apt-cache-{}'.format(version_final),
                 'paths': ['${APT_CACHE_DIR}']
             }
         )
@@ -91,9 +91,7 @@ def platform_gitlab_ci_cache_paths(indent, apk=False, apt=False, pip=False):
     if pip:
         cache_list.append(
             {
-                'key': 'pip-cache-{}'.format(
-                    version.as_minor()
-                ),
+                'key': 'pip-cache-{}'.format(version_final),
                 'paths': ['${PIP_CACHE_DIR}']
             }
         )

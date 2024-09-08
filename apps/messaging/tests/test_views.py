@@ -1,7 +1,5 @@
 from mayan.apps.testing.tests.base import GenericViewTestCase
 
-from .mixins import MessageTestMixin, MessageViewTestMixin
-
 from ..events import event_message_created, event_message_edited
 from ..models import Message
 from ..permissions import (
@@ -9,10 +7,12 @@ from ..permissions import (
     permission_message_edit, permission_message_view
 )
 
+from .mixins import MessageViewTestMixin
 
-class MessageViewTestCase(
-    MessageTestMixin, MessageViewTestMixin, GenericViewTestCase
-):
+
+class MessageViewTestCase(MessageViewTestMixin, GenericViewTestCase):
+    auto_create_test_message = False
+
     def test_message_create_view_no_permission(self):
         message_count = Message.objects.count()
 
@@ -46,17 +46,17 @@ class MessageViewTestCase(
         self.assertEqual(events[0].target, self._test_message)
         self.assertEqual(events[0].verb, event_message_created.id)
 
-    def test_message_create_view_for_superuser_with_permissions(self):
+    def test_message_create_view_for_super_user_with_permissions(self):
         self.grant_permission(permission=permission_message_create)
 
         message_count = Message.objects.count()
 
-        self._create_test_superuser()
+        self._create_test_super_user()
 
         self._clear_events()
 
         response = self._request_test_message_create_view(
-            extra_data={'user': self._test_superuser.pk}
+            extra_data={'user': self._test_super_user.pk}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -154,7 +154,8 @@ class MessageViewTestCase(
 
         response = self._request_test_message_list_view()
         self.assertNotContains(
-            response=response, text=self._test_message.subject, status_code=200
+            response=response, status_code=200,
+            text=self._test_message.subject
         )
 
         events = self._get_test_events()
@@ -171,7 +172,8 @@ class MessageViewTestCase(
 
         response = self._request_test_message_list_view()
         self.assertContains(
-            response=response, text=self._test_message.subject, status_code=200
+            response=response, status_code=200,
+            text=self._test_message.subject
         )
 
         events = self._get_test_events()

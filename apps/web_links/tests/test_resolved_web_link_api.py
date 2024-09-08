@@ -1,18 +1,19 @@
 from rest_framework import status
 
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import event_web_link_navigated
 from ..models import ResolvedWebLink
 from ..permissions import permission_web_link_instance_view
 
-from .mixins import ResolvedWebLinkAPIViewTestMixin, WebLinkTestMixin
+from .mixins import ResolvedWebLinkAPIViewTestMixin
 
 
 class ResolvedWebLinkAPIViewTestCase(
-    DocumentTestMixin, WebLinkTestMixin, ResolvedWebLinkAPIViewTestMixin,
-    BaseAPITestCase
+    DocumentTestMixin, ResolvedWebLinkAPIViewTestMixin, BaseAPITestCase
 ):
     def setUp(self):
         super().setUp()
@@ -116,7 +117,9 @@ class ResolvedWebLinkAPIViewTestCase(
         response = self._request_resolved_web_link_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

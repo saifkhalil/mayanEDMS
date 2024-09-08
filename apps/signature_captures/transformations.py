@@ -1,13 +1,13 @@
 import logging
 
-from django import forms
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.converter.layers import layer_decorations
 from mayan.apps.converter.transformations import (
     BaseTransformation, ImagePasteCoordinatesPercentTransformationMixin
 )
+from mayan.apps.forms import form_fields
 
 logger = logging.getLogger(name=__name__)
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(name=__name__)
 class SignatureCapturePasteTransformation(
     ImagePasteCoordinatesPercentTransformationMixin, BaseTransformation
 ):
-    label = _('Paste a signature capture (percent coordinates)')
+    label = _(message='Paste a signature capture (percent coordinates)')
     name = 'paste_signature_capture_percent'
 
     @staticmethod
@@ -35,9 +35,9 @@ class SignatureCapturePasteTransformation(
         SuperForm = super().get_form_class()
 
         class Form(SuperForm):
-            internal_name = forms.ChoiceField(
-                help_text=_('Signature capture internal name'),
-                label=_('Internal name'),
+            internal_name = form_fields.ChoiceField(
+                help_text=_(message='Signature capture internal name'),
+                label=_(message='Internal name'),
                 required=True
             )
 

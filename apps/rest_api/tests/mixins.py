@@ -30,12 +30,8 @@ class DynamicFieldSerializerAPIViewTestCaseMixin:
     def _test_view_factory(self, test_object=None):
         self.TestModelParent = self._create_test_model(
             fields={
-                'test_field_1': models.CharField(
-                    blank=True, max_length=1
-                ),
-                'test_field_2': models.CharField(
-                    blank=True, max_length=1
-                )
+                'test_field_1': models.CharField(blank=True, max_length=1),
+                'test_field_2': models.CharField(blank=True, max_length=1)
             }, model_name='TestModelParent'
         )
 
@@ -45,12 +41,8 @@ class DynamicFieldSerializerAPIViewTestCaseMixin:
                     on_delete=models.CASCADE, related_name='children',
                     to='TestModelParent',
                 ),
-                'test_field_3': models.CharField(
-                    blank=True, max_length=1
-                ),
-                'test_field_4': models.CharField(
-                    blank=True, max_length=1
-                )
+                'test_field_3': models.CharField(blank=True, max_length=1),
+                'test_field_4': models.CharField(blank=True, max_length=1)
             }, model_name='TestModelChild'
         )
 
@@ -89,14 +81,16 @@ class DynamicFieldSerializerAPIViewTestCaseMixin:
     def _request_test_api_view(self, query):
         return self.get(
             viewname='rest_api:{}'.format(self._test_view_name), kwargs={
-                'test_object_id': self._test_object_child.pk,
+                'test_object_id': self._test_object_child.pk
             }, query=query
         )
 
 
 class RESTAPIViewTestMixin:
     def _request_test_browser_api_view(self):
-        return self.get(query={'format': 'api'}, viewname='rest_api:api_root')
+        return self.get(
+            query={'format': 'api'}, viewname='rest_api:api_root'
+        )
 
     def _request_test_redoc_ui_view(self):
         return self.get(viewname='rest_api:schema-redoc')

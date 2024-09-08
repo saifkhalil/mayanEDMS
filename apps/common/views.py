@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.templatetags.static import static
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from stronghold.views import StrongholdPublicMixin
@@ -22,7 +22,9 @@ from .settings import setting_home_view
 
 
 class AboutView(SimpleView):
-    extra_context = {'title': _('About')}
+    extra_context = {
+        'title': _(message='About')
+    }
     template_name = 'appearance/about.html'
     view_icon = icon_about
 
@@ -40,7 +42,7 @@ class FaviconRedirectView(RedirectView):
 
 class HomeView(SimpleView):
     extra_context = {
-        'title': _('Home'),
+        'title': _(message='Home')
     }
     template_name = 'appearance/home.html'
     view_icon = icon_home
@@ -50,9 +52,9 @@ class LicenseView(SimpleView):
     extra_context = {
         'form': LicenseForm(),
         'read_only': True,
-        'title': _('License'),
+        'title': _(message='License')
     }
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
     view_icon = icon_license
 
 
@@ -66,7 +68,7 @@ class ObjectCopyView(
         model_copy = ModelCopy.get(model=self.external_object._meta.model)
         context = {
             'object': self.external_object,
-            'subtitle': _('Fields to be copied: %s') % ', '.join(
+            'subtitle': _(message='Fields to be copied: %s') % ', '.join(
                 sorted(
                     map(
                         str, model_copy.get_fields_verbose_names()
@@ -76,7 +78,7 @@ class ObjectCopyView(
         }
 
         context['title'] = _(
-            'Make a copy of %(object_name)s "%(object)s"?'
+            message='Make a copy of %(object_name)s "%(object)s"?'
         ) % {
             'object_name': self.get_object_name(context=context),
             'object': self.external_object
@@ -87,7 +89,7 @@ class ObjectCopyView(
     def view_action(self):
         self.external_object.copy_instance()
         messages.success(
-            message=_('Object copied successfully.'),
+            message=_(message='Object copied successfully.'),
             request=self.request
         )
 
@@ -98,29 +100,29 @@ class RootView(StrongholdPublicMixin, SimpleView):
 
 
 class SetupListView(SimpleView):
-    template_name = 'appearance/generic_list_horizontal.html'
+    template_name = 'appearance/list_horizontal.html'
     view_icon = icon_setup
 
     def get_extra_context(self, **kwargs):
         return {
             'no_results_icon': icon_setup,
             'no_results_text': _(
-                'No results here means that don\'t have the required '
+                message='No results here means that don\'t have the required '
                 'permissions to perform administrative task.'
             ),
-            'no_results_title': _('No setup options available.'),
+            'no_results_title': _(message='No setup options available.'),
             'resolved_links': menu_setup.resolve(
                 request=self.request, sort_results=True
             ),
             'subtitle': _(
-                'Here you can configure all aspects of the system.'
+                message='Here you can configure all aspects of the system.'
             ),
-            'title': _('Setup items')
+            'title': _(message='Setup items')
         }
 
 
 class ToolsListView(SimpleView):
-    template_name = 'appearance/generic_list_horizontal.html'
+    template_name = 'appearance/list_horizontal.html'
     view_icon = icon_tools
 
     def get_extra_context(self):
@@ -129,7 +131,7 @@ class ToolsListView(SimpleView):
                 request=self.request, sort_results=True
             ),
             'subtitle': _(
-                'These modules are used to do system maintenance.'
+                message='These modules are used to do system maintenance.'
             ),
-            'title': _('Tools')
+            'title': _(message='Tools')
         }

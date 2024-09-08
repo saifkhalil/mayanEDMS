@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.rest_api import serializers
 from mayan.apps.rest_api.relations import MultiKwargHyperlinkedIdentityField
@@ -8,30 +8,30 @@ from .models import SignatureCapture
 
 class SignatureCaptureSerializer(serializers.HyperlinkedModelSerializer):
     document_url = serializers.HyperlinkedIdentityField(
-        label=_('Document URL'), lookup_field='document_id',
+        label=_(message='Document URL'), lookup_field='document_id',
         lookup_url_kwarg='document_id', view_name='rest_api:document-detail'
     )
     image_url = MultiKwargHyperlinkedIdentityField(
-        label=_('Image URL'), view_kwargs=(
+        label=_(message='Image URL'), view_kwargs=(
             {
                 'lookup_field': 'document_id',
-                'lookup_url_kwarg': 'document_id',
+                'lookup_url_kwarg': 'document_id'
             },
             {
                 'lookup_field': 'pk',
-                'lookup_url_kwarg': 'signature_capture_id',
+                'lookup_url_kwarg': 'signature_capture_id'
             }
         ), view_name='rest_api:signature_capture-image'
     )
     url = MultiKwargHyperlinkedIdentityField(
-        label=_('URL'), view_kwargs=(
+        label=_(message='URL'), view_kwargs=(
             {
                 'lookup_field': 'document_id',
-                'lookup_url_kwarg': 'document_id',
+                'lookup_url_kwarg': 'document_id'
             },
             {
                 'lookup_field': 'pk',
-                'lookup_url_kwarg': 'signature_capture_id',
+                'lookup_url_kwarg': 'signature_capture_id'
             }
         ), view_name='rest_api:signature_capture-detail'
     )

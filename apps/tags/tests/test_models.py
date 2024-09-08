@@ -1,5 +1,7 @@
 from mayan.apps.documents.permissions import permission_document_view
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.testing.tests.base import BaseTestCase
 
 from ..events import event_tag_attached, event_tag_removed
@@ -23,7 +25,9 @@ class TagDocumentTestCase(DocumentTestMixin, TagTestMixin, BaseTestCase):
             document=self._test_document, user=self._test_case_user
         )
 
-        self.assertTrue(self._test_document in self._test_tag.documents.all())
+        self.assertTrue(
+            self._test_document in self._test_tag.documents.all()
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 1)
@@ -44,7 +48,7 @@ class TagDocumentTestCase(DocumentTestMixin, TagTestMixin, BaseTestCase):
 
         self.assertEqual(
             self._test_tag.get_document_count(user=self._test_case_user),
-            len(self._test_documents)
+            len(self._test_document_list)
         )
 
         events = self._get_test_events()
@@ -62,7 +66,7 @@ class TagDocumentTestCase(DocumentTestMixin, TagTestMixin, BaseTestCase):
 
         self.assertEqual(
             self._test_tag.get_document_count(user=self._test_case_user),
-            len(self._test_documents) - 1
+            len(self._test_document_list) - 1
         )
 
         events = self._get_test_events()
@@ -94,7 +98,9 @@ class TagDocumentTestCase(DocumentTestMixin, TagTestMixin, BaseTestCase):
 
         self._clear_events()
 
-        self.assertTrue(self._test_tag.get_absolute_url())
+        self.assertTrue(
+            self._test_tag.get_absolute_url()
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

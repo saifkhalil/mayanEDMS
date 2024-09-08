@@ -1,9 +1,9 @@
 from rest_framework import status
 
 from mayan.apps.documents.permissions import (
-    permission_document_type_edit, permission_document_type_view
+    permission_document_type_edit, permission_document_type_view,
+    permission_document_view
 )
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import (
@@ -16,16 +16,16 @@ from ..permissions import (
 )
 
 from .literals import TEST_WORKFLOW_TEMPLATE_LABEL
+from .mixins.workflow_template_document_mixins import (
+    WorkflowTemplateDocumentAPIViewTestMixin
+)
 from .mixins.workflow_template_mixins import (
-    WorkflowTemplateAPIViewTestMixin,
-    WorkflowTemplateDocumentTypeAPIViewMixin,
-    WorkflowTemplateTestMixin
+    WorkflowTemplateAPIViewTestMixin, WorkflowTemplateDocumentTypeAPIViewMixin
 )
 
 
 class WorkflowTemplateAPIViewTestCase(
-    DocumentTestMixin, WorkflowTemplateAPIViewTestMixin,
-    WorkflowTemplateTestMixin, BaseAPITestCase
+    WorkflowTemplateAPIViewTestMixin, BaseAPITestCase
 ):
     auto_upload_test_document = False
 
@@ -35,7 +35,9 @@ class WorkflowTemplateAPIViewTestCase(
         response = self._request_test_workflow_template_create_api_view()
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(Workflow.objects.count(), 0)
+        self.assertEqual(
+            Workflow.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -52,7 +54,9 @@ class WorkflowTemplateAPIViewTestCase(
             response.data['label'], TEST_WORKFLOW_TEMPLATE_LABEL
         )
 
-        self.assertEqual(Workflow.objects.count(), 1)
+        self.assertEqual(
+            Workflow.objects.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 1)
@@ -69,7 +73,9 @@ class WorkflowTemplateAPIViewTestCase(
 
         response = self._request_test_workflow_template_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(Workflow.objects.count(), 1)
+        self.assertEqual(
+            Workflow.objects.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -86,7 +92,9 @@ class WorkflowTemplateAPIViewTestCase(
         response = self._request_test_workflow_template_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        self.assertEqual(Workflow.objects.count(), 0)
+        self.assertEqual(
+            Workflow.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -156,7 +164,9 @@ class WorkflowTemplateAPIViewTestCase(
 
         response = self._request_test_workflow_template_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -276,15 +286,102 @@ class WorkflowTemplateAPIViewTestCase(
         self.assertEqual(events[0].verb, event_workflow_template_edited.id)
 
 
-class WorkflowTemplateDocumentTypeAPIViewTestCase(
-    DocumentTestMixin, WorkflowTemplateDocumentTypeAPIViewMixin,
-    WorkflowTemplateTestMixin, BaseAPITestCase
+class WorkflowTemplateDocumentAPIViewTestCase(
+    WorkflowTemplateDocumentAPIViewTestMixin, BaseAPITestCase
 ):
-    auto_upload_test_document = False
-
     def setUp(self):
         super().setUp()
-        self._create_test_workflow_template()
+        self._create_test_workflow_template(add_test_document_type=True)
+        self._create_test_workflow_template_state()
+        self._create_test_document_stub()
+
+    def test_workflow_template_document_list_api_view_with_no_permission(self):
+        self._clear_events()
+
+        response = self._request_test_workflow_template_document_list_api_view()
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+    def test_workflow_template_document_list_api_view_with_workflow_template_access(self):
+        self.grant_access(
+            obj=self._test_workflow_template,
+            permission=permission_workflow_template_view
+        )
+
+        self._clear_events()
+
+        response = self._request_test_workflow_template_document_list_api_view()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['count'], 0)
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+    def test_workflow_template_document_list_api_view_with_document_access(self):
+        self.grant_access(
+            obj=self._test_document, permission=permission_document_view
+        )
+
+        self._clear_events()
+
+        response = self._request_test_workflow_template_document_list_api_view()
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+    def test_workflow_template_document_list_api_view_with_full_access(self):
+        self.grant_access(
+            obj=self._test_document, permission=permission_document_view
+        )
+        self.grant_access(
+            obj=self._test_workflow_template,
+            permission=permission_workflow_template_view
+        )
+
+        self._clear_events()
+
+        response = self._request_test_workflow_template_document_list_api_view()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(
+            response.data['results'][0]['id'],
+            self._test_document.pk
+        )
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+    def test_trashed_document_workflow_template_document_list_api_view_with_full_access(self):
+        self.grant_access(
+            obj=self._test_document, permission=permission_document_view
+        )
+        self.grant_access(
+            obj=self._test_workflow_template,
+            permission=permission_workflow_template_view
+        )
+
+        self._test_document.delete()
+
+        self._clear_events()
+
+        response = self._request_test_workflow_template_document_list_api_view()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['count'], 0)
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+
+class WorkflowTemplateDocumentTypeAPIViewTestCase(
+    WorkflowTemplateDocumentTypeAPIViewMixin, BaseAPITestCase
+):
+    auto_create_test_workflow_template = True
+    auto_upload_test_document = False
 
     def test_workflow_template_document_type_add_api_view_no_permission(self):
         self.grant_access(
@@ -419,7 +516,9 @@ class WorkflowTemplateDocumentTypeAPIViewTestCase(
         self.assertEqual(events.count(), 0)
 
     def test_workflow_template_document_type_list_api_view_with_workflow_template_access(self):
-        self._test_workflow_template.document_types.add(self._test_document_type)
+        self._test_workflow_template.document_types.add(
+            self._test_document_type
+        )
 
         self.grant_access(
             obj=self._test_workflow_template,
@@ -430,7 +529,9 @@ class WorkflowTemplateDocumentTypeAPIViewTestCase(
 
         response = self._request_test_workflow_template_document_type_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

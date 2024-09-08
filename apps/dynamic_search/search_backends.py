@@ -14,8 +14,7 @@ from .literals import MESSAGE_FEATURE_NO_STATUS
 from .search_interpreters import SearchInterpreter
 from .search_models import SearchModel
 from .settings import (
-    setting_backend, setting_backend_arguments,
-    setting_results_limit
+    setting_backend, setting_backend_arguments, setting_results_limit
 )
 
 logger = logging.getLogger(name=__name__)
@@ -73,10 +72,11 @@ class SearchBackend:
     def _enable():
         # Hidden import.
         from .handlers import (
-            handler_deindex_instance, handler_index_instance,
+            handler_deindex_instance,
             handler_factory_index_related_instance_delete,
             handler_factory_index_related_instance_m2m,
-            handler_factory_index_related_instance_save
+            handler_factory_index_related_instance_save,
+            handler_index_instance
         )
 
         for search_model in SearchModel.all():
@@ -156,8 +156,12 @@ class SearchBackend:
         from .tasks import task_index_instance
 
         if action in ('post_add', 'pre_remove'):
-            instance_paths = search_model_related_paths.get(instance._meta.model, ())
-            model_paths = search_model_related_paths.get(model, ())
+            instance_paths = search_model_related_paths.get(
+                instance._meta.model, ()
+            )
+            model_paths = search_model_related_paths.get(
+                model, ()
+            )
 
             if action == 'pre_remove':
                 exclude_kwargs = {
@@ -172,6 +176,14 @@ class SearchBackend:
                 result = ResolverPipelineModelAttribute.resolve(
                     attribute=instance_path, obj=instance
                 )
+
+                try:
+                    result = result.filter(pk__in=pk_set)
+                except AttributeError:
+                    """
+                    Result is not a queryset. Exception can be safely
+                    ignored.
+                    """
 
                 entries = flatten_list(value=result)
 
@@ -317,9 +329,14 @@ class SearchBackend:
         Optional method to clear all search indices.
         """
 
-    def search(self, query, search_model, user, queryset=None):
+    def search(
+        self, query, search_model, user, store_resultset=False, queryset=None
+    ):
         AccessControlList = apps.get_model(
             app_label='acls', model_name='AccessControlList'
+        )
+        SavedResultset = apps.get_model(
+            app_label='dynamic_search', model_name='SavedResultset'
         )
 
         search_interpreter = SearchInterpreter.init(
@@ -338,7 +355,20 @@ class SearchBackend:
                 user=user
             )
 
-        return SearchBackend.limit_queryset(queryset=queryset)
+        queryset = SearchBackend.limit_queryset(queryset=queryset)
+
+        if store_resultset:
+            search_explainer_text = search_interpreter.to_explain()
+
+            saved_resultset = SavedResultset.objects.queryset_save(
+                queryset=queryset,
+                search_explainer_text=search_explainer_text,
+                search_query=query, user=user
+            )
+        else:
+            saved_resultset = None
+
+        return (saved_resultset, queryset)
 
     def tear_down(self):
         """

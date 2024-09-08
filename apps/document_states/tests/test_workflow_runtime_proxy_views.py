@@ -28,11 +28,11 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_document_list_view()
         self.assertNotContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=404
+            response=response, status_code=404,
+            text=self._test_workflow_template.label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=404
+            response=response, status_code=404, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -48,11 +48,11 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_document_list_view()
         self.assertContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template.label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=200
+            response=response, status_code=200, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -67,11 +67,11 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_document_list_view()
         self.assertNotContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=404
+            response=response, status_code=404,
+            text=self._test_workflow_template.label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=404
+            response=response, status_code=404, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -90,11 +90,11 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_document_list_view()
         self.assertContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template.label
         )
         self.assertContains(
-            response=response, text=self._test_document.label, status_code=200
+            response=response, status_code=200, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -115,11 +115,11 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_document_list_view()
         self.assertContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template.label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=200
+            response=response, status_code=200, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -130,8 +130,8 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_list_view()
         self.assertNotContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template.label
         )
 
     def test_workflow_runtime_proxy_list_view_with_access(self):
@@ -144,8 +144,8 @@ class WorkflowRuntimeProxyViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_list_view()
         self.assertContains(
-            response=response, text=self._test_workflow_template.label,
-            status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template.label
         )
 
         events = self._get_test_events()
@@ -171,14 +171,14 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_document_list_view()
         self.assertNotContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=404
+            response=response, status_code=404,
+            text=self._test_workflow_template_state_list[0].label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=404
+            response=response, status_code=404, text=self._test_document.label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=404
+            response=response, status_code=404, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -194,11 +194,11 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_document_list_view()
         self.assertContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template_state_list[0].label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=200
+            response=response, status_code=200, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -213,11 +213,11 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_document_list_view()
         self.assertNotContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=404
+            response=response, status_code=404,
+            text=self._test_workflow_template_state_list[0].label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=404
+            response=response, status_code=404, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -236,11 +236,11 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_document_list_view()
         self.assertContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template_state_list[0].label
         )
         self.assertContains(
-            response=response, text=self._test_document.label, status_code=200
+            response=response, status_code=200, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -261,11 +261,11 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_document_list_view()
         self.assertContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template_state_list[0].label
         )
         self.assertNotContains(
-            response=response, text=self._test_document.label, status_code=200
+            response=response, status_code=200, text=self._test_document.label
         )
 
         events = self._get_test_events()
@@ -276,8 +276,8 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_list_view()
         self.assertNotContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=404
+            response=response, status_code=404,
+            text=self._test_workflow_template_state_list[0].label
         )
 
         events = self._get_test_events()
@@ -293,8 +293,8 @@ class WorkflowRuntimeProxyStateViewTestCase(
 
         response = self._request_test_workflow_runtime_proxy_state_list_view()
         self.assertContains(
-            response=response,
-            text=self._test_workflow_template_states[0].label, status_code=200
+            response=response, status_code=200,
+            text=self._test_workflow_template_state_list[0].label
         )
 
         events = self._get_test_events()

@@ -1,20 +1,21 @@
 import yaml
 
-from django import forms
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.serialization import yaml_dump, yaml_load
-from mayan.apps.views.forms import DetailForm, ModelForm
+from mayan.apps.forms import form_fields, form_widgets, forms
 
 from .fields import ImageField
 from .models import Asset, LayerTransformation
 from .transformations import BaseTransformation
 
 
-class AssetDetailForm(DetailForm):
+class AssetDetailForm(forms.DetailForm):
     preview = ImageField(
-        image_alt_text=_('Asset preview image'), label=_('Preview')
+        image_alt_text=_(message='Asset preview image'), label=_(
+            message='Preview'
+        )
     )
 
     def __init__(self, *args, **kwargs):
@@ -36,13 +37,14 @@ class LayerTransformationSelectForm(forms.Form):
             layer=layer
         )
 
-    transformation = forms.ChoiceField(
-        choices=(), help_text=_('Available transformations for this layer.'),
-        label=_('Transformation')
+    transformation = form_fields.ChoiceField(
+        choices=(), help_text=_(
+            message='Available transformations for this layer.'
+        ), label=_(message='Transformation')
     )
 
 
-class LayerTransformationForm(ModelForm):
+class LayerTransformationForm(forms.ModelForm):
     class Meta:
         fields = ('arguments', 'order')
         model = LayerTransformation
@@ -53,18 +55,21 @@ class LayerTransformationForm(ModelForm):
         super().__init__(*args, **kwargs)
         transformation_class = self.get_transformation_class()
         if self.instance:
-            for key, value in yaml_load(stream=self.instance.arguments or '{}').items():
+            try:
+                obj = yaml_load(stream=self.instance.arguments or '{}')
+            except Exception:
+                obj = {}
+
+            for key, value in obj.items():
                 self.initial[key] = value
 
-        self.template_name = getattr(
-            transformation_class, 'template_name', None
-        )
+        self.transformation_template_name = transformation_class.get_template_name()
 
-        if self.template_name:
+        if self.transformation_template_name:
             self.fields['arguments'].widget.attrs['class'] = 'hidden'
             self.fields['order'].widget.attrs['class'] = 'hidden'
         else:
-            self.fields['arguments'].widget = forms.widgets.HiddenInput()
+            self.fields['arguments'].widget = form_widgets.HiddenInput()
 
     def get_transformation_class(self):
         if not self._transformation_name:
@@ -73,7 +78,7 @@ class LayerTransformationForm(ModelForm):
             return BaseTransformation.get(name=self._transformation_name)
 
     def clean(self):
-        if self.template_name:
+        if self.transformation_template_name:
             # If the transformation specifies a template, take the values
             # provided and just check for valid format.
             # Allows compatibility with the redaction template and
@@ -85,7 +90,7 @@ class LayerTransformationForm(ModelForm):
             except yaml.YAMLError:
                 raise ValidationError(
                     message=_(
-                        '"%s" not a valid entry.'
+                        message='"%s" not a valid entry.'
                     ) % self.cleaned_data['arguments']
                 )
         else:

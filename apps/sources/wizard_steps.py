@@ -1,6 +1,8 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.forms.document_type_forms import DocumentTypeFilteredSelectForm
+from mayan.apps.documents.forms.document_type_forms import (
+    DocumentTypeFilteredSelectForm
+)
 from mayan.apps.documents.permissions import permission_document_create
 
 from .classes import DocumentCreateWizardStep
@@ -8,7 +10,7 @@ from .classes import DocumentCreateWizardStep
 
 class DocumentCreateWizardStepDocumentType(DocumentCreateWizardStep):
     form_class = DocumentTypeFilteredSelectForm
-    label = _('Select document type')
+    label = _(message='Select document type')
     name = 'document_type_selection'
     number = 0
 

@@ -1,6 +1,11 @@
 from .literals import TEST_USER_LOCALE_LANGUAGE, TEST_USER_LOCALE_TIMEZONE
 
 
+class JavaScriptCatalogViewTestMixin:
+    def _request_javascript_catalog_view(self):
+        return self.get(viewname='locales:javascript_catalog')
+
+
 class UserLocaleProfileViewMixin:
     def _request_test_current_user_locale_profile_detail_view(self):
         return self._request_test_user_locale_profile_detail_view(
@@ -14,14 +19,14 @@ class UserLocaleProfileViewMixin:
             user=self._test_case_user, follow=follow
         )
 
-    def _request_test_superuser_locale_profile_detail_view(self):
+    def _request_test_super_user_locale_profile_detail_view(self):
         return self._request_test_user_locale_profile_detail_view(
-            user=self._test_superuser
+            user=self._test_super_user
         )
 
-    def _request_test_superuser_locale_profile_edit_view(self):
+    def _request_test_super_user_locale_profile_edit_view(self):
         return self._request_test_user_locale_profile_edit_view(
-            user=self._test_superuser
+            user=self._test_super_user
         )
 
     def _request_test_user_locale_profile_detail_view(self, user=None):

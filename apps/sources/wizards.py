@@ -1,27 +1,26 @@
 from furl import furl
 
-from django import forms
 from django.apps import apps
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import classonlymethod
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from formtools.wizard.views import SessionWizardView
-
+from mayan.apps.forms import forms, wizards
 from mayan.apps.views.view_mixins import ViewIconMixin
 
 from .classes import DocumentCreateWizardStep
+from .exceptions import SourceActionExceptionUnknown
 from .icons import (
-    icon_document_create_multiple, icon_wizard_step_first,
+    icon_document_upload_wizard, icon_wizard_step_first,
     icon_wizard_step_next, icon_wizard_step_previous
 )
 
 
-class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
-    template_name = 'appearance/generic_wizard.html'
-    view_icon = icon_document_create_multiple
+class DocumentCreateWizard(ViewIconMixin, wizards.SessionWizardView):
+    template_name = 'appearance/wizard.html'
+    view_icon = icon_document_upload_wizard
 
     @classonlymethod
     def as_view(cls, *args, **kwargs):
@@ -29,7 +28,7 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
         # initialized as a view. Declare one empty form and then change the
         # form list in the .dispatch() method.
         class EmptyForm(forms.Form):
-            """Empty form"""
+            """Empty form."""
 
         cls.form_list = [EmptyForm]
         return super().as_view(*args, **kwargs)
@@ -52,18 +51,25 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
         self.form_list = result['form_list']
         self.condition_dict = result['condition_dict']
 
-        if not Source.objects.interactive().filter(enabled=True).exists():
-            messages.error(
-                message=_(
-                    'No interactive document sources have been defined or '
-                    'none have been enabled, create one before proceeding.'
-                ), request=request
-            )
-            return HttpResponseRedirect(
-                redirect_to=reverse(viewname='sources:source_list')
-            )
+        for source in Source.objects.filter(enabled=True):
+            try:
+                action = source.get_action(name='document_upload')
+                if action.has_interface(interface_name='View'):
+                    return super().dispatch(request=request, *args, **kwargs)
+            except SourceActionExceptionUnknown:
+                """
+                Non fatal. Ignore and try the next source.
+                """
 
-        return super().dispatch(request, *args, **kwargs)
+        messages.error(
+            message=_(
+                message='No interactive document sources have been defined or '
+                'none have been enabled, create one before proceeding.'
+            ), request=request
+        )
+        return HttpResponseRedirect(
+            redirect_to=reverse(viewname='sources:source_list')
+        )
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
@@ -74,13 +80,13 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
             {
                 'form_css_classes': 'form-hotkey-enter form-hotkey-double-click',
                 'step_title': _(
-                    'Step %(step)d of %(total_steps)d: %(step_label)s'
+                    message='Step %(step)d of %(total_steps)d: %(step_label)s'
                 ) % {
                     'step': self.steps.step1,
                     'step_label': wizard_step.label,
                     'total_steps': len(self.form_list)
                 },
-                'title': _('Document upload wizard'),
+                'title': _(message='Document upload wizard'),
                 'wizard_step': wizard_step,
                 'wizard_steps': DocumentCreateWizardStep.get_all()
             }
@@ -89,20 +95,20 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
         context['form_button_overrides'] = (
             {
                 'icon': icon_wizard_step_first,
-                'label': _('First'),
+                'label': _(message='First'),
                 'name_override': 'wizard_goto_step',
                 'value': self.steps.first
             },
             {
                 'icon': icon_wizard_step_previous,
-                'label': _('Previous'),
+                'label': _(message='Previous'),
                 'name_override': 'wizard_goto_step',
                 'value': self.steps.prev
             },
             {
                 'icon': icon_wizard_step_next,
                 'is_primary': True,
-                'label': _('Next')
+                'label': _(message='Next')
             }
         )
 
@@ -112,17 +118,25 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
             context['form_button_overrides'][1]['css_classes'] = 'disabled'
             context['form_button_overrides'][1]['disabled'] = True
 
+        if not wizard_step.get_next_is_enabled(wizard=self):
+            context['form_button_overrides'][2]['css_classes'] = 'disabled'
+            context['form_button_overrides'][2]['disabled'] = True
+
         return context
 
     def get_form_initial(self, step):
-        return DocumentCreateWizardStep.get(
-            name=step
-        ).get_form_initial(wizard=self) or {}
+        wizard_step = DocumentCreateWizardStep.get(name=step)
+
+        initial = wizard_step.get_form_initial(wizard=self) or {}
+
+        return initial
 
     def get_form_kwargs(self, step):
-        return DocumentCreateWizardStep.get(
-            name=step
-        ).get_form_kwargs(wizard=self) or {}
+        wizard_step = DocumentCreateWizardStep.get(name=step)
+
+        kwargs = wizard_step.get_form_kwargs(wizard=self) or {}
+
+        return kwargs
 
     def done(self, form_list, **kwargs):
         query_dict = {}
@@ -133,10 +147,10 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
             )
 
         url = furl(
-            reverse(viewname='sources:document_upload_interactive')
+            reverse(viewname='sources:document_upload')
         )
         # Use equal and not .update() to get the same result as using
-        # urlencode(doseq=True)
+        # urlencode(doseq=True).
         url.args = query_dict
 
         return HttpResponseRedirect(

@@ -2,9 +2,9 @@ import os
 
 from ..models import DocumentType
 from ..permissions import (
-    permission_document_properties_edit,
-    permission_document_type_create, permission_document_type_delete,
-    permission_document_type_edit, permission_document_type_view,
+    permission_document_properties_edit, permission_document_type_create,
+    permission_document_type_delete, permission_document_type_edit,
+    permission_document_type_view
 )
 
 from .base import GenericDocumentViewTestCase
@@ -14,43 +14,10 @@ from .literals import (
 )
 from .mixins.document_type_mixins import (
     DocumentQuickLabelViewTestMixin,
-    DocumentTypeDeletionPoliciesViewTestMixin,
     DocumentTypeFilenameGeneratorViewTestMixin,
     DocumentTypeQuickLabelTestMixin, DocumentTypeQuickLabelViewTestMixin,
-    DocumentTypeViewTestMixin
+    DocumentTypeRetentionPoliciesViewTestMixin, DocumentTypeViewTestMixin
 )
-
-
-class DocumentTypeDeletionPoliciesViewTestCase(
-    DocumentTypeDeletionPoliciesViewTestMixin, GenericDocumentViewTestCase
-):
-    auto_upload_test_document = False
-
-    def test_document_type_deletion_policies_get_view_no_permission(self):
-        response = self._request_test_document_type_policies_get_view()
-        self.assertEqual(response.status_code, 404)
-
-    def test_document_type_deletion_policies_get_view_access(self):
-        self.grant_access(
-            obj=self._test_document_type,
-            permission=permission_document_type_edit
-        )
-
-        response = self._request_test_document_type_policies_get_view()
-        self.assertEqual(response.status_code, 200)
-
-    def test_document_type_deletion_policies_post_view_no_permission(self):
-        response = self._request_test_document_type_policies_post_view()
-        self.assertEqual(response.status_code, 404)
-
-    def test_document_type_deletion_policies_post_view_access(self):
-        self.grant_access(
-            obj=self._test_document_type,
-            permission=permission_document_type_edit
-        )
-
-        response = self._request_test_document_type_policies_post_view()
-        self.assertEqual(response.status_code, 302)
 
 
 class DocumentTypeFilenameGeneratorViewTestCase(
@@ -174,8 +141,7 @@ class DocumentTypeViewTestCase(
 
 
 class DocumentTypeQuickLabelViewTestCase(
-    DocumentTypeQuickLabelTestMixin, DocumentTypeQuickLabelViewTestMixin,
-    GenericDocumentViewTestCase
+    DocumentTypeQuickLabelViewTestMixin, GenericDocumentViewTestCase
 ):
     auto_upload_test_document = False
 
@@ -188,7 +154,9 @@ class DocumentTypeQuickLabelViewTestCase(
         response = self._request_test_quick_label_create_view()
         self.assertEqual(response.status_code, 404)
 
-        self.assertEqual(self._test_document_type.filenames.count(), 0)
+        self.assertEqual(
+            self._test_document_type.filenames.count(), 0
+        )
 
     def test_document_type_quick_label_create_with_access(self):
         self.grant_access(
@@ -199,7 +167,9 @@ class DocumentTypeQuickLabelViewTestCase(
         response = self._request_test_quick_label_create_view()
         self.assertEqual(response.status_code, 302)
 
-        self.assertEqual(self._test_document_type.filenames.count(), 1)
+        self.assertEqual(
+            self._test_document_type.filenames.count(), 1
+        )
 
     def test_document_type_quick_label_delete_no_permission(self):
         self._create_test_document_type_quick_label()
@@ -335,3 +305,35 @@ class DocumentsQuickLabelViewTestCase(
         self.assertEqual(
             self._test_document.label, self._test_document_type_quick_label.filename
         )
+
+
+class DocumentTypeRetentionPoliciesViewTestCase(
+    DocumentTypeRetentionPoliciesViewTestMixin, GenericDocumentViewTestCase
+):
+    auto_upload_test_document = False
+
+    def test_document_type_retention_policies_get_view_no_permission(self):
+        response = self._request_test_document_type_retention_policies_get_view()
+        self.assertEqual(response.status_code, 404)
+
+    def test_document_type_retention_policies_get_view_access(self):
+        self.grant_access(
+            obj=self._test_document_type,
+            permission=permission_document_type_edit
+        )
+
+        response = self._request_test_document_type_retention_policies_get_view()
+        self.assertEqual(response.status_code, 200)
+
+    def test_document_type_retention_policies_post_view_no_permission(self):
+        response = self._request_test_document_type_retention_policies_post_view()
+        self.assertEqual(response.status_code, 404)
+
+    def test_document_type_retention_policies_post_view_access(self):
+        self.grant_access(
+            obj=self._test_document_type,
+            permission=permission_document_type_edit
+        )
+
+        response = self._request_test_document_type_retention_policies_post_view()
+        self.assertEqual(response.status_code, 302)

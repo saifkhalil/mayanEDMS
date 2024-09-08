@@ -3,7 +3,9 @@ from rest_framework import status
 from mayan.apps.documents.permissions import (
     permission_document_type_edit, permission_document_type_view
 )
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import event_web_link_created, event_web_link_edited
@@ -13,23 +15,20 @@ from ..permissions import (
     permission_web_link_edit, permission_web_link_view
 )
 
-from .literals import TEST_WEB_LINK_LABEL_EDITED, TEST_WEB_LINK_LABEL
-from .mixins import (
-    WebLinkDocumentTypeAPIViewMixin, WebLinkAPIViewTestMixin,
-    WebLinkTestMixin
-)
+from .literals import TEST_WEB_LINK_LABEL, TEST_WEB_LINK_LABEL_EDITED
+from .mixins import WebLinkAPIViewTestMixin, WebLinkDocumentTypeAPIViewMixin
 
 
-class WebLinkAPIViewTestCase(
-    WebLinkTestMixin, WebLinkAPIViewTestMixin, BaseAPITestCase
-):
+class WebLinkAPIViewTestCase(WebLinkAPIViewTestMixin, BaseAPITestCase):
     def test_web_link_create_api_view_no_permission(self):
         self._clear_events()
 
         response = self._request_test_web_link_create_api_view()
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(WebLink.objects.count(), 0)
+        self.assertEqual(
+            WebLink.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -43,10 +42,16 @@ class WebLinkAPIViewTestCase(
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         web_link = WebLink.objects.first()
-        self.assertEqual(response.data['id'], web_link.pk)
-        self.assertEqual(response.data['label'], TEST_WEB_LINK_LABEL)
+        self.assertEqual(
+            response.data['id'], web_link.pk
+        )
+        self.assertEqual(
+            response.data['label'], TEST_WEB_LINK_LABEL
+        )
 
-        self.assertEqual(WebLink.objects.count(), 1)
+        self.assertEqual(
+            WebLink.objects.count(), 1
+        )
         self.assertEqual(web_link.label, TEST_WEB_LINK_LABEL)
 
         events = self._get_test_events()
@@ -65,7 +70,9 @@ class WebLinkAPIViewTestCase(
         response = self._request_test_web_link_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(WebLink.objects.count(), 1)
+        self.assertEqual(
+            WebLink.objects.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -81,7 +88,9 @@ class WebLinkAPIViewTestCase(
         response = self._request_test_web_link_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        self.assertEqual(WebLink.objects.count(), 0)
+        self.assertEqual(
+            WebLink.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -195,8 +204,7 @@ class WebLinkAPIViewTestCase(
 
 
 class WebLinkDocumentTypeAPIViewTestCase(
-    DocumentTestMixin, WebLinkDocumentTypeAPIViewMixin, WebLinkTestMixin,
-    BaseAPITestCase
+    DocumentTestMixin, WebLinkDocumentTypeAPIViewMixin, BaseAPITestCase
 ):
     auto_upload_test_document = False
 
@@ -345,7 +353,9 @@ class WebLinkDocumentTypeAPIViewTestCase(
 
         response = self._request_test_web_link_document_type_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

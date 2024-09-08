@@ -1,7 +1,7 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .events import event_file_metadata_document_file_submitted
-from .tasks import task_process_document_file
+from .tasks import task_document_file_metadata_process
 
 
 def method_document_file_metadata_submit(self, user=None):
@@ -21,28 +21,9 @@ def method_document_file_metadata_submit_single(self, user=None):
     else:
         user_id = None
 
-    task_process_document_file.apply_async(
-        kwargs={
-            'document_file_id': self.pk, 'user_id': user_id
-        }
+    task_document_file_metadata_process.apply_async(
+        kwargs={'document_file_id': self.pk, 'user_id': user_id}
     )
-
-
-def method_get_document_file_metadata(self, dotted_name):
-    latest_file = self.file_latest
-    # Don't error out if document has no file.
-    if latest_file:
-        return latest_file.get_file_metadata(
-            dotted_name=dotted_name
-        )
-
-
-method_get_document_file_metadata.short_description = _(
-    'get_file_metadata(< file metadata dotted path >)'
-)
-method_get_document_file_metadata.help_text = _(
-    'Return the specified document file metadata entry.'
-)
 
 
 def method_get_document_file_file_metadata(self, dotted_name):
@@ -52,7 +33,7 @@ def method_get_document_file_file_metadata(self, dotted_name):
         return
 
     driver_internal_name = parts[0]
-    key = parts[1].replace('.', '_')
+    attribute_internal_name = parts[1]
 
     try:
         document_driver = self.file_metadata_drivers.get(
@@ -62,11 +43,15 @@ def method_get_document_file_file_metadata(self, dotted_name):
         return
     else:
         try:
-            return document_driver.entries.get(key=key).value
+            file_metadata_entry = document_driver.entries.get(
+                internal_name=attribute_internal_name
+            )
         except document_driver.entries.model.DoesNotExist:
             return
+        else:
+            return file_metadata_entry.value
 
 
 method_get_document_file_file_metadata.help_text = _(
-    'Return the specified document file file metadata entry.'
+    message='Return the specified document file file metadata entry.'
 )

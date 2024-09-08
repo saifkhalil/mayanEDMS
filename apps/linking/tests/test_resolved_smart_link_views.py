@@ -3,14 +3,11 @@ from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 
 from ..permissions import permission_resolved_smart_link_view
 
-from .mixins import (
-    ResolvedSmartLinkDocumentViewTestMixin, SmartLinkTestMixin
-)
+from .mixins import ResolvedSmartLinkDocumentViewTestMixin
 
 
 class ResolvedSmartLinkDocumentViewTestCase(
-    SmartLinkTestMixin, ResolvedSmartLinkDocumentViewTestMixin,
-    GenericDocumentViewTestCase
+    ResolvedSmartLinkDocumentViewTestMixin, GenericDocumentViewTestCase
 ):
     auto_upload_test_document = False
 
@@ -28,11 +25,11 @@ class ResolvedSmartLinkDocumentViewTestCase(
         response = self._request_test_document_resolved_smart_link_list_view()
         self.assertNotContains(
             response=response, status_code=404,
-            text=self._test_documents[0].label
+            text=self._test_document_list[0].label
         )
         self.assertNotContains(
             response=response, status_code=404,
-            text=self._test_documents[0].uuid
+            text=self._test_document_list[0].uuid
         )
 
         events = self._get_test_events()
@@ -40,7 +37,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_document_resolved_smart_link_list_view_with_document_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
 
@@ -49,11 +46,11 @@ class ResolvedSmartLinkDocumentViewTestCase(
         response = self._request_test_document_resolved_smart_link_list_view()
         self.assertContains(
             response=response, status_code=200,
-            text=self._test_documents[0].label
+            text=self._test_document_list[0].label
         )
         self.assertNotContains(
             response=response, status_code=200,
-            text=self._test_documents[0].uuid
+            text=self._test_document_list[0].uuid
         )
 
         events = self._get_test_events()
@@ -70,11 +67,11 @@ class ResolvedSmartLinkDocumentViewTestCase(
         response = self._request_test_document_resolved_smart_link_list_view()
         self.assertNotContains(
             response=response, status_code=404,
-            text=self._test_documents[0].label
+            text=self._test_document_list[0].label
         )
         self.assertNotContains(
             response=response, status_code=404,
-            text=self._test_documents[0].uuid
+            text=self._test_document_list[0].uuid
         )
 
         events = self._get_test_events()
@@ -82,7 +79,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_document_resolved_smart_link_list_view_with_full_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
         self.grant_access(
@@ -95,11 +92,11 @@ class ResolvedSmartLinkDocumentViewTestCase(
         response = self._request_test_document_resolved_smart_link_list_view()
         self.assertContains(
             response=response, status_code=200,
-            text=self._test_documents[0].label
+            text=self._test_document_list[0].label
         )
         self.assertContains(
             response=response, status_code=200,
-            text=self._test_documents[0].uuid
+            text=self._test_document_list[0].uuid
         )
 
         events = self._get_test_events()
@@ -111,22 +108,22 @@ class ResolvedSmartLinkDocumentViewTestCase(
             permission=permission_resolved_smart_link_view
         )
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
 
-        self._test_documents[0].delete()
+        self._test_document_list[0].delete()
 
         self._clear_events()
 
         response = self._request_test_document_resolved_smart_link_list_view()
         self.assertNotContains(
             response=response, status_code=404,
-            text=self._test_documents[0].label
+            text=self._test_document_list[0].label
         )
         self.assertNotContains(
             response=response, status_code=404,
-            text=self._test_documents[0].uuid
+            text=self._test_document_list[0].uuid
         )
 
         events = self._get_test_events()
@@ -143,7 +140,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_document_resolved_smart_document_list_with_main_document_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
 
@@ -171,7 +168,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_document_resolved_smart_document_list_with_main_document_and_smart_link_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
         self.grant_access(
@@ -184,7 +181,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
         response = self._request_test_document_resolved_smart_link_document_list_view()
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(
-            response=response, text=self._test_documents[1].label
+            response=response, text=self._test_document_list[1].label
         )
 
         events = self._get_test_events()
@@ -192,7 +189,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_trashed_main_document_resolved_smart_document_list_with_main_document_and_smart_link_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
         self.grant_access(
@@ -200,7 +197,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
             permission=permission_resolved_smart_link_view
         )
 
-        self._test_documents[0].delete()
+        self._test_document_list[0].delete()
 
         self._clear_events()
 
@@ -212,11 +209,11 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_document_resolved_smart_document_list_with_full_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
         self.grant_access(
-            obj=self._test_documents[1], permission=permission_document_view
+            obj=self._test_document_list[1], permission=permission_document_view
         )
         self.grant_access(
             obj=self._test_smart_link,
@@ -228,7 +225,7 @@ class ResolvedSmartLinkDocumentViewTestCase(
         response = self._request_test_document_resolved_smart_link_document_list_view()
         self.assertEqual(response.status_code, 200)
         self.assertContains(
-            response=response, text=self._test_documents[1].label
+            response=response, text=self._test_document_list[1].label
         )
 
         events = self._get_test_events()
@@ -236,25 +233,25 @@ class ResolvedSmartLinkDocumentViewTestCase(
 
     def test_trashed_linked_document_resolved_smart_document_list_with_full_access(self):
         self.grant_access(
-            obj=self._test_documents[0],
+            obj=self._test_document_list[0],
             permission=permission_resolved_smart_link_view
         )
         self.grant_access(
-            obj=self._test_documents[1], permission=permission_document_view
+            obj=self._test_document_list[1], permission=permission_document_view
         )
         self.grant_access(
             obj=self._test_smart_link,
             permission=permission_resolved_smart_link_view
         )
 
-        self._test_documents[1].delete()
+        self._test_document_list[1].delete()
 
         self._clear_events()
 
         response = self._request_test_document_resolved_smart_link_document_list_view()
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(
-            response=response, text=self._test_documents[1].label
+            response=response, text=self._test_document_list[1].label
         )
 
         events = self._get_test_events()

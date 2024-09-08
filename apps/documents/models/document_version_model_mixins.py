@@ -1,3 +1,4 @@
+from itertools import islice
 import logging
 import os
 
@@ -6,14 +7,20 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.urls import reverse
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.databases.classes import ModelQueryFields
 from mayan.apps.converter.exceptions import AppImageError
+from mayan.apps.databases.classes import ModelQueryFields
+from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerMethodAfter
 from mayan.apps.templating.classes import Template
 
+from ..events import (
+    event_document_version_page_created, event_document_version_edited
+)
 from ..literals import (
-    IMAGE_ERROR_NO_VERSION_PAGES,
+    DOCUMENT_VERSION_PAGE_CREATE_BATCH_SIZE,
+    IMAGE_ERROR_DOCUMENT_VERSION_HAS_NO_PAGES,
     STORAGE_NAME_DOCUMENT_VERSION_PAGE_IMAGE_CACHE
 )
 from ..signals import signal_post_document_version_remap
@@ -43,10 +50,19 @@ class DocumentVersionBusinessLogicMixin:
     def active_set(self, save=True):
         with transaction.atomic():
             self.document.versions.exclude(pk=self.pk).update(active=False)
+
             self.active = True
 
             if save:
-                return self.save(update_fields=('active',))
+                self.save(
+                    update_fields=('active',)
+                )
+
+            self.document.version_active = self
+            self.document._event_ignore = True
+            self.document.save(
+                update_fields=('version_active',)
+            )
 
     @cached_property
     def cache(self):
@@ -83,7 +99,9 @@ class DocumentVersionBusinessLogicMixin:
                 user=user
             )
         else:
-            raise AppImageError(error_name=IMAGE_ERROR_NO_VERSION_PAGES)
+            raise AppImageError(
+                error_name=IMAGE_ERROR_DOCUMENT_VERSION_HAS_NO_PAGES
+            )
 
     def get_cache_partitions(self):
         result = [self.cache_partition]
@@ -110,7 +128,7 @@ class DocumentVersionBusinessLogicMixin:
             ).render(
                 context={'instance': self}
             )
-    get_label.short_description = _('Label')
+    get_label.short_description = _(message='Label')
 
     def get_source_content_object_dictionary_list(self):
         DocumentFilePage = apps.get_model(
@@ -155,7 +173,9 @@ class DocumentVersionBusinessLogicMixin:
         queryset = ModelQueryFields.get(
             model=DocumentVersionPage
         ).get_queryset()
-        return queryset.filter(pk__in=self.version_pages.all())
+        return queryset.filter(
+            pk__in=self.version_pages.all()
+        )
 
     def pages_append_all(self, user=None):
         """
@@ -170,7 +190,7 @@ class DocumentVersionBusinessLogicMixin:
 
         document_file_pages = DocumentFilePage.objects.filter(
             document_file__document=self.document
-        ).order_by('document_file__timestamp', 'document_file__page_number')
+        ).order_by('document_file__timestamp', 'page_number')
 
         annotated_content_object_list = DocumentVersion.annotate_content_object_list(
             content_object_list=list(document_file_pages)
@@ -184,6 +204,12 @@ class DocumentVersionBusinessLogicMixin:
     def pages_first(self):
         return self.pages.first()
 
+    @method_event(
+        action_object='document',
+        event_manager_class=EventManagerMethodAfter,
+        event=event_document_version_edited,
+        target='self'
+    )
     def pages_remap(self, annotated_content_object_list=None, user=None):
         DocumentVersion = apps.get_model(
             app_label='documents', model_name='DocumentVersion'
@@ -192,6 +218,8 @@ class DocumentVersionBusinessLogicMixin:
             app_label='documents', model_name='DocumentVersionPage'
         )
 
+        self._event_actor = user
+
         for page in self.pages.all():
             page._event_actor = user
             page.delete()
@@ -199,17 +227,37 @@ class DocumentVersionBusinessLogicMixin:
         if not annotated_content_object_list:
             annotated_content_object_list = ()
 
-        for content_object_entry in annotated_content_object_list:
-            version_page = DocumentVersionPage(
+        document_version_pages = (
+            DocumentVersionPage(
                 document_version=self,
                 content_object=content_object_entry['content_object'],
                 page_number=content_object_entry['page_number']
+            ) for content_object_entry in annotated_content_object_list
+        )
+
+        while True:
+            batch = list(
+                islice(
+                    document_version_pages,
+                    DOCUMENT_VERSION_PAGE_CREATE_BATCH_SIZE
+                )
             )
-            version_page._event_actor = user
-            version_page.save()
+
+            if not batch:
+                break
+
+            DocumentVersionPage.objects.bulk_create(
+                batch_size=DOCUMENT_VERSION_PAGE_CREATE_BATCH_SIZE,
+                objs=batch
+            )
+
+        for page in self.pages.all().only('pk'):
+            event_document_version_page_created.commit(
+                action_object=self, actor=user, target=page
+            )
 
         signal_post_document_version_remap.send(
-            sender=DocumentVersion, instance=self
+            instance=self, sender=DocumentVersion
         )
 
     def pages_reset(self, document_file=None, user=None):
@@ -224,7 +272,9 @@ class DocumentVersionBusinessLogicMixin:
         latest_file = document_file or self.document.file_latest
 
         if latest_file:
-            content_object_list = list(latest_file.pages.all())
+            content_object_list = list(
+                latest_file.pages.all()
+            )
         else:
             content_object_list = None
 

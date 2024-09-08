@@ -53,33 +53,47 @@ class PartialNavigation {
 
         this.currentAjaxRequest = null;
         this.AjaxRequestTimeOutList = [];
+
+        // AJAX Refresh button.
+        this.ajaxRefreshButtonAnimationSpeed = 1000;
+        this.ajaxRefreshButtonEnabled = true;
+        this.ajaxRefreshButtonTimer = setTimeout(null);;
     }
 
     initialize () {
         this.setupAjaxAnchors();
         this.setupAjaxNavigation();
         this.setupAjaxForm();
+        this.setupAjaxRefreshButton();
     }
 
     filterLocation (newLocation) {
         /*
          * Method to validate new locations
          */
-        let uri = new URI(newLocation);
-        const currentLocation = new URI(location);
+        let url;
 
-        if (uri.path() === '') {
-            // href with no path remain in the same location
-            // We strip the same location query and use the new href's one
-            uri.path(
-                new URI(currentLocation.fragment()).path()
-            )
-            return uri.toString();
+        try {
+            url = new URL(newLocation, window.location.origin);
+        } catch (error) {
+            if (error instanceof TypeError) {
+                return this.initialURL;
+            } else {
+                throw error;
+            }
         }
 
-        if (uri.path() === '/') {
-            // Root URL is not allowed
-            return this.initialURL;
+        if (url.pathname === '/') {
+            // href with no path remain in the same location
+            // We strip the same location query and use the new href's one.
+            let urlNew = new URL(window.location.hash.substring(1), url);
+            urlNew.search = newLocation;
+
+            if (urlNew.pathname === '/') {
+                return this.initialURL;
+            } else {
+                return urlNew.pathname + urlNew.search;
+            }
         }
 
         return newLocation;
@@ -105,6 +119,7 @@ class PartialNavigation {
             let options = {};
 
             options['timeOut'] = 10000;
+            $('body').css('cursor', 'progress');
 
             toastr['warning'](app.ajaxThrottlingMessage, '', options);
             return;
@@ -113,10 +128,14 @@ class PartialNavigation {
         // Another AJAX request is being processed. Cancel the previous
         // one.
         if (this.currentAjaxRequest) {
+            // Store and repaint the content area to avoid a '0' status
+            // server error message.
+            const htmlContent = $('#ajax-content').html();
+
             this.currentAjaxRequest.abort();
-            // Clear the content area to avoid a '0' status server error
-            // message.
-            $('#ajax-content').empty('');
+            $('body').css('cursor', 'progress');
+
+            $('#ajax-content').html(htmlContent);
         }
 
         this.currentAjaxRequest = $.ajax({
@@ -138,6 +157,7 @@ class PartialNavigation {
                         window.location = this.url;
                     } else {
                         $('#ajax-content').html(data).change();
+                        $('body').css('cursor', 'default');
                     }
                 }
 
@@ -269,11 +289,11 @@ class PartialNavigation {
             pushState = true;
         }
 
-        let currentLocation = new URI(location);
-        currentLocation.fragment(newLocation);
+        let urlNew = new URL(window.location);
+        urlNew.hash = newLocation;
 
         if (pushState) {
-            history.pushState({}, '', currentLocation);
+            history.pushState({}, '', urlNew);
         }
         this.loadAjaxContent(newLocation);
     }
@@ -304,41 +324,26 @@ class PartialNavigation {
                 });
             },
             beforeSubmit: function(arr, $form, options) {
-                const uri = new URI(location);
-                const uriFragment = uri.fragment();
-                const url = $form.attr('action') || uriFragment;
-                const formAction = new URI(url);
-                let finalUrl = new URI(formAction.path() + '?' + formAction.query());
-                const formQueryString = new URLSearchParams(
+                const urlDefault = new URL(
+                    window.location.hash.substring(1), window.location
+                );
+                const stringFormAction = $form.attr('action') || urlDefault.toString();
+
+                options.url = stringFormAction;
+
+                const urlSearchParamForm = new URLSearchParams(
                     decodeURIComponent($form.serialize())
                 );
+                const urlFormAction = new URL(stringFormAction, window.location);
 
-                options.url = url;
-
-                // Merge the URL and the form values in a smart way instead
-                // of just blindly adding a '?' between them.
-                formQueryString.forEach(function(value, key) {
-                    finalUrl.setQuery(key, value);
-                });
-
-                lastAjaxFormData.url = finalUrl.toString();
+                urlFormAction.search = urlSearchParamForm.toString();
+                lastAjaxFormData.url = urlFormAction;
 
                 if ($form.attr('target') == '_blank') {
                     // If the form has a target attribute we emulate it by
                     // opening a new window and passing the form serialized
                     // data as the query.
-                    const formAction = new URI($form.attr('action'));
-                    let finalUrl = new URI(formAction.path());
-                    const formQueryString = new URLSearchParams(
-                        decodeURIComponent($form.serialize())
-                    );
-
-                    // Merge the URL and the form values in a smart way instead
-                    // of just blindly adding a '?' between them.
-                    formQueryString.forEach(function(value, key) {
-                        finalUrl.setQuery(key, value);
-                    });
-                    window.open(finalUrl.toString());
+                    window.open(urlFormAction.toString());
 
                     return false;
                 }
@@ -348,19 +353,49 @@ class PartialNavigation {
             error: function(jqXHR, textStatus, errorThrown){
                 app.processAjaxRequestError(jqXHR);
             },
-            mimeType: 'text/html; charset=utf-8', // ! Need set mimeType only when run from local file
+            // ! Need set mimeType only when run from local file.
+            mimeType: 'text/html; charset=utf-8',
             success: function(data, textStatus, request) {
                 if (request.status == app.redirectionCode) {
-                    // Handle redirects after submitting the form
+                    // Handle redirects after submitting the form.
                     const newLocation = request.getResponseHeader('Location');
 
                     app.setLocation(newLocation);
                 } else {
-                    let currentUri = new URI(window.location.hash);
-                    currentUri.fragment(lastAjaxFormData.url);
-                    history.pushState({}, '', currentUri);
+                    let urlCurrent = new URL(window.location.origin);
+                    urlCurrent.hash = lastAjaxFormData.url.pathname + lastAjaxFormData.url.search;
+                    history.pushState({}, '', urlCurrent);
                     $('#ajax-content').html(data).change();
                 }
+            }
+        });
+    }
+
+    setupAjaxRefreshButton () {
+        const app = this;
+
+        $('body').on('click', 'a.appearance-link-ajax-refresh', function (event) {
+            const $this = $(this);
+
+            $this.blur();
+
+            event.preventDefault();
+
+            if (app.ajaxRefreshButtonEnabled) {
+                app.ajaxRefreshButtonEnabled = false;
+
+                clearTimeout(app.ajaxRefreshButtonTimer);
+                app.setLocation(window.location.hash.substring(1));
+                $this.addClass('fa-spin');
+                $this.css(
+                    'animation-duration',
+                    app.ajaxRefreshButtonAnimationSpeed + 'ms'
+                );
+
+                app.ajaxRefreshButtonTimer = setTimeout(function () {
+                    $this.removeClass('fa-spin');
+                    app.ajaxRefreshButtonEnabled = true;
+                }, app.ajaxRefreshButtonAnimationSpeed);
             }
         });
     }
@@ -370,32 +405,28 @@ class PartialNavigation {
          * Setup the navigation method using the hash of the location.
          * Also handles the back button event and loads via AJAX any
          * URL in the location when the app first launches. Registers
-         * a callback to send an emulated HTTP_REFERER so that the backends
+         * a callback to send an emulated `HTTP_REFERER` so that the backends
          * code will still work without change.
          */
         const app = this;
 
-        // Load ajax content when the hash changes
+        // Load ajax content when the hash changes.
         if (window.history && window.history.pushState) {
             $(window).on('popstate', function() {
-                const uri = new URI(location);
-                const uriFragment = uri.fragment();
-                app.setLocation(uriFragment, false);
+                app.setLocation(window.location.hash.substring(1), false);
             });
         }
 
-        // Load any initial address in the URL of the browser
+        // Load any initial address in the URL of the browser.
         if (window.location.hash) {
-            const uri = new URI(window.location.hash);
-            const uriFragment = uri.fragment();
-            this.setLocation(uriFragment);
+            this.setLocation(window.location.hash.substring(1));
         } else {
             this.setLocation('/');
         }
 
         $.ajaxSetup({
             beforeSend: function (jqXHR, settings) {
-                // Emulate the HTTP_REFERER.
+                // Emulate the `HTTP_REFERER`.
                 jqXHR.setRequestHeader('X-Alt-Referer', app.lastLocation);
             },
         });

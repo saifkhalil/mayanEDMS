@@ -1,6 +1,8 @@
 import logging
 
+from rest_framework import status
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from mayan.apps.acls.models import AccessControlList
 from mayan.apps.rest_api import generics
@@ -17,6 +19,7 @@ from ..serializers.document_serializers import (
     DocumentFileActionSerializer, DocumentSerializer,
     DocumentChangeTypeSerializer, DocumentUploadSerializer
 )
+from ..tasks.document_tasks import task_document_move_to_trash
 
 logger = logging.getLogger(name=__name__)
 
@@ -30,19 +33,28 @@ class APIDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
     put: Edit the properties of the selected document.
     """
     lookup_url_kwarg = 'document_id'
-    mayan_object_permissions = {
-        'GET': (permission_document_view,),
-        'PUT': (permission_document_properties_edit,),
-        'PATCH': (permission_document_properties_edit,),
-        'DELETE': (permission_document_trash,)
+    mayan_object_permission_map = {
+        'DELETE': permission_document_trash,
+        'GET': permission_document_view,
+        'PATCH': permission_document_properties_edit,
+        'PUT': permission_document_properties_edit
     }
     serializer_class = DocumentSerializer
     source_queryset = Document.valid.all()
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        task_document_move_to_trash.apply_async(
+            kwargs={
+                'document_id': instance.pk, 'user_id': self.request.user.pk
+            }
+        )
+
+        return Response(status=status.HTTP_202_ACCEPTED)
+
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class APIDocumentFileActionListView(generics.ListAPIView):
@@ -67,10 +79,7 @@ class APIDocumentListView(generics.ListCreateAPIView):
     get: Returns a list of all the documents.
     post: Create a new document.
     """
-    mayan_object_permissions = {
-        'GET': (permission_document_view,),
-    }
-    ordering_fields = ('datetime_created', 'document_type', 'id', 'label')
+    mayan_object_permission_map = {'GET': permission_document_view}
     serializer_class = DocumentSerializer
     source_queryset = Document.valid.all()
 
@@ -89,9 +98,7 @@ class APIDocumentListView(generics.ListCreateAPIView):
         super().perform_create(serializer=serializer)
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class APIDocumentChangeTypeView(generics.ObjectActionAPIView):
@@ -99,9 +106,7 @@ class APIDocumentChangeTypeView(generics.ObjectActionAPIView):
     post: Change the type of the selected document.
     """
     lookup_url_kwarg = 'document_id'
-    mayan_object_permissions = {
-        'POST': (permission_document_change_type,)
-    }
+    mayan_object_permission_map = {'POST': permission_document_change_type}
     serializer_class = DocumentChangeTypeSerializer
     source_queryset = Document.valid.all()
 
@@ -133,6 +138,4 @@ class APIDocumentUploadView(generics.CreateAPIView):
         super().perform_create(serializer=serializer)
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}

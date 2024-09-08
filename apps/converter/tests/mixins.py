@@ -1,9 +1,8 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.files import File
-from django.db.models import Q
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.permissions.tests.mixins import PermissionTestMixin
+from mayan.apps.testing.tests.mixins import TestMixinObjectCreationTrack
 
 from ..classes import Layer
 from ..models import Asset, LayerTransformation
@@ -11,16 +10,29 @@ from ..tasks import task_content_object_image_generate
 from ..transformations import BaseTransformation
 
 from .literals import (
-    TEST_ASSET_LABEL, TEST_ASSET_LABEL_EDITED, TEST_ASSET_INTERNAL_NAME,
-    TEST_ASSET_PATH, TEST_LAYER_LABEL, TEST_LAYER_ORDER, TEST_LAYER_NAME,
+    TEST_ASSET_INTERNAL_NAME, TEST_ASSET_LABEL, TEST_ASSET_LABEL_EDITED,
+    TEST_ASSET_PATH, TEST_LAYER_LABEL, TEST_LAYER_NAME, TEST_LAYER_ORDER,
     TEST_TRANSFORMATION_ARGUMENT, TEST_TRANSFORMATION_ARGUMENT_EDITED,
     TEST_TRANSFORMATION_LABEL, TEST_TRANSFORMATION_NAME
 )
 
 
-class AssetAPIViewTestMixin:
+class AssetTestMixin(TestMixinObjectCreationTrack):
+    _test_object_model = Asset
+    _test_object_name = '_test_asset'
+
+    def _create_test_asset(self):
+        with open(file=TEST_ASSET_PATH, mode='rb') as file_object:
+            self._test_asset = Asset.objects.create(
+                label=TEST_ASSET_LABEL,
+                internal_name=TEST_ASSET_INTERNAL_NAME,
+                file=File(file=file_object)
+            )
+
+
+class AssetAPIViewTestMixin(AssetTestMixin):
     def _request_test_asset_create_api_view(self):
-        pk_list = list(Asset.objects.values_list('pk', flat=True))
+        self._test_object_track()
 
         with open(file=TEST_ASSET_PATH, mode='rb') as file_object:
             response = self.post(
@@ -31,10 +43,7 @@ class AssetAPIViewTestMixin:
                 }
             )
 
-        try:
-            self._test_asset = Asset.objects.get(~Q(pk__in=pk_list))
-        except Asset.DoesNotExist:
-            self._test_asset = None
+        self._test_object_set()
 
         return response
 
@@ -73,7 +82,7 @@ class AssetAPIViewTestMixin:
         return self.get(viewname='rest_api:asset-list')
 
 
-class AssetTaskTestMixin:
+class AssetTaskTestMixin(AssetTestMixin):
     def _execute_asset_task_content_object_image_generate(self):
         content_type = ContentType.objects.get_for_model(model=Asset)
 
@@ -85,19 +94,9 @@ class AssetTaskTestMixin:
         ).get()
 
 
-class AssetTestMixin:
-    def _create_test_asset(self):
-        with open(file=TEST_ASSET_PATH, mode='rb') as file_object:
-            self._test_asset = Asset.objects.create(
-                label=TEST_ASSET_LABEL,
-                internal_name=TEST_ASSET_INTERNAL_NAME,
-                file=File(file=file_object)
-            )
-
-
-class AssetViewTestMixin:
+class AssetViewTestMixin(AssetTestMixin):
     def _request_test_asset_create_view(self):
-        pk_list = list(Asset.objects.values_list('pk', flat=True))
+        self._test_object_track()
 
         with open(file=TEST_ASSET_PATH, mode='rb') as file_object:
             response = self.post(
@@ -108,9 +107,7 @@ class AssetViewTestMixin:
                 }
             )
 
-        self._test_asset = Asset.objects.exclude(
-            pk__in=pk_list
-        ).first()
+        self._test_object_set()
 
         return response
 
@@ -134,7 +131,7 @@ class AssetViewTestMixin:
                 'asset_id': self._test_asset.pk
             }, data={
                 'label': TEST_ASSET_LABEL_EDITED,
-                'internal_name': TEST_ASSET_INTERNAL_NAME,
+                'internal_name': TEST_ASSET_INTERNAL_NAME
             }
         )
 
@@ -148,7 +145,7 @@ class LayerTestCaseMixin:
         Layer.invalidate_cache()
 
 
-class LayerTestMixin(PermissionTestMixin):
+class LayerTestMixin:
     _test_transformation_object = None
     _test_transformation_object_parent = None
     auto_create_test_layer = True
@@ -178,7 +175,7 @@ class LayerTestMixin(PermissionTestMixin):
 
             self._test_layer = Layer(
                 label=TEST_LAYER_LABEL, name=TEST_LAYER_NAME,
-                order=TEST_LAYER_ORDER, permissions={
+                order=TEST_LAYER_ORDER, permission_map={
                     'create': self._test_layer_permission_create,
                     'delete': self._test_layer_permission_delete,
                     'edit': self._test_layer_permission_edit,
@@ -204,7 +201,9 @@ class LayerTestMixin(PermissionTestMixin):
         super().tearDown()
 
 
-class TransformationTestMixin(LayerTestMixin):
+class TransformationTestMixin(LayerTestMixin, TestMixinObjectCreationTrack):
+    _test_object_model = LayerTransformation
+    _test_object_name = '_test_transformation'
     auto_create_test_transformation_class = True
 
     def setUp(self):
@@ -241,11 +240,9 @@ class TransformationTestMixin(LayerTestMixin):
         self.TestTransformationClass = TestTransformation
 
 
-class TransformationViewTestMixin:
+class TransformationViewTestMixin(TransformationTestMixin):
     def _request_transformation_create_post_view(self):
-        pk_list = list(
-            LayerTransformation.objects.values('pk')
-        )
+        self._test_object_track()
 
         response = self.post(
             viewname='converter:transformation_create', kwargs={
@@ -262,12 +259,7 @@ class TransformationViewTestMixin:
             }
         )
 
-        try:
-            self._test_transformation = LayerTransformation.objects.get(
-                ~Q(pk__in=pk_list)
-            )
-        except LayerTransformation.DoesNotExist:
-            self._test_transformation = None
+        self._test_object_set()
 
         return response
 

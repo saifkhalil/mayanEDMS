@@ -3,11 +3,12 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document, DocumentType
+from mayan.apps.documents.models.document_models import Document
+from mayan.apps.documents.models.document_type_models import DocumentType
 from mayan.apps.documents.permissions import permission_document_type_edit
 from mayan.apps.views.generics import (
     AddRemoveView, SingleObjectCreateView, SingleObjectDeleteView,
@@ -29,8 +30,8 @@ logger = logging.getLogger(name=__name__)
 
 
 class DocumentTypeWebLinksView(AddRemoveView):
-    list_added_title = _('Web links enabled')
-    list_available_title = _('Available web links')
+    list_added_title = _(message='Web links enabled')
+    list_available_title = _(message='Available web links')
     main_object_method_add_name = 'web_links_add'
     main_object_method_remove_name = 'web_links_remove'
     main_object_model = DocumentType
@@ -47,7 +48,7 @@ class DocumentTypeWebLinksView(AddRemoveView):
         return {
             'object': self.main_object,
             'title': _(
-                'Web links to enable for document type: %s'
+                message='Web links to enable for document type: %s'
             ) % self.main_object
         }
 
@@ -78,7 +79,9 @@ class ResolvedWebLinkView(ExternalObjectViewMixin, RedirectView):
 
 
 class WebLinkCreateView(SingleObjectCreateView):
-    extra_context = {'title': _('Create new web link')}
+    extra_context = {
+        'title': _(message='Create new web link')
+    }
     form_class = WebLinkForm
     post_action_redirect = reverse_lazy(
         viewname='web_links:web_link_list'
@@ -100,13 +103,13 @@ class WebLinkDeleteView(SingleObjectDeleteView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Delete web link: %s') % self.object
+            'title': _(message='Delete web link: %s') % self.object
         }
 
 
 class WebLinkDocumentTypesView(AddRemoveView):
-    list_added_title = _('Document types enabled')
-    list_available_title = _('Available document types')
+    list_added_title = _(message='Document types enabled')
+    list_available_title = _(message='Available document types')
     main_object_method_add_name = 'document_types_add'
     main_object_method_remove_name = 'document_types_remove'
     main_object_model = WebLink
@@ -123,7 +126,7 @@ class WebLinkDocumentTypesView(AddRemoveView):
         return {
             'object': self.main_object,
             'title': _(
-                'Document type for which to enable web link: %s'
+                message='Document type for which to enable web link: %s'
             ) % self.main_object
         }
 
@@ -140,7 +143,7 @@ class WebLinkEditView(SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit web link: %s') % self.object
+            'title': _(message='Edit web link: %s') % self.object
         }
 
     def get_instance_extra_data(self):
@@ -159,14 +162,14 @@ class WebLinkListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Web links allow generating HTTP links from documents to '
+                message='Web links allow generating HTTP links from documents to '
                 'external resources. The link URL\'s can contain document '
                 'properties values.'
             ),
             'no_results_title': _(
-                'There are no web links'
+                message='There are no web links'
             ),
-            'title': _('Web links')
+            'title': _(message='Web links')
         }
 
     def get_source_queryset(self):
@@ -189,15 +192,15 @@ class DocumentWebLinkListView(ExternalObjectViewMixin, WebLinkListView):
             'hide_object': True,
             'no_results_icon': icon_web_link_setup,
             'no_results_text': _(
-                'Web links allow generating HTTP links from documents to '
+                message='Web links allow generating HTTP links from documents to '
                 'external resources. The link URL\'s can contain document '
                 'properties values.'
             ),
             'no_results_title': _(
-                'There are no web links for this document'
+                message='There are no web links for this document'
             ),
             'object': self.external_object,
-            'title': _('Web links for document: %s') % self.external_object
+            'title': _(message='Web links for document: %s') % self.external_object
         }
 
     def get_web_link_queryset(self):

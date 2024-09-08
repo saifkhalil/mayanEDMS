@@ -1,10 +1,6 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.search import (
-    search_model_document, search_model_document_file,
-    search_model_document_file_page, search_model_document_version,
-    search_model_document_version_page
-)
+from mayan.apps.documents.search import search_model_document
 from mayan.apps.dynamic_search.search_models import SearchModel
 
 from .permissions import permission_cabinet_view
@@ -20,62 +16,40 @@ search_model_cabinet.add_proxy_model(
     app_label='cabinets', model_name='Cabinet'
 )
 
+search_model_cabinet.add_model_field(field='id')
 search_model_cabinet.add_model_field(field='label')
 
 # Cabinet documents
 
 search_model_cabinet.add_model_field(
-    field='documents__document_type__label', label=_('Document type')
+    field='documents__document_type__label', label=_(message='Document type')
 )
 search_model_cabinet.add_model_field(
-    field='documents__label', label=_('Document label')
+    field='documents__label', label=_(message='Document label')
 )
 search_model_cabinet.add_model_field(
-    field='documents__description', label=_('Document description')
+    field='documents__description', label=_(message='Document description')
 )
 search_model_cabinet.add_model_field(
-    field='documents__uuid', label=_('Document UUID')
+    field='documents__uuid', label=_(message='Document UUID')
 )
 
 # Cabinet documents files
 
 search_model_cabinet.add_model_field(
-    field='documents__files__checksum', label=_('Document file checksum')
+    field='documents__files__checksum', label=_(message='Document file checksum')
 )
 search_model_cabinet.add_model_field(
-    field='documents__files__mimetype', label=_('Document file MIME type')
+    field='documents__files__mimetype', label=_(message='Document file MIME type')
 )
 
 # Document
 
 search_model_document.add_model_field(
-    field='cabinets__label', label=_('Cabinets')
+    field='cabinets__id',
+    help_text=_(message='The database ID of the cabinet.'),
+    label=_(message='Cabinet ID')
 )
-
-# Document file
-
-search_model_document_file.add_model_field(
-    field='document__cabinets__label',
-    label=_('Document cabinets')
-)
-
-# Document file page
-
-search_model_document_file_page.add_model_field(
-    field='document_file__document__cabinets__label',
-    label=_('Document cabinets')
-)
-
-# Document version
-
-search_model_document_version.add_model_field(
-    field='document__cabinets__label',
-    label=_('Document cabinets')
-)
-
-# Document version page
-
-search_model_document_version_page.add_model_field(
-    field='document_version__document__cabinets__label',
-    label=_('Document cabinets')
+search_model_document.add_model_field(
+    field='cabinets__label', label=_(message='Cabinets')
 )

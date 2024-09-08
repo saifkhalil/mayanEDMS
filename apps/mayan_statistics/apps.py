@@ -1,15 +1,15 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
     menu_list_facet, menu_object, menu_return, menu_tools
 )
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 
-from .classes import StatisticType, StatisticNamespace
+from .classes import StatisticNamespace, StatisticType
 from .links import (
     link_statistic_namespace_detail, link_statistic_namespace_list,
-    link_statistic_type_queue, link_statistic_type_detail, link_statistics
+    link_statistic_type_detail, link_statistic_type_queue, link_statistics
 )
 
 
@@ -24,9 +24,9 @@ class StatisticsApp(MayanAppConfig):
         'statistics/node_modules/chart.js/karma.conf.*',
         'statistics/node_modules/chart.js/samples/*',
         'statistics/node_modules/chart.js/src/*',
-        'statistics/node_modules/chart.js/*docs*',
+        'statistics/node_modules/chart.js/*docs*'
     )
-    verbose_name = _('Statistics')
+    verbose_name = _(message='Statistics')
 
     def ready(self):
         super().ready()
@@ -35,20 +35,20 @@ class StatisticsApp(MayanAppConfig):
 
         SourceColumn(
             attribute='type_label', include_label=True,
-            label=_('Type'), source=StatisticType
+            label=_(message='Type'), source=StatisticType
         )
 
         SourceColumn(
             attribute='schedule',
             # Translators: Schedule here is a noun, the 'schedule' at
             # which the statistic will be updated
-            include_label=True, label=_('Schedule'),
+            include_label=True, label=_(message='Schedule'),
             source=StatisticType
         )
 
         SourceColumn(
             attribute='get_last_update', include_label=True,
-            label=_('Last update'), source=StatisticType
+            label=_(message='Last update'), source=StatisticType
         )
 
         menu_list_facet.bind_links(
@@ -61,7 +61,9 @@ class StatisticsApp(MayanAppConfig):
         )
         menu_return.bind_links(
             links=(link_statistic_namespace_list,),
-            sources=(StatisticNamespace,)
+            sources=(
+                StatisticNamespace, 'statistics:statistic_namespace_list'
+            )
         )
         menu_tools.bind_links(
             links=(link_statistics,)

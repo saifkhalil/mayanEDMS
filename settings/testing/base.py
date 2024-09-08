@@ -1,4 +1,15 @@
+from tempfile import mkdtemp
+
 from .. import *  # NOQA
+
+MEDIA_ROOT_TEMPORARY = mkdtemp()
+MEDIA_ROOT = MEDIA_ROOT_TEMPORARY
+setting_namespace.get_setting(name='MEDIA_ROOT').set_value(
+    value=MEDIA_ROOT_TEMPORARY
+)
+setting_namespace.update_globals(
+    global_symbol_table=globals()
+)
 
 AUTHENTICATION_BACKEND = 'mayan.apps.authentication.authentication_backends.AuthenticationBackendModelDjangoDefault'
 
@@ -15,6 +26,13 @@ FILE_METADATA_AUTO_PROCESS = False
 INSTALLED_APPS = [
     cls for cls in INSTALLED_APPS if cls != 'whitenoise.runserver_nostatic'  # NOQA: F405
 ]
+
+templating_app_index = INSTALLED_APPS.index(
+    'mayan.apps.templating.apps.TemplatingApp'
+)
+INSTALLED_APPS.insert(
+    templating_app_index + 1, 'mayan.apps.testing.apps.TestingApp'
+)
 
 LOGGING_LOG_FILE_PATH = '/tmp/mayan-errors.log'
 LOGGING_LEVEL = 'WARNING'
@@ -37,16 +55,18 @@ MIDDLEWARE = [
 
 OCR_AUTO_OCR = False
 
-# User a simpler password hasher
+# User a simpler password hasher.
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
 )
 
 SEARCH_BACKEND = 'mayan.apps.dynamic_search.tests.backends.TestSearchBackendProxy'
 
-STATICFILES_STORAGE = None
+STORAGES['staticfiles'] = {
+    'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+}
 
-# Cache templates in memory
+# Cache templates in memory.
 TEMPLATES[0]['OPTIONS']['loaders'] = (  # NOQA: F405
     (
         'django.template.loaders.cached.Loader', (
@@ -56,4 +76,4 @@ TEMPLATES[0]['OPTIONS']['loaders'] = (  # NOQA: F405
     ),
 )
 
-TESTING = True  # Silence the error logger for non critical HTTP404 and PermissionDenied
+TESTING = True  # Silence the error logger for non critical `Http404` and `PermissionDenied`.

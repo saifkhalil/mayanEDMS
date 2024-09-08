@@ -1,5 +1,5 @@
 from mayan.apps.django_gpg.tests.mixins import KeyTestMixin
-from mayan.apps.documents.models import DocumentFile
+from mayan.apps.documents.models.document_file_models import DocumentFile
 from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 from mayan.apps.documents.tests.literals import TEST_FILE_SMALL_PATH
 
@@ -250,8 +250,8 @@ class SignatureToolsViewTestCase(
         signature.date_time = None
         signature.save()
 
-        self._test_documents[0].delete()
-        self._test_documents[1].delete()
+        self._test_document_list[0].delete()
+        self._test_document_list[1].delete()
 
         self.grant_permission(
             permission=permission_document_file_signature_verify

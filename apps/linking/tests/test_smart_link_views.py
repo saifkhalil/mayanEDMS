@@ -12,14 +12,12 @@ from ..permissions import (
 from .literals import TEST_SMART_LINK_LABEL, TEST_SMART_LINK_LABEL_EDITED
 from .mixins import (
     DocumentTypeAddRemoveSmartLinkViewTestMixin,
-    SmartLinkDocumentTypeViewTestMixin, SmartLinkTestMixin,
-    SmartLinkViewTestMixin
+    SmartLinkDocumentTypeViewTestMixin, SmartLinkViewTestMixin
 )
 
 
 class DocumentTypeAddRemoveSmartLinkViewTestCase(
-    DocumentTypeAddRemoveSmartLinkViewTestMixin, SmartLinkTestMixin,
-    GenericDocumentViewTestCase
+    DocumentTypeAddRemoveSmartLinkViewTestMixin, GenericDocumentViewTestCase
 ):
     auto_upload_test_document = False
 
@@ -279,16 +277,16 @@ class DocumentTypeAddRemoveSmartLinkViewTestCase(
         self.assertEqual(events[0].verb, event_smart_link_edited.id)
 
 
-class SmartLinkViewTestCase(
-    SmartLinkTestMixin, SmartLinkViewTestMixin, GenericViewTestCase
-):
+class SmartLinkViewTestCase(SmartLinkViewTestMixin, GenericViewTestCase):
     def test_smart_link_create_view_no_permission(self):
         self._clear_events()
 
         response = self._request_test_smart_link_create_view()
         self.assertEqual(response.status_code, 403)
 
-        self.assertEqual(SmartLink.objects.count(), 0)
+        self.assertEqual(
+            SmartLink.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -301,7 +299,9 @@ class SmartLinkViewTestCase(
         response = self._request_test_smart_link_create_view()
         self.assertEqual(response.status_code, 302)
 
-        self.assertEqual(SmartLink.objects.count(), 1)
+        self.assertEqual(
+            SmartLink.objects.count(), 1
+        )
         self.assertEqual(
             SmartLink.objects.first().label, TEST_SMART_LINK_LABEL
         )
@@ -322,7 +322,9 @@ class SmartLinkViewTestCase(
         response = self._request_test_smart_link_delete_view()
         self.assertEqual(response.status_code, 404)
 
-        self.assertEqual(SmartLink.objects.count(), 1)
+        self.assertEqual(
+            SmartLink.objects.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -338,7 +340,9 @@ class SmartLinkViewTestCase(
         response = self._request_test_smart_link_delete_view()
         self.assertEqual(response.status_code, 302)
 
-        self.assertEqual(SmartLink.objects.count(), 0)
+        self.assertEqual(
+            SmartLink.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -414,8 +418,7 @@ class SmartLinkViewTestCase(
 
 
 class SmartLinkDocumentTypeViewTestCase(
-    SmartLinkDocumentTypeViewTestMixin, SmartLinkTestMixin,
-    GenericDocumentViewTestCase
+    SmartLinkDocumentTypeViewTestMixin, GenericDocumentViewTestCase
 ):
     auto_upload_test_document = False
 

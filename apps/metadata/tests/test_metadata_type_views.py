@@ -3,21 +3,20 @@ from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 from mayan.apps.testing.tests.base import GenericViewTestCase
 
 from ..events import (
-    event_metadata_type_relationship_updated, event_metadata_type_created,
-    event_metadata_type_edited
+    event_metadata_type_created, event_metadata_type_edited,
+    event_metadata_type_relationship_updated
 )
-from ..models import MetadataType
+from ..models.metadata_type_models import MetadataType
 from ..permissions import (
     permission_metadata_type_create, permission_metadata_type_delete,
     permission_metadata_type_edit, permission_metadata_type_view
 )
 
-from .mixins import MetadataTypeTestMixin, MetadataTypeViewTestMixin
+from .mixins.metadata_type_mixins import MetadataTypeViewTestMixin
 
 
 class DocumentTypeMetadataTypeRelationshipViewTestCase(
-    MetadataTypeViewTestMixin, MetadataTypeTestMixin,
-    GenericDocumentViewTestCase
+    MetadataTypeViewTestMixin, GenericDocumentViewTestCase
 ):
     auto_upload_test_document = False
 
@@ -219,16 +218,15 @@ class DocumentTypeMetadataTypeRelationshipViewTestCase(
             test_document_type_metadata_type_relationship_count + 1
         )
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             qs=self._test_document_type.metadata.values(
                 'metadata_type', 'required'
-            ),
-            values=[
+            ), transform=dict, values=(
                 {
                     'metadata_type': self._test_metadata_type.pk,
-                    'required': True,
-                }
-            ], transform=dict
+                    'required': True
+                },
+            )
         )
 
         events = self._get_test_events()
@@ -243,7 +241,7 @@ class DocumentTypeMetadataTypeRelationshipViewTestCase(
 
 
 class MetadataTypeViewTestCase(
-    MetadataTypeViewTestMixin, MetadataTypeTestMixin, GenericViewTestCase
+    MetadataTypeViewTestMixin, GenericViewTestCase
 ):
     def test_metadata_type_create_view_no_permission(self):
         metadata_type_count = MetadataType.objects.count()
@@ -328,7 +326,9 @@ class MetadataTypeViewTestCase(
         response = self._request_test_metadata_type_multiple_delete_view()
         self.assertEqual(response.status_code, 404)
 
-        self.assertEqual(MetadataType.objects.count(), metadata_type_count)
+        self.assertEqual(
+            MetadataType.objects.count(), metadata_type_count
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -414,7 +414,7 @@ class MetadataTypeViewTestCase(
 
         response = self._request_metadata_type_list_view()
         self.assertNotContains(
-            response=response, text=self._test_metadata_type, status_code=200
+            response=response, status_code=200, text=self._test_metadata_type
         )
 
         events = self._get_test_events()
@@ -432,7 +432,7 @@ class MetadataTypeViewTestCase(
 
         response = self._request_metadata_type_list_view()
         self.assertContains(
-            response=response, text=self._test_metadata_type, status_code=200
+            response=response, status_code=200, text=self._test_metadata_type
         )
 
         events = self._get_test_events()
@@ -440,8 +440,7 @@ class MetadataTypeViewTestCase(
 
 
 class MetadataTypeDocumentTypeRelationshipViewTestCase(
-    MetadataTypeViewTestMixin, MetadataTypeTestMixin,
-    GenericDocumentViewTestCase
+    MetadataTypeViewTestMixin, GenericDocumentViewTestCase
 ):
     auto_upload_test_document = False
 
@@ -602,7 +601,8 @@ class MetadataTypeDocumentTypeRelationshipViewTestCase(
         test_metadata_type_document_type_relationship_count = self._test_metadata_type.document_types.count()
 
         self.grant_access(
-            obj=self._test_metadata_type, permission=permission_metadata_type_edit
+            obj=self._test_metadata_type,
+            permission=permission_metadata_type_edit
         )
 
         self._clear_events()
@@ -623,7 +623,8 @@ class MetadataTypeDocumentTypeRelationshipViewTestCase(
         test_metadata_type_document_type_relationship_count = self._test_metadata_type.document_types.count()
 
         self.grant_access(
-            obj=self._test_metadata_type, permission=permission_metadata_type_edit
+            obj=self._test_metadata_type,
+            permission=permission_metadata_type_edit
         )
         self.grant_access(
             obj=self._test_document_type,
@@ -641,16 +642,15 @@ class MetadataTypeDocumentTypeRelationshipViewTestCase(
             test_metadata_type_document_type_relationship_count + 1
         )
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             qs=self._test_document_type.metadata.values(
                 'metadata_type', 'required'
-            ),
-            values=[
+            ), transform=dict, values=(
                 {
                     'metadata_type': self._test_metadata_type.pk,
-                    'required': True,
-                }
-            ], transform=dict
+                    'required': True
+                },
+            )
         )
 
         events = self._get_test_events()

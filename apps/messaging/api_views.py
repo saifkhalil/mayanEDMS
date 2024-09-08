@@ -15,18 +15,16 @@ class APIMessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     put: Edit the selected message.
     """
     lookup_url_kwarg = 'message_id'
-    mayan_object_permissions = {
-        'GET': (permission_message_view,),
-        'PUT': (permission_message_edit,),
-        'PATCH': (permission_message_edit,),
-        'DELETE': (permission_message_delete,)
+    mayan_object_permission_map = {
+        'GET': permission_message_view,
+        'PUT': permission_message_edit,
+        'PATCH': permission_message_edit,
+        'DELETE': permission_message_delete
     }
     serializer_class = MessageSerializer
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_source_queryset(self):
         return self.request.user.messages.all()
@@ -37,19 +35,12 @@ class APIMessageListView(generics.ListCreateAPIView):
     get: Returns a list of all the messages.
     post: Create a new message.
     """
-    mayan_object_permissions = {
-        'GET': (permission_message_view,)
-    }
-    mayan_view_permissions = {
-        'POST': (permission_message_create,)
-    }
-    ordering_fields = ('date_time', 'id')
+    mayan_object_permission_map = {'GET': permission_message_view}
+    mayan_view_permission_map = {'POST': permission_message_create}
     serializer_class = MessageSerializer
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_source_queryset(self):
         return self.request.user.messages.all()

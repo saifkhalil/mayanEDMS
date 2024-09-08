@@ -11,9 +11,13 @@ class ParentObjectDocumentAPIViewMixin:
         queryset = self.get_document_queryset()
 
         if not permission:
-            permission = getattr(
-                self, 'mayan_external_object_permissions', {}
-            ).get(self.request.method, (None,))[0]
+            mayan_external_object_permission_map = getattr(
+                self, 'mayan_external_object_permission_map', {}
+            )
+
+            permission = mayan_external_object_permission_map.get(
+                self.request.method, None
+            )
 
         if permission:
             queryset = AccessControlList.objects.restrict_queryset(
@@ -44,7 +48,8 @@ class ParentObjectDocumentFileAPIViewMixin(ParentObjectDocumentAPIViewMixin):
         )
 
     def get_document_file_queryset(self):
-        return self.get_document().files.all()
+        document = self.get_document()
+        return document.files.all()
 
 
 class ParentObjectDocumentFilePageAPIViewMixin(
@@ -64,7 +69,8 @@ class ParentObjectDocumentFilePageAPIViewMixin(
         )
 
     def get_document_file_page_queryset(self):
-        return self.get_document_file().pages.all()
+        document_file = self.get_document_file()
+        return document_file.pages.all()
 
 
 class ParentObjectDocumentTypeAPIViewMixin:
@@ -72,9 +78,13 @@ class ParentObjectDocumentTypeAPIViewMixin:
         queryset = DocumentType.objects.all()
 
         if not permission:
-            permission = getattr(
-                self, 'mayan_external_object_permissions', {}
-            ).get(self.request.method, (None,))[0]
+            mayan_external_object_permission_map = getattr(
+                self, 'mayan_external_object_permission_map', {}
+            )
+
+            permission = mayan_external_object_permission_map.get(
+                self.request.method, None
+            )
 
         if permission:
             queryset = AccessControlList.objects.restrict_queryset(
@@ -102,7 +112,8 @@ class ParentObjectDocumentVersionAPIViewMixin(ParentObjectDocumentAPIViewMixin):
         )
 
     def get_document_version_queryset(self):
-        return self.get_document().versions.all()
+        document = self.get_document()
+        return document.versions.all()
 
 
 class ParentObjectDocumentVersionPageAPIViewMixin(
@@ -122,4 +133,5 @@ class ParentObjectDocumentVersionPageAPIViewMixin(
         )
 
     def get_document_version_page_queryset(self):
-        return self.get_document_version().pages.all()
+        document_version = self.get_document_version()
+        return document_version.pages.all()

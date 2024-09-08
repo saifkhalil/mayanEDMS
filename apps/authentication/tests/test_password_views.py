@@ -53,7 +53,7 @@ class PasswordResetViewTestCase(
     PasswordResetViewTestMixin, GenericViewTestCase
 ):
     auto_login_user = False
-    create_test_case_superuser = True
+    create_test_case_super_user = True
 
     def test_password_reset_view(self):
         self.logout()
@@ -62,7 +62,9 @@ class PasswordResetViewTestCase(
         response = self._request_password_reset_post_view()
         self.assertEqual(response.status_code, 302)
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            len(mail.outbox), 1
+        )
         email_parts = mail.outbox[0].body.replace('\n', '').split('/')
         uidb64 = email_parts[-3]
         token = email_parts[-2]
@@ -80,11 +82,13 @@ class PasswordResetViewTestCase(
         response = self._request_password_reset_confirm_view(
             new_password=TEST_PASSWORD_NEW, uidb64=uidb64
         )
-        self.assertNotIn(INTERNAL_RESET_SESSION_TOKEN, self.client.session)
+        self.assertNotIn(
+            INTERNAL_RESET_SESSION_TOKEN, self.client.session
+        )
 
-        self._test_case_superuser.refresh_from_db()
+        self._test_case_super_user.refresh_from_db()
         self.assertTrue(
-            self._test_case_superuser.check_password(
+            self._test_case_super_user.check_password(
                 raw_password=TEST_PASSWORD_NEW
             )
         )
@@ -93,8 +97,8 @@ class PasswordResetViewTestCase(
         self.assertEqual(events.count(), 1)
 
         self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_superuser)
-        self.assertEqual(events[0].target, self._test_case_superuser)
+        self.assertEqual(events[0].actor, self._test_case_super_user)
+        self.assertEqual(events[0].target, self._test_case_super_user)
         self.assertEqual(events[0].verb, event_user_edited.id)
 
     @override_settings(AUTHENTICATION_DISABLE_PASSWORD_RESET=False)
@@ -107,7 +111,9 @@ class PasswordResetViewTestCase(
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(
+            len(mail.outbox), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -125,7 +131,9 @@ class PasswordResetViewTestCase(
             response.url, reverse(viewname=setting_home_view.value)
         )
 
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(
+            len(mail.outbox), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -141,7 +149,9 @@ class PasswordResetViewTestCase(
         self.assertEqual(response.status_code, 302)
         self.assertNotEqual(response.url, setting_home_view.value)
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            len(mail.outbox), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -159,7 +169,9 @@ class PasswordResetViewTestCase(
             response.url, reverse(viewname=setting_home_view.value)
         )
 
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(
+            len(mail.outbox), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -168,6 +180,52 @@ class PasswordResetViewTestCase(
 class UserPasswordViewTestCase(
     UserPasswordViewTestMixin, GenericViewTestCase
 ):
+    def test_super_user_set_password_view_no_permission(self):
+        self._create_test_super_user()
+
+        self._test_user = self._test_super_user
+
+        password_hash = self._test_super_user.password
+
+        self._clear_events()
+
+        response = self._request_test_user_password_set_view(
+            password=TEST_USER_PASSWORD_EDITED
+        )
+        self.assertEqual(response.status_code, 404)
+
+        self._test_user.refresh_from_db()
+        self.assertEqual(self._test_super_user.password, password_hash)
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+    def test_super_user_set_password_view_with_access(self):
+        self._create_test_super_user()
+
+        self.grant_access(
+            obj=self._test_super_user, permission=permission_user_edit
+        )
+
+        self._test_user = self._test_super_user
+
+        password_hash = self._test_super_user.password
+
+        self._clear_events()
+
+        response = self._request_test_user_password_set_view(
+            password=TEST_USER_PASSWORD_EDITED
+        )
+        self.assertEqual(response.status_code, 404)
+
+        self._test_user.refresh_from_db()
+        self.assertEqual(
+            self._test_super_user.password, password_hash
+        )
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
     def test_user_set_password_view_no_permission(self):
         self._create_test_user()
 
@@ -188,7 +246,9 @@ class UserPasswordViewTestCase(
 
     def test_user_set_password_view_with_access(self):
         self._create_test_user()
-        self.grant_access(obj=self._test_user, permission=permission_user_edit)
+        self.grant_access(
+            obj=self._test_user, permission=permission_user_edit
+        )
 
         password_hash = self._test_user.password
 
@@ -229,7 +289,9 @@ class UserPasswordViewTestCase(
 
     def test_user_multiple_set_password_view_with_access(self):
         self._create_test_user()
-        self.grant_access(obj=self._test_user, permission=permission_user_edit)
+        self.grant_access(
+            obj=self._test_user, permission=permission_user_edit
+        )
 
         password_hash = self._test_user.password
 

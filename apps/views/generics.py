@@ -6,35 +6,34 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import (
     FormView as DjangoFormView, DetailView, TemplateView
 )
-from django.views.generic.base import View
-from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import (
     CreateView, DeleteView, FormMixin, UpdateView
 )
 from django.views.generic.list import ListView
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.dynamic_search.view_mixins import SearchFilterEnabledListViewMixin
-
-from .forms import ChoiceForm
-from .icons import (
-    icon_add_all, icon_confirm_form_cancel, icon_confirm_form_submit,
-    icon_remove_all, icon_assign_remove_add, icon_assign_remove_remove
+from mayan.apps.dynamic_search.views.view_mixins import (
+    SearchFilterEnabledListViewMixin
 )
+from mayan.apps.forms.forms import ChoiceForm
+
+from .icons import (
+    icon_add_all, icon_assign_remove_add, icon_assign_remove_remove,
+    icon_confirm_form_cancel, icon_confirm_form_submit, icon_remove_all
+)
+from .settings import setting_paginate_by
 from .view_mixins import (
-    ExtraDataDeleteViewMixin, DownloadViewMixin, DynamicFormViewMixin,
+    ExtraDataDeleteViewMixin, DynamicFieldSetFormViewMixin,
     ExternalObjectViewMixin, ExtraContextViewMixin, FormExtraKwargsViewMixin,
     ListModeViewMixin, ModelFormFieldsetsViewMixin, MultipleObjectViewMixin,
     ObjectActionViewMixin, ObjectNameViewMixin, RedirectionViewMixin,
     RestrictedQuerysetViewMixin, SortingViewMixin, ViewIconMixin,
     ViewPermissionCheckViewMixin
 )
-
-from .settings import setting_paginate_by
 
 logger = logging.getLogger(name=__name__)
 
@@ -44,7 +43,7 @@ class MultiFormView(DjangoFormView):
     form_extra_kwargs = None
     prefix = None
     prefixes = {}
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
 
     def _create_form(self, form_name, klass):
         form_kwargs = self.get_form_kwargs(form_name=form_name)
@@ -61,7 +60,7 @@ class MultiFormView(DjangoFormView):
     def dispatch(self, request, *args, **kwargs):
         form_classes = self.get_form_classes()
         self.forms = self.get_forms(form_classes=form_classes)
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request=request, *args, **kwargs)
 
     def forms_invalid(self, forms):
         return self.render_to_response(
@@ -147,7 +146,12 @@ class MultiFormView(DjangoFormView):
         return self.prefixes.get(form_name, self.prefix)
 
     def post(self, request, *args, **kwargs):
-        if all([form.is_valid() for form in self.forms.values()]):
+        form_list = self.forms.values()
+        form_list_valid = [
+            form.is_valid() for form in form_list
+        ]
+
+        if all(form_list_valid):
             return self.forms_valid(forms=self.forms)
         else:
             return self.forms_invalid(forms=self.forms)
@@ -160,12 +164,12 @@ class AddRemoveView(
 ):
     form_classes = {'form_available': ChoiceForm, 'form_added': ChoiceForm}
     list_added_help_text = _(
-        'Select entries to be removed. Hold Control to select multiple '
+        message='Select entries to be removed. Hold Control to select multiple '
         'entries. Once the selection is complete, click the button below '
         'or double click the list to activate the action.'
     )
     list_available_help_text = _(
-        'Select entries to be added. Hold Control to select multiple '
+        message='Select entries to be added. Hold Control to select multiple '
         'entries. Once the selection is complete, click the button below '
         'or double click the list to activate the action.'
     )
@@ -313,38 +317,38 @@ class AddRemoveView(
             {
                 'subtemplates_list': [
                     {
-                        'name': 'appearance/generic_form_subtemplate.html',
+                        'name': 'appearance/partials/form/single.html',
                         'column_class': 'col-xs-12 col-sm-6 col-md-6 col-lg-6',
                         'context': {
                             'extra_buttons': [
                                 {
                                     'icon': icon_add_all,
-                                    'label': _('Add all'),
+                                    'label': _(message='Add all'),
                                     'name': 'add_all'
                                 }
                             ],
                             'form': self.forms['form_available'],
                             'hide_labels': True,
                             'submit_icon': icon_assign_remove_add,
-                            'submit_label': _('Add'),
+                            'submit_label': _(message='Add'),
                             'title': self.list_available_title or ' '
                         }
                     },
                     {
-                        'name': 'appearance/generic_form_subtemplate.html',
+                        'name': 'appearance/partials/form/single.html',
                         'column_class': 'col-xs-12 col-sm-6 col-md-6 col-lg-6',
                         'context': {
                             'extra_buttons': [
                                 {
                                     'icon': icon_remove_all,
-                                    'label': _('Remove all'),
+                                    'label': _(message='Remove all'),
                                     'name': 'remove_all'
                                 }
                             ],
                             'form': self.forms['form_added'],
                             'hide_labels': True,
                             'submit_icon': icon_assign_remove_remove,
-                            'submit_label': _('Remove'),
+                            'submit_label': _(message='Remove'),
                             'title': self.list_added_title or ' '
                         }
                     }
@@ -421,8 +425,8 @@ class AddRemoveView(
     def get_success_url(self):
         # Redirect to the same view.
         return reverse(
-            viewname=self.request.resolver_match.view_name,
-            kwargs=self.request.resolver_match.kwargs
+            kwargs=self.request.resolver_match.kwargs,
+            viewname=self.request.resolver_match.view_name
         )
 
 
@@ -433,7 +437,7 @@ class ConfirmView(
     """
     View that will execute an view action upon user Yes/No confirmation.
     """
-    template_name = 'appearance/generic_confirm.html'
+    template_name = 'appearance/confirm.html'
 
     def get_context_data(self, **kwargs):
         context = {
@@ -462,24 +466,24 @@ class FormView(
     providing extra context, extra keyword arguments for the forms, and
     customizable redirection.
     """
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
 
 
-class DynamicFormView(DynamicFormViewMixin, FormView):
+class DynamicFormView(
+    DynamicFieldSetFormViewMixin, FormView
+):
     """Form view that uses a single dynamic form."""
 
 
 class MultipleObjectFormActionView(
-    ExtraContextViewMixin, ObjectActionViewMixin,
-    ViewPermissionCheckViewMixin, RestrictedQuerysetViewMixin,
-    MultipleObjectViewMixin, FormExtraKwargsViewMixin, RedirectionViewMixin,
-    ViewIconMixin, DjangoFormView
+    ObjectActionViewMixin, RestrictedQuerysetViewMixin,
+    MultipleObjectViewMixin, FormView
 ):
     """
-    This view will present a form and upon receiving a POST request will
-    perform an action on an object or queryset.
+    This view will present a form and upon receiving a POST request
+    will perform an action on an object or queryset.
     """
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
 
     def __init__(self, *args, **kwargs):
         result = super().__init__(*args, **kwargs)
@@ -505,12 +509,12 @@ class MultipleObjectFormActionView(
         self.view_action(form=form)
         return super().form_valid(form=form)
 
-    def get_queryset(self):
+    def get_queryset(self, **kwargs):
         try:
-            return super().get_queryset()
+            return super().get_queryset(**kwargs)
         except ImproperlyConfigured:
             self.queryset = self.get_source_queryset()
-            return super().get_queryset()
+            return super().get_queryset(**kwargs)
 
 
 class MultipleObjectConfirmActionView(
@@ -524,7 +528,7 @@ class MultipleObjectConfirmActionView(
     confirmation.
     """
 
-    template_name = 'appearance/generic_confirm.html'
+    template_name = 'appearance/confirm.html'
 
     def __init__(self, *args, **kwargs):
         result = super().__init__(*args, **kwargs)
@@ -573,14 +577,14 @@ class RelationshipView(FormView):
         except Exception as exception:
             messages.error(
                 message=_(
-                    'Error updating relationship; %s'
+                    message='Error updating relationship; %s'
                 ) % exception, request=self.request
             )
             if settings.DEBUG or settings.TESTING:
                 raise
         else:
             messages.success(
-                message=_('Relationships updated successfully'),
+                message=_(message='Relationships updated successfully'),
                 request=self.request
             )
 
@@ -620,7 +624,7 @@ class SingleObjectCreateView(
     ModelFormFieldsetsViewMixin, ViewIconMixin, CreateView
 ):
     error_message_duplicate = None
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
 
     def form_valid(self, form):
         # This overrides the original Django form_valid method.
@@ -643,7 +647,7 @@ class SingleObjectCreateView(
             context = self.get_context_data()
 
             error_message = self.get_error_message_duplicate() or _(
-                'Duplicate data error: %(error)s'
+                message='Duplicate data error: %(error)s'
             ) % {
                 'error': '\n'.join(exception.messages)
             }
@@ -662,7 +666,7 @@ class SingleObjectCreateView(
                 context = self.get_context_data()
 
                 messages.error(
-                    message=_('%(object)s not created, error: %(error)s') % {
+                    message=_(message='%(object)s not created, error: %(error)s') % {
                         'error': exception,
                         'object': self.get_object_name(context=context)
                     }, request=self.request
@@ -673,7 +677,7 @@ class SingleObjectCreateView(
 
             messages.success(
                 message=_(
-                    '%(object)s created successfully.'
+                    message='%(object)s created successfully.'
                 ) % {
                     'object': self.get_object_name(context=context)
                 }, request=self.request
@@ -692,7 +696,7 @@ class SingleObjectDeleteView(
     ViewPermissionCheckViewMixin, RestrictedQuerysetViewMixin,
     ExtraContextViewMixin, RedirectionViewMixin, ViewIconMixin, DeleteView
 ):
-    template_name = 'appearance/generic_confirm.html'
+    template_name = 'appearance/confirm.html'
 
     def __init__(self, *args, **kwargs):
         result = super().__init__(*args, **kwargs)
@@ -708,17 +712,16 @@ class SingleObjectDeleteView(
 
         return result
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
+    def form_valid(self, form):
         context = self.get_context_data()
         object_name = self.get_object_name(context=context)
 
         try:
-            result = super().delete(request, *args, **kwargs)
+            result = super().form_valid(form=form)
         except Exception as exception:
             messages.error(
                 message=_(
-                    '%(object)s not deleted, error: %(error)s.'
+                    message='%(object)s not deleted, error: %(error)s.'
                 ) % {
                     'error': exception,
                     'object': object_name
@@ -728,7 +731,7 @@ class SingleObjectDeleteView(
         else:
             messages.success(
                 message=_(
-                    '%(object)s deleted successfully.'
+                    message='%(object)s deleted successfully.'
                 ) % {
                     'object': object_name
                 }, request=self.request
@@ -757,7 +760,7 @@ class SingleObjectDetailView(
     ExtraContextViewMixin, ModelFormFieldsetsViewMixin, ViewIconMixin,
     DetailView
 ):
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
 
     def __init__(self, *args, **kwargs):
         result = super().__init__(*args, **kwargs)
@@ -791,7 +794,7 @@ class SingleObjectDetailView(
             else:
                 messages.error(
                     message=_(
-                        'Error retrieving %(object)s; %(error)s'
+                        message='Error retrieving %(object)s; %(error)s'
                     ) % {
                         'error': exception,
                         'object': self.get_object_name(
@@ -810,59 +813,8 @@ class SingleObjectDetailView(
             return super().get_queryset()
 
 
-class BaseDownloadView(
-    DownloadViewMixin, ViewPermissionCheckViewMixin, View
-):
-    def get(self, request, *args, **kwargs):
-        return self.render_to_response()
-
-
-class SingleObjectDownloadView(
-    RestrictedQuerysetViewMixin, SingleObjectMixin, BaseDownloadView
-):
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        return super().get(
-            request, *args, **kwargs
-        )
-
-    def get_download_file_object(self):
-        return self.object.open()
-
-    def get_download_filename(self):
-        return str(self.object)
-
-
-class MultipleObjectDownloadView(
-    RestrictedQuerysetViewMixin, MultipleObjectViewMixin, BaseDownloadView
-):
-    """
-    View that support receiving multiple objects via a pk_list query.
-    """
-    def __init__(self, *args, **kwargs):
-        result = super().__init__(*args, **kwargs)
-
-        if self.__class__.mro()[0].get_queryset != MultipleObjectDownloadView.get_queryset:
-            raise ImproperlyConfigured(
-                '%(cls)s is overloading the `get_queryset` method. '
-                'Subclasses should implement the `get_source_queryset` '
-                'method instead. ' % {
-                    'cls': self.__class__.__name__
-                }
-            )
-
-        return result
-
-    def get_queryset(self):
-        try:
-            return super().get_queryset()
-        except ImproperlyConfigured:
-            self.queryset = self.get_source_queryset()
-            return super().get_queryset()
-
-
 class SingleObjectDynamicFormCreateView(
-    DynamicFormViewMixin, SingleObjectCreateView
+    DynamicFieldSetFormViewMixin, SingleObjectCreateView
 ):
     """
     A form that will allow creation of a single instance from the values
@@ -876,7 +828,7 @@ class SingleObjectEditView(
     FormExtraKwargsViewMixin, RedirectionViewMixin,
     ModelFormFieldsetsViewMixin, ViewIconMixin, UpdateView
 ):
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
 
     def form_valid(self, form):
         # This overrides the original Django form_valid method.
@@ -903,7 +855,7 @@ class SingleObjectEditView(
             else:
                 messages.error(
                     message=_(
-                        '%(object)s not updated, error: %(error)s.'
+                        message='%(object)s not updated, error: %(error)s.'
                     ) % {
                         'error': exception,
                         'object': object_name
@@ -913,7 +865,7 @@ class SingleObjectEditView(
         else:
             messages.success(
                 message=_(
-                    '%(object)s updated successfully.'
+                    message='%(object)s updated successfully.'
                 ) % {
                     'object': object_name
                 }, request=self.request
@@ -934,7 +886,7 @@ class SingleObjectEditView(
 
 
 class SingleObjectDynamicFormEditView(
-    DynamicFormViewMixin, SingleObjectEditView
+    DynamicFieldSetFormViewMixin, SingleObjectEditView
 ):
     """
     A form that will allow editing a single instance from the values
@@ -950,7 +902,7 @@ class SingleObjectListView(
     """
     A view that will generate a list of instances from a queryset.
     """
-    template_name = 'appearance/generic_list.html'
+    template_name = 'appearance/list.html'
 
     def __init__(self, *args, **kwargs):
         result = super().__init__(*args, **kwargs)
@@ -980,12 +932,12 @@ class SingleObjectListView(
 
 
 class MultipleObjectDeleteView(MultipleObjectConfirmActionView):
-    success_message_plural = _('%(count)d objects deleted successfully.')
-    success_message_single = _('"%(object)s" deleted successfully.')
-    success_message_singular = _('%(count)d object deleted successfully.')
-    title_plural = _('Delete %(count)d objects.')
-    title_single = _('Delete "%(object)s".')
-    title_singular = _('Delete %(count)d object.')
+    success_message_plural = _(message='%(count)d objects deleted successfully.')
+    success_message_single = _(message='"%(object)s" deleted successfully.')
+    success_message_singular = _(message='%(count)d object deleted successfully.')
+    title_plural = _(message='Delete %(count)d objects.')
+    title_single = _(message='Delete "%(object)s".')
+    title_singular = _(message='Delete %(count)d object.')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1009,7 +961,4 @@ class MultipleObjectDeleteView(MultipleObjectConfirmActionView):
             for key, value in self.get_instance_extra_data().items():
                 setattr(instance, key, value)
 
-        if hasattr(self, 'get_delete_extra_data'):
-            instance.delete(**self.get_delete_extra_data())
-        else:
-            instance.delete()
+        instance.delete()

@@ -2,8 +2,8 @@ from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 
-from mayan.apps.events.classes import EventManagerSave
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerSave
 
 from .events import (
     event_group_created, event_group_edited, event_user_created,
@@ -90,7 +90,9 @@ def get_method_user_init():
     method_original = User.__init__
 
     def method_init(self, *args, **kwargs):
-        _instance_extra_data = kwargs.pop('_instance_extra_data', {})
+        _instance_extra_data = kwargs.pop(
+            '_instance_extra_data', {}
+        )
         result = method_original(self, *args, **kwargs)
         for key, value in _instance_extra_data.items():
             setattr(self, key, value)

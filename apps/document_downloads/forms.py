@@ -1,31 +1,33 @@
-from django import forms
-from django.forms.formsets import formset_factory
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
+
+from mayan.apps.forms import form_fields, form_widgets, forms, formsets
 
 
 class DocumentDownloadForm(forms.Form):
-    document_file_id = forms.CharField(
-        label=_('Document file ID'), widget=forms.HiddenInput
+    document_file_id = form_fields.CharField(
+        label=_(message='Document file ID'), widget=form_widgets.HiddenInput
     )
-    document = forms.CharField(
-        label=_('Document'), required=False,
-        widget=forms.TextInput(
+    document = form_fields.CharField(
+        label=_(message='Document'), required=False,
+        widget=form_widgets.TextInput(
             attrs={
                 'readonly': 'readonly'
             }
         )
     )
-    document_file = forms.CharField(
-        label=_('Document file'), required=False,
-        widget=forms.TextInput(
+    document_file = form_fields.CharField(
+        label=_(message='Document file'), required=False,
+        widget=form_widgets.TextInput(
             attrs={
                 'readonly': 'readonly'
             }
         )
     )
-    include = forms.BooleanField(
-        initial=True, label=_('Include'), required=False
+    include = form_fields.BooleanField(
+        initial=True, label=_(message='Include'), required=False
     )
 
 
-DocumentDownloadFormSet = formset_factory(form=DocumentDownloadForm, extra=0)
+DocumentDownloadFormSet = formsets.formset_factory(
+    form=DocumentDownloadForm, extra=0
+)

@@ -1,45 +1,44 @@
-from django import forms
 from django.utils.html import escape
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.views.forms import DetailForm
+from mayan.apps.forms import form_fields, form_widgets, forms
 
 from .models import Key
 
 
-class KeyDetailForm(DetailForm):
+class KeyDetailForm(forms.DetailForm):
     def __init__(self, *args, **kwargs):
         instance = kwargs['instance']
 
         extra_fields = (
             {
-                'field': 'key_id', 'label': _('Key ID')
+                'field': 'key_id', 'label': _(message='Key ID')
             },
             {
                 'func': lambda x: escape(instance.user_id),
-                'label': _('User ID')
+                'label': _(message='User ID')
             },
             {
-                'field': 'creation_date', 'label': _('Creation date'),
-                'widget': forms.widgets.DateInput
+                'field': 'creation_date', 'label': _(message='Creation date'),
+                'widget': form_widgets.DateInput
             },
             {
-                'func': lambda x: instance.expiration_date or _('None'),
-                'label': _('Expiration date'),
-                'widget': forms.widgets.DateInput
+                'func': lambda x: instance.expiration_date or _(message='None'),
+                'label': _(message='Expiration date'),
+                'widget': form_widgets.DateInput
             },
             {
-                'field': 'fingerprint', 'label': _('Fingerprint')
+                'field': 'fingerprint', 'label': _(message='Fingerprint')
             },
             {
-                'field': 'length', 'label': _('Length')
+                'field': 'length', 'label': _(message='Length')
             },
             {
-                'field': 'algorithm', 'label': _('Algorithm')
+                'field': 'algorithm', 'label': _(message='Algorithm')
             },
             {
                 'func': lambda x: instance.get_key_type_display(),
-                'label': _('Type')
+                'label': _(message='Type')
             }
         )
 
@@ -52,7 +51,9 @@ class KeyDetailForm(DetailForm):
 
 
 class KeySearchForm(forms.Form):
-    term = forms.CharField(
-        label=_('Term'),
-        help_text=_('Name, e-mail, key ID or key fingerprint to look for.')
+    term = form_fields.CharField(
+        label=_(message='Term'),
+        help_text=_(
+            message='Name, e-mail, key ID or key fingerprint to look for.'
+        )
     )

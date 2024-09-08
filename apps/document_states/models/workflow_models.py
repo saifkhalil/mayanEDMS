@@ -1,14 +1,16 @@
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.databases.model_mixins import ExtraDataModelMixin
 from mayan.apps.common.validators import validate_internal_name
-from mayan.apps.documents.models import Document, DocumentType
+from mayan.apps.databases.model_mixins import ExtraDataModelMixin
+from mayan.apps.documents.models.document_models import Document
+from mayan.apps.documents.models.document_type_models import DocumentType
 from mayan.apps.documents.permissions import permission_document_view
-from mayan.apps.events.classes import EventManagerSave
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerSave
+
 from ..events import (
     event_workflow_template_created, event_workflow_template_edited
 )
@@ -26,25 +28,27 @@ class Workflow(
     Fields:
     * label - Identifier. A name/label to call the workflow
     """
+    _ordering_fields = ('internal_name', 'label')
+
     auto_launch = models.BooleanField(
         default=True, help_text=_(
-            'Launch workflow when document is created.'
-        ), verbose_name=_('Auto launch')
+            message='Launch workflow when document is created.'
+        ), verbose_name=_(message='Auto launch')
     )
     internal_name = models.CharField(
         db_index=True, help_text=_(
-            'This value will be used by other apps to reference this '
+            message='This value will be used by other apps to reference this '
             'workflow. Can only contain letters, numbers, and underscores.'
         ), max_length=255, unique=True, validators=[validate_internal_name],
-        verbose_name=_('Internal name')
+        verbose_name=_(message='Internal name')
     )
     label = models.CharField(
-        help_text=_('A short text to describe the workflow.'),
-        max_length=255, unique=True, verbose_name=_('Label')
+        help_text=_(message='A short text to describe the workflow.'),
+        max_length=255, unique=True, verbose_name=_(message='Label')
     )
     document_types = models.ManyToManyField(
         related_name='workflows', to=DocumentType, verbose_name=_(
-            'Document types'
+            message='Document types'
         )
     )
 
@@ -52,8 +56,8 @@ class Workflow(
 
     class Meta:
         ordering = ('label',)
-        verbose_name = _('Workflow')
-        verbose_name_plural = _('Workflows')
+        verbose_name = _(message='Workflow')
+        verbose_name_plural = _(message='Workflows')
 
     def __str__(self):
         return self.label
@@ -69,11 +73,11 @@ class Workflow(
         event_manager_class=EventManagerSave,
         created={
             'event': event_workflow_template_created,
-            'target': 'self',
+            'target': 'self'
         },
         edited={
             'event': event_workflow_template_edited,
-            'target': 'self',
+            'target': 'self'
         }
     )
     def save(self, *args, **kwargs):
@@ -83,8 +87,8 @@ class Workflow(
 class WorkflowRuntimeProxy(Workflow):
     class Meta:
         proxy = True
-        verbose_name = _('Workflow runtime proxy')
-        verbose_name_plural = _('Workflow runtime proxies')
+        verbose_name = _(message='Workflow runtime proxy')
+        verbose_name_plural = _(message='Workflow runtime proxies')
 
     def get_documents(self, permission=None, user=None):
         """

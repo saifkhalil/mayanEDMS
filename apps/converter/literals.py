@@ -1,5 +1,4 @@
 import os
-
 import platform
 
 from django.conf import settings
@@ -74,6 +73,8 @@ DEFAULT_CONVERTER_IMAGE_CACHE_TIME = '31556926'
 DEFAULT_CONVERTER_IMAGE_GENERATION_MAX_RETRIES = 7
 DEFAULT_CONVERTER_IMAGE_GENERATION_TIMEOUT = 120  # seconds
 
+DEFAULT_CONVERTER_LOAD_TRUNCATED_IMAGES = False
+
 DEFAULT_PAGE_NUMBER = 1
 DEFAULT_PDFTOPPM_DPI = 300
 DEFAULT_PDFTOPPM_FORMAT = 'jpeg'  # Possible values jpeg, png, tiff
@@ -90,6 +91,12 @@ DEFAULT_CONVERTER_GRAPHICS_BACKEND_ARGUMENTS = {
     'pdfinfo_path': DEFAULT_PDFINFO_PATH,
     'pillow_format': DEFAULT_PILLOW_FORMAT,
     'pillow_maximum_image_pixels': DEFAULT_PILLOW_MAXIMUM_IMAGE_PIXELS
+}
+
+IMAGE_ERROR_BROKEN_FILE = 'converter_image_error_broken_file'
+
+MAP_PILLOW_FORMAT_TO_MIME_TYPE = {
+    'JPEG': 'image/jpeg'
 }
 
 STORAGE_NAME_ASSETS = 'converter__assets'

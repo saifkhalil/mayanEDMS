@@ -1,6 +1,6 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.navigation.classes import Link
+from mayan.apps.navigation.links import Link
 
 from .icons import (
     icon_comment_add, icon_comment_delete, icon_comment_edit,
@@ -13,21 +13,21 @@ from .permissions import (
 
 link_comment_add = Link(
     args='object.pk', icon=icon_comment_add,
-    permissions=(permission_document_comment_create,), text=_('Add comment'),
+    permission=permission_document_comment_create, text=_(message='Add comment'),
     view='comments:comment_add'
 )
 link_comment_delete = Link(
     args='object.pk', icon=icon_comment_delete,
-    permissions=(permission_document_comment_delete,), tags='dangerous',
-    text=_('Delete'), view='comments:comment_delete'
+    permission=permission_document_comment_delete, tags='dangerous',
+    text=_(message='Delete'), view='comments:comment_delete'
 )
 link_comment_edit = Link(
     args='object.pk', icon=icon_comment_edit,
-    permissions=(permission_document_comment_edit,),
-    text=_('Edit'), view='comments:comment_edit'
+    permission=permission_document_comment_edit,
+    text=_(message='Edit'), view='comments:comment_edit'
 )
 link_comments_for_document = Link(
     args='resolved_object.pk', icon=icon_comments_for_document,
-    permissions=(permission_document_comment_view,), text=_('Comments'),
+    permission=permission_document_comment_view, text=_(message='Comments'),
     view='comments:comments_for_document'
 )

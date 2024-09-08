@@ -1,14 +1,17 @@
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from rest_framework import status
 
 from mayan.apps.documents.permissions import permission_document_view
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import (
-    event_cabinet_created, event_cabinet_deleted, event_cabinet_edited,
-    event_cabinet_document_added, event_cabinet_document_removed
+    event_cabinet_created, event_cabinet_deleted,
+    event_cabinet_document_added, event_cabinet_document_removed,
+    event_cabinet_edited
 )
 from ..models import Cabinet
 from ..permissions import (
@@ -19,13 +22,11 @@ from ..permissions import (
 
 from .mixins import (
     CabinetAPIViewTestMixin, CabinetDocumentAPIViewTestMixin,
-    CabinetTestMixin, DocumentCabinetAPIViewTestMixin
+    DocumentCabinetAPIViewTestMixin
 )
 
 
-class CabinetAPITestCase(
-    CabinetAPIViewTestMixin, CabinetTestMixin, BaseAPITestCase
-):
+class CabinetAPITestCase(CabinetAPIViewTestMixin, BaseAPITestCase):
     def test_cabinet_create_api_view_no_permission(self):
         test_cabinet_count = Cabinet.objects.count()
 
@@ -185,7 +186,9 @@ class CabinetAPITestCase(
 
         response = self._request_test_cabinet_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -209,9 +212,7 @@ class CabinetAPITestCase(
         self.assertEqual(events.count(), 0)
 
 
-class CabinetChildAPITestCase(
-    CabinetAPIViewTestMixin, CabinetTestMixin, BaseAPITestCase
-):
+class CabinetChildAPITestCase(CabinetAPIViewTestMixin, BaseAPITestCase):
     auto_create_test_cabinet = True
 
     def test_cabinet_child_create_api_view_no_permission(self):
@@ -239,10 +240,10 @@ class CabinetChildAPITestCase(
         response = self._request_test_cabinet_child_create_api_view()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self._test_cabinets[0].refresh_from_db()
+        self._test_cabinet_list[0].refresh_from_db()
         self.assertEqual(Cabinet.objects.count(), cabinet_count + 1)
         self.assertTrue(
-            self._test_cabinet_child in self._test_cabinets[0].get_descendants()
+            self._test_cabinet_child in self._test_cabinet_list[0].get_descendants()
         )
 
         events = self._get_test_events()
@@ -294,8 +295,7 @@ class CabinetChildAPITestCase(
 
 
 class CabinetDocumentAPITestCase(
-    CabinetDocumentAPIViewTestMixin, CabinetTestMixin, DocumentTestMixin,
-    BaseAPITestCase
+    CabinetDocumentAPIViewTestMixin, DocumentTestMixin, BaseAPITestCase
 ):
     auto_create_test_cabinet = True
     auto_upload_test_document = False
@@ -447,7 +447,9 @@ class CabinetDocumentAPITestCase(
 
         response = self._request_test_cabinet_document_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -488,7 +490,7 @@ class CabinetDocumentAPITestCase(
 
         self.assertEqual(
             response.data['results'][0]['uuid'],
-            force_text(s=self._test_document.uuid)
+            force_str(s=self._test_document.uuid)
         )
 
         events = self._get_test_events()
@@ -512,7 +514,9 @@ class CabinetDocumentAPITestCase(
 
         response = self._request_test_cabinet_document_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -650,8 +654,8 @@ class CabinetDocumentAPITestCase(
 
 
 class DocumentCabinetAPITestCase(
-    CabinetAPIViewTestMixin, CabinetTestMixin,
-    DocumentCabinetAPIViewTestMixin, DocumentTestMixin, BaseAPITestCase
+    CabinetAPIViewTestMixin, DocumentCabinetAPIViewTestMixin,
+    DocumentTestMixin, BaseAPITestCase
 ):
     auto_create_test_cabinet = True
     auto_upload_test_document = False
@@ -681,7 +685,9 @@ class DocumentCabinetAPITestCase(
 
         response = self._request_test_document_cabinet_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

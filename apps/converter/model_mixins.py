@@ -9,7 +9,7 @@ from django.apps import apps
 from django.db.models import Max
 from django.urls import reverse
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.serialization import yaml_load
 from mayan.apps.file_caching.models import CachePartitionFile
@@ -78,9 +78,10 @@ class AssetBusinessLogicMixin:
 
     def get_hash(self):
         with self.open() as file_object:
-            return hashlib.sha256(
+            hash_object = hashlib.sha256(
                 string=file_object.read()
-            ).hexdigest()
+            )
+            return hash_object.hexdigest()
 
     def get_image(self):
         with self.open() as file_object:
@@ -112,7 +113,13 @@ class ObjectLayerBusinessLogicMixin:
 
 class LayerTransformationBusinessLogicMixin:
     def get_arguments_column(self):
-        arguments = yaml_load(stream=self.arguments or '{}')
+        try:
+            arguments = yaml_load(stream=self.arguments or '{}')
+        except Exception:
+            arguments = {
+                'error': _(message='Badly formatted arguments YAML')
+            }
+
         result = []
         for key, value in arguments.items():
             result.append(
@@ -121,7 +128,7 @@ class LayerTransformationBusinessLogicMixin:
 
         return ', '.join(result)
 
-    get_arguments_column.short_description = _('Arguments')
+    get_arguments_column.short_description = _(message='Arguments')
 
     def get_transformation_class(self):
         return BaseTransformation.get(name=self.name)

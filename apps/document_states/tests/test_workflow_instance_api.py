@@ -2,7 +2,6 @@ import json
 
 from rest_framework import status
 
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import (
@@ -16,17 +15,13 @@ from ..permissions import (
 from .literals import TEST_WORKFLOW_INSTANCE_LOG_ENTRY_EXTRA_DATA
 from .mixins.workflow_instance_mixins import (
     WorkflowInstanceAPIViewTestMixin, WorkflowInstanceLaunchAPIViewTestMixin,
-    WorkflowInstanceLogEntryTransitrionListAPIViewTestMixin
+    WorkflowInstanceLogEntryTransitionListAPIViewTestMixin
 )
-from .mixins.workflow_template_mixins import WorkflowTemplateTestMixin
 
 
 class WorkflowInstanceAPIViewTestCase(
-    DocumentTestMixin, WorkflowInstanceAPIViewTestMixin,
-    WorkflowTemplateTestMixin, BaseAPITestCase
+    WorkflowInstanceAPIViewTestMixin, BaseAPITestCase
 ):
-    auto_upload_test_document = False
-
     def setUp(self):
         super().setUp()
         self._create_test_workflow_template(add_test_document_type=True)
@@ -132,7 +127,9 @@ class WorkflowInstanceAPIViewTestCase(
 
         response = self._request_test_workflow_instance_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -203,7 +200,9 @@ class WorkflowInstanceAPIViewTestCase(
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 0)
+        self.assertEqual(
+            workflow_instance.log_entries.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -213,16 +212,17 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 0)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -232,16 +232,17 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template_transition,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 0)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -255,16 +256,17 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template_transition,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 1)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 1)
@@ -287,18 +289,19 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template_transition,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._test_document.delete()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 0)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -308,16 +311,17 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 0)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -331,16 +335,17 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 1)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 1)
@@ -363,18 +368,19 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._test_document.delete()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
-            workflow_instance=workflow_instance
+            workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 0)
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -388,22 +394,24 @@ class WorkflowInstanceAPIViewTestCase(
             obj=self._test_workflow_template,
             permission=permission_workflow_instance_transition
         )
-        workflow_instance = self._test_document.workflows.first()
 
         self._clear_events()
 
         response = self._request_test_workflow_instance_log_entry_create_api_view(
             extra_data={
                 'extra_data': TEST_WORKFLOW_INSTANCE_LOG_ENTRY_EXTRA_DATA
-            }, workflow_instance=workflow_instance
+            }, workflow_instance=self._test_workflow_instance
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(workflow_instance.log_entries.count(), 1)
-        workflow_instance.refresh_from_db()
+        self.assertEqual(
+            self._test_workflow_instance.log_entries.count(), 1
+        )
+
+        self._test_workflow_instance.refresh_from_db()
 
         self.assertEqual(
-            workflow_instance.get_context()['workflow_instance_context'],
+            self._test_workflow_instance.get_context()['workflow_instance_context'],
             json.loads(s=TEST_WORKFLOW_INSTANCE_LOG_ENTRY_EXTRA_DATA)
         )
 
@@ -512,11 +520,8 @@ class WorkflowInstanceAPIViewTestCase(
 
 
 class WorkflowInstanceLaunchAPIViewTestCase(
-    DocumentTestMixin, WorkflowInstanceLaunchAPIViewTestMixin,
-    WorkflowTemplateTestMixin, BaseAPITestCase
+    WorkflowInstanceLaunchAPIViewTestMixin, BaseAPITestCase
 ):
-    auto_upload_test_document = False
-
     def setUp(self):
         super().setUp()
         self._create_test_workflow_template(
@@ -647,12 +652,9 @@ class WorkflowInstanceLaunchAPIViewTestCase(
 
 
 class WorkflowInstanceLogEntryTransitrionListAPIViewTestCase(
-    DocumentTestMixin, WorkflowInstanceAPIViewTestMixin,
-    WorkflowInstanceLogEntryTransitrionListAPIViewTestMixin,
-    WorkflowTemplateTestMixin, BaseAPITestCase
+    WorkflowInstanceAPIViewTestMixin,
+    WorkflowInstanceLogEntryTransitionListAPIViewTestMixin, BaseAPITestCase
 ):
-    auto_upload_test_document = False
-
     def setUp(self):
         super().setUp()
         self._create_test_workflow_template(add_test_document_type=True)
@@ -660,7 +662,6 @@ class WorkflowInstanceLogEntryTransitrionListAPIViewTestCase(
         self._create_test_workflow_template_state()
         self._create_test_workflow_template_transition()
         self._create_test_document_stub()
-        self._test_workflow_instance = self._test_document.workflows.first()
 
     def test_workflow_instance_log_entry_transition_list_api_view_no_permission(self):
         self._clear_events()
@@ -681,7 +682,9 @@ class WorkflowInstanceLogEntryTransitrionListAPIViewTestCase(
 
         response = self._request_test_workflow_instance_log_entry_transition_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -714,7 +717,9 @@ class WorkflowInstanceLogEntryTransitrionListAPIViewTestCase(
 
         response = self._request_test_workflow_instance_log_entry_transition_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -747,7 +752,9 @@ class WorkflowInstanceLogEntryTransitrionListAPIViewTestCase(
 
         response = self._request_test_workflow_instance_log_entry_transition_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -788,7 +795,9 @@ class WorkflowInstanceLogEntryTransitrionListAPIViewTestCase(
 
         response = self._request_test_workflow_instance_log_entry_transition_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(
+            response.data['count'], 1
+        )
         self.assertEqual(
             response.data['results'][0]['id'],
             self._test_workflow_template_transition.pk

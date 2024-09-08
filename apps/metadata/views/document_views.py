@@ -6,15 +6,15 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.views.generics import (
     MultipleObjectFormActionView, SingleObjectListView
 )
-from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 from mayan.apps.views.utils import convert_to_id_list
+from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from ..forms import (
     DocumentMetadataAddForm, DocumentMetadataFormSet,
@@ -26,7 +26,8 @@ from ..icons import (
 )
 from ..links import link_metadata_add, link_metadata_multiple_add
 from ..mixins import DocumentMetadataSameTypeViewMixin
-from ..models import DocumentMetadata, MetadataType
+from ..models.metadata_instance_models import DocumentMetadata
+from ..models.metadata_type_models import MetadataType
 from ..permissions import (
     permission_document_metadata_add, permission_document_metadata_edit,
     permission_document_metadata_remove, permission_document_metadata_view
@@ -42,10 +43,10 @@ class DocumentMetadataAddView(
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message = _(
-        'Metadata add request performed on %(count)d document'
+        message='Metadata add request performed on %(count)d document'
     )
     success_message_plural = _(
-        'Metadata add request performed on %(count)d documents'
+        message='Metadata add request performed on %(count)d documents'
     )
     view_icon = icon_document_metadata_add
 
@@ -53,7 +54,7 @@ class DocumentMetadataAddView(
         queryset = self.object_list
 
         result = {
-            'title': ungettext(
+            'title': ngettext(
                 singular='Add metadata types to document',
                 plural='Add metadata types to documents',
                 number=queryset.count()
@@ -65,7 +66,7 @@ class DocumentMetadataAddView(
                 {
                     'object': queryset.first(),
                     'title': _(
-                        'Add metadata types to document: %s'
+                        message='Add metadata types to document: %s'
                     ) % queryset.first()
                 }
             )
@@ -102,17 +103,17 @@ class DocumentMetadataAddView(
     def get_post_object_action_url(self):
         if self.action_count == 1:
             return reverse(
-                viewname='metadata:metadata_edit', kwargs={
+                kwargs={
                     'document_id': self.action_id_list[0]
-                }
+                }, viewname='metadata:metadata_edit'
             )
         elif self.action_count > 1:
             url = furl(
-                path=reverse(
-                    viewname='metadata:metadata_multiple_edit'
-                ), args={
+                args={
                     'id_list': convert_to_id_list(items=self.action_id_list)
-                }
+                }, path=reverse(
+                    viewname='metadata:metadata_multiple_edit'
+                )
             )
 
             return url.tostr()
@@ -143,36 +144,40 @@ class DocumentMetadataAddView(
             except Exception as exception:
                 messages.error(
                     message=_(
-                        'Error adding metadata type '
+                        message='Error adding metadata type '
                         '"%(metadata_type)s" to document: '
                         '%(document)s; %(exception)s'
                     ) % {
-                        'metadata_type': metadata_type,
                         'document': instance,
                         'exception': ', '.join(
-                            getattr(exception, 'messages', exception)
-                        )
+                            getattr(
+                                exception, 'messages', (
+                                    str(exception),
+                                )
+                            )
+                        ),
+                        'metadata_type': metadata_type
                     }, request=self.request
                 )
             else:
                 if created:
                     messages.success(
                         message=_(
-                            'Metadata type: %(metadata_type)s '
+                            message='Metadata type: %(metadata_type)s '
                             'successfully added to document %(document)s.'
                         ) % {
-                            'metadata_type': metadata_type,
-                            'document': instance
+                            'document': instance,
+                            'metadata_type': metadata_type
                         }, request=self.request
                     )
                 else:
                     messages.warning(
                         message=_(
-                            'Metadata type: %(metadata_type)s already '
-                            'present in document %(document)s.'
+                            message='Metadata type: %(metadata_type)s '
+                            'already present in document %(document)s.'
                         ) % {
-                            'metadata_type': metadata_type,
-                            'document': instance
+                            'document': instance,
+                            'metadata_type': metadata_type
                         }, request=self.request
                     )
 
@@ -185,10 +190,10 @@ class DocumentMetadataEditView(
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message = _(
-        'Metadata edit request performed on %(count)d document'
+        message='Metadata edit request performed on %(count)d document'
     )
     success_message_plural = _(
-        'Metadata edit request performed on %(count)d documents'
+        message='Metadata edit request performed on %(count)d documents'
     )
     view_icon = icon_document_metadata_edit
 
@@ -204,7 +209,9 @@ class DocumentMetadataEditView(
         if queryset.count() == 1:
             no_results_main_link = link_metadata_add.resolve(
                 context=RequestContext(
-                    dict_={'object': queryset.first()},
+                    dict_={
+                        'object': queryset.first()
+                    },
                     request=self.request
                 )
             )
@@ -221,14 +228,14 @@ class DocumentMetadataEditView(
             'no_results_icon': icon_metadata,
             'no_results_main_link': no_results_main_link,
             'no_results_text': _(
-                'Add metadata types available for this document\'s type '
+                message='Add metadata types available for this document\'s type '
                 'and assign them corresponding values.'
             ),
-            'no_results_title': _('There is no metadata to edit'),
-            'title': ungettext(
-                'Edit document metadata',
-                'Edit documents metadata',
-                queryset.count()
+            'no_results_title': _(message='There is no metadata to edit'),
+            'title': ngettext(
+                singular='Edit document metadata',
+                plural='Edit documents metadata',
+                number=queryset.count()
             )
         }
 
@@ -237,7 +244,7 @@ class DocumentMetadataEditView(
                 {
                     'object': queryset.first(),
                     'title': _(
-                        'Edit metadata for document: %s'
+                        message='Edit metadata for document: %s'
                     ) % queryset.first()
                 }
             )
@@ -251,12 +258,12 @@ class DocumentMetadataEditView(
         initial = []
 
         for document in queryset:
-            document_metadata_queryset = AccessControlList.objects.restrict_queryset(
+            queryset_document_metadata = AccessControlList.objects.restrict_queryset(
                 queryset=document.metadata.all(),
                 permission=permission_document_metadata_edit,
                 user=self.request.user
             )
-            for document_metadata in document_metadata_queryset:
+            for document_metadata in queryset_document_metadata:
                 metadata_dict.setdefault(
                     document_metadata.metadata_type, set()
                 )
@@ -281,22 +288,20 @@ class DocumentMetadataEditView(
     def get_post_object_action_url(self):
         if self.action_count == 1:
             return reverse(
-                viewname='metadata:metadata_list', kwargs={
+                kwargs={
                     'document_id': self.action_id_list[0]
-                }
+                }, viewname='metadata:metadata_list'
             )
         elif self.action_count > 1:
             url = furl(
-                path=reverse(
-                    viewname='metadata:metadata_multiple_edit'
-                ), args={
+                args={
                     'id_list': convert_to_id_list(items=self.action_id_list)
-                }
+                }, path=reverse(viewname='metadata:metadata_multiple_edit')
             )
             return url.tostr()
 
     def object_action(self, form, instance):
-        document_metadata_queryset = AccessControlList.objects.restrict_queryset(
+        queryset_document_metadata = AccessControlList.objects.restrict_queryset(
             queryset=instance.metadata.all(),
             permission=permission_document_metadata_edit,
             user=self.request.user
@@ -305,7 +310,7 @@ class DocumentMetadataEditView(
         errors = []
         for form in form.forms:
             if form.cleaned_data['update']:
-                if document_metadata_queryset.filter(metadata_type=form.cleaned_data['metadata_type_id']).exists():
+                if queryset_document_metadata.filter(metadata_type=form.cleaned_data['metadata_type_id']).exists():
                     try:
                         save_metadata_list(
                             document=instance,
@@ -326,7 +331,7 @@ class DocumentMetadataEditView(
 
             messages.error(
                 message=_(
-                    'Error editing metadata for document: '
+                    message='Error editing metadata for document: '
                     '%(document)s; %(exception)s.'
                 ) % {
                     'document': instance,
@@ -339,7 +344,7 @@ class DocumentMetadataEditView(
         else:
             messages.success(
                 message=_(
-                    'Metadata for document %s edited successfully.'
+                    message='Metadata for document %s edited successfully.'
                 ) % instance, request=self.request
             )
 
@@ -359,21 +364,21 @@ class DocumentMetadataListView(ExternalObjectViewMixin, SingleObjectListView):
             'no_results_icon': icon_metadata,
             'no_results_main_link': link_metadata_add.resolve(
                 context=RequestContext(
-                    dict_={
-                        'object': self.external_object
-                    }, request=self.request
+                    dict_={'object': self.external_object},
+                    request=self.request
                 )
             ),
             'no_results_text': _(
-                'Add metadata types this document\'s type '
-                'to be able to add them to individual documents. '
-                'Once added to individual document, you can then edit their '
-                'values.'
+                message='Add metadata types this document\'s type to be able '
+                'to add them to individual documents. Once added to '
+                'individual document, you can then edit their values.'
             ),
             'no_results_title': _(
-                'This document doesn\'t have any metadata'
+                message='This document doesn\'t have any metadata'
             ),
-            'title': _('Metadata for document: %s') % self.external_object
+            'title': _(
+                message='Metadata for document: %s'
+            ) % self.external_object
         }
 
     def get_source_queryset(self):
@@ -388,10 +393,10 @@ class DocumentMetadataRemoveView(
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message = _(
-        'Metadata remove request performed on %(count)d document'
+        message='Metadata remove request performed on %(count)d document'
     )
     success_message_plural = _(
-        'Metadata remove request performed on %(count)d documents'
+        message='Metadata remove request performed on %(count)d documents'
     )
     view_icon = icon_document_metadata_remove
 
@@ -400,7 +405,7 @@ class DocumentMetadataRemoveView(
 
         result = {
             'form_display_mode_table': True,
-            'title': ungettext(
+            'title': ngettext(
                 singular='Remove metadata types from the document',
                 plural='Remove metadata types from the documents',
                 number=queryset.count()
@@ -412,7 +417,7 @@ class DocumentMetadataRemoveView(
                 {
                     'object': queryset.first(),
                     'title': _(
-                        'Remove metadata types from the document: %s'
+                        message='Remove metadata types from the document: %s'
                     ) % queryset.first()
                 }
             )
@@ -424,15 +429,15 @@ class DocumentMetadataRemoveView(
 
         metadata = {}
         for document in queryset:
-            document_metadata_queryset = AccessControlList.objects.restrict_queryset(
+            queryset_document_metadata = AccessControlList.objects.restrict_queryset(
                 queryset=document.metadata.all(),
                 permission=permission_document_metadata_remove,
                 user=self.request.user
             )
 
-            for document_metadata in document_metadata_queryset:
+            for document_metadata in queryset_document_metadata:
                 # Metadata value cannot be None here, fallback to an empty
-                # string
+                # string.
                 value = document_metadata.value or ''
                 if document_metadata.metadata_type in metadata:
                     if value not in metadata[document_metadata.metadata_type]:
@@ -454,9 +459,9 @@ class DocumentMetadataRemoveView(
     def get_post_object_action_url(self):
         if self.action_count == 1:
             return reverse(
-                viewname='metadata:metadata_list', kwargs={
+                kwargs={
                     'document_id': self.action_id_list[0]
-                }
+                }, viewname='metadata:metadata_list'
             )
 
     def object_action(self, form, instance):
@@ -478,19 +483,22 @@ class DocumentMetadataRemoveView(
                     document_metadata.delete()
                     messages.success(
                         message=_(
-                            'Successfully remove metadata type "%(metadata_type)s" from document: %(document)s.'
+                            message='Successfully remove metadata type '
+                            '"%(metadata_type)s" from document: %(document)s.'
                         ) % {
-                            'metadata_type': metadata_type,
-                            'document': instance
+                            'document': instance,
+                            'metadata_type': metadata_type
                         }, request=self.request
                     )
                 except ValidationError as exception:
                     messages.error(
                         message=_(
-                            'Error removing metadata type "%(metadata_type)s" from document: %(document)s; %(exception)s'
+                            message='Error removing metadata type '
+                            '"%(metadata_type)s" from document: '
+                            '%(document)s; %(exception)s'
                         ) % {
-                            'metadata_type': metadata_type,
                             'document': instance,
-                            'exception': ', '.join(exception.messages)
+                            'exception': ', '.join(exception.messages),
+                            'metadata_type': metadata_type
                         }, request=self.request
                     )

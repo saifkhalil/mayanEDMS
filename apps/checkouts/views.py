@@ -1,8 +1,8 @@
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.documents.views.document_views import DocumentListView
 from mayan.apps.views.exceptions import ActionError
 from mayan.apps.views.generics import (
@@ -11,7 +11,7 @@ from mayan.apps.views.generics import (
 )
 
 from .exceptions import DocumentAlreadyCheckedOut, DocumentNotCheckedOut
-from .forms import DocumentCheckOutForm, DocumentCheckOutDetailForm
+from .forms import DocumentCheckOutDetailForm, DocumentCheckOutForm
 from .icons import (
     icon_check_in_document, icon_check_out_document, icon_check_out_info,
     icon_check_out_list
@@ -25,21 +25,21 @@ from .permissions import (
 
 class DocumentCheckInView(MultipleObjectConfirmActionView):
     error_message = _(
-        'Unable to check in document "%(instance)s"; %(exception)s'
+        message='Unable to check in document "%(instance)s"; %(exception)s'
     )
     pk_url_kwarg = 'document_id'
     success_message_plural = _(
-        '%(count)d documents checked in successfully.'
+        message='%(count)d documents checked in successfully.'
     )
     success_message_single = _(
-        'Document "%(object)s" checked in successfully.'
+        message='Document "%(object)s" checked in successfully.'
     )
     success_message_singular = _(
-        '%(count)d document checked in successfully.'
+        message='%(count)d document checked in successfully.'
     )
-    title_plural = _('Check in %(count)d documents.')
-    title_single = _('Check in document "%(object)s".')
-    title_singular = _('Check in %(count)d document.')
+    title_plural = _(message='Check in %(count)d documents.')
+    title_single = _(message='Check in document "%(object)s".')
+    title_singular = _(message='Check in %(count)d document.')
     view_icon = icon_check_in_document
 
     def get_extra_context(self):
@@ -57,9 +57,9 @@ class DocumentCheckInView(MultipleObjectConfirmActionView):
     def get_post_object_action_url(self):
         if self.action_count == 1:
             return reverse(
-                viewname='checkouts:check_out_info', kwargs={
+                kwargs={
                     'document_id': self.action_id_list[0]
-                }
+                }, viewname='checkouts:check_out_info'
             )
         else:
             super().get_post_action_redirect()
@@ -67,19 +67,19 @@ class DocumentCheckInView(MultipleObjectConfirmActionView):
     def get_source_queryset(self):
         # object_permission is None to disable restricting queryset mixin
         # and restrict the queryset ourselves from two permissions.
-        document_queryset = Document.valid.all()
+        queryset_documents = Document.valid.all()
 
-        check_in_queryset = AccessControlList.objects.restrict_queryset(
+        queryset_check_ins = AccessControlList.objects.restrict_queryset(
             permission=permission_document_check_in,
-            queryset=document_queryset, user=self.request.user
+            queryset=queryset_documents, user=self.request.user
         )
 
-        check_in_override_queryset = AccessControlList.objects.restrict_queryset(
+        queryset_check_in_overrides = AccessControlList.objects.restrict_queryset(
             permission=permission_document_check_in_override,
-            queryset=document_queryset, user=self.request.user
+            queryset=queryset_documents, user=self.request.user
         )
 
-        return check_in_queryset | check_in_override_queryset
+        return queryset_check_ins | queryset_check_in_overrides
 
     def object_action(self, form, instance):
         try:
@@ -92,24 +92,24 @@ class DocumentCheckInView(MultipleObjectConfirmActionView):
 
 class DocumentCheckOutView(MultipleObjectFormActionView):
     error_message = _(
-        'Unable to checkout document "%(instance)s"; %(exception)s'
+        message='Unable to checkout document "%(instance)s"; %(exception)s'
     )
     form_class = DocumentCheckOutForm
     object_permission = permission_document_check_out
     pk_url_kwarg = 'document_id'
     source_queryset = Document.valid.all()
     success_message_plural = _(
-        '%(count)d documents checked out successfully.'
+        message='%(count)d documents checked out successfully.'
     )
     success_message_single = _(
-        'Document "%(object)s" checked out successfully.'
+        message='Document "%(object)s" checked out successfully.'
     )
     success_message_singular = _(
-        '%(count)d document checked out successfully.'
+        message='%(count)d document checked out successfully.'
     )
-    title_plural = _('Checkout %(count)d documents.')
-    title_single = _('Checkout document "%(object)s".')
-    title_singular = _('Checkout %(count)d document.')
+    title_plural = _(message='Checkout %(count)d documents.')
+    title_single = _(message='Checkout document "%(object)s".')
+    title_singular = _(message='Checkout %(count)d document.')
     view_icon = icon_check_out_document
 
     def get_extra_context(self):
@@ -127,9 +127,9 @@ class DocumentCheckOutView(MultipleObjectFormActionView):
     def get_post_object_action_url(self):
         if self.action_count == 1:
             return reverse(
-                viewname='checkouts:check_out_info', kwargs={
+                kwargs={
                     'document_id': self.action_id_list[0]
-                }
+                }, viewname='checkouts:check_out_info'
             )
         else:
             super().get_post_action_redirect()
@@ -157,7 +157,7 @@ class DocumentCheckOutDetailView(SingleObjectDetailView):
         return {
             'object': self.object,
             'title': _(
-                'Check out details for document: %s'
+                message='Check out details for document: %s'
             ) % self.object
         }
 
@@ -178,11 +178,11 @@ class DocumentCheckOutListView(DocumentListView):
             {
                 'no_results_icon': icon_check_out_info,
                 'no_results_text': _(
-                    'Checking out a document, blocks certain operations '
+                    message='Checking out a document, blocks certain operations '
                     'for a predetermined amount of time.'
                 ),
-                'no_results_title': _('No documents have been checked out'),
-                'title': _('Checked out documents')
+                'no_results_title': _(message='No documents have been checked out'),
+                'title': _(message='Checked out documents')
             }
         )
         return context

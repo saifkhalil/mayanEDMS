@@ -9,7 +9,7 @@ from .scoped_queries import (
 )
 from .search_query_terms import QueryTerm
 from .settings import setting_default_operator
-from .utils import get_match_all_value
+from .utils import is_url_query_positive
 
 
 class SearchInterpreter:
@@ -50,7 +50,9 @@ class SearchInterpreter:
         if priority in cls._registry:
             raise DynamicSearchInterpreterError(
                 'Search interpreter `{}` is already registered for '
-                'priority `{}`.'.format(cls._registry[priority], priority)
+                'priority `{}`.'.format(
+                    cls._registry[priority], priority
+                )
             )
         else:
             cls._registry[priority] = klass
@@ -68,7 +70,9 @@ class SearchInterpreter:
     @classmethod
     def do_prefix_remove(cls, prefix, value):
         if value.startswith(prefix):
-            return value[len(prefix):]
+            return value[
+                len(prefix):
+            ]
 
     def do_query_decode(self, query=None):
         return self._do_query_decode(query=query)
@@ -119,8 +123,10 @@ class SearchInterpreterAdvanced(SearchInterpreter):
     def _do_query_decode(self, query=None):
         query = query or self.query.copy()
 
-        self.global_and_search = get_match_all_value(
-            value=query.pop(MATCH_ALL_FIELD_NAME, 'no')
+        query_match_all_value = query.pop(MATCH_ALL_FIELD_NAME, 'no')
+
+        self.global_and_search = is_url_query_positive(
+            value=query_match_all_value
         )
 
         if self.global_and_search:
@@ -128,9 +134,7 @@ class SearchInterpreterAdvanced(SearchInterpreter):
         else:
             inter_field_operator = 'OR'
 
-        query_field_term_dictionary = QueryTerm.do_query_parse(
-            query=query
-        )
+        query_field_term_dictionary = QueryTerm.do_query_parse(query=query)
 
         scoped_query = self.get_scoped_query_instance()
 
@@ -141,14 +145,13 @@ class SearchInterpreterAdvanced(SearchInterpreter):
         )
 
         if self.result_scope is not None:
+            result_scope_identifier = str(self.result_scope)
+
             scoped_query_entry = ScopedQueryEntryControlResult(
-                scoped_query=scoped_query, result_scope_identifier=str(
-                    self.result_scope
-                )
+                result_scope_identifier=result_scope_identifier,
+                scoped_query=scoped_query
             )
-            scoped_query.do_scope_entry_add(
-                scope_entry=scoped_query_entry
-            )
+            scoped_query.do_scope_entry_add(scope_entry=scoped_query_entry)
 
         return scoped_query
 
@@ -221,7 +224,9 @@ class SearchInterpreterAdvanced(SearchInterpreter):
                 operand_right = scope_id
 
                 scoped_query_entry = ScopedQueryEntryDataOperator(
-                    operand_list=(str(operand_left), str(operand_right)),
+                    operand_list=(
+                        str(operand_left), str(operand_right)
+                    ),
                     operator_text=operator_text,
                     scope_identifier=str(result_scope),
                     scoped_query=scoped_query
@@ -241,10 +246,11 @@ class SearchInterpreterAdvanced(SearchInterpreter):
         scoped_query = self.get_scoped_query_instance()
 
         for key, value in self.query.items():
-            key = self.do_prefix_remove(prefix=self.prefix, value=key)
+            if value:
+                key = self.do_prefix_remove(prefix=self.prefix, value=key)
 
-            if key in scoped_query.search_model.search_field_name_list or key == MATCH_ALL_FIELD_NAME:
-                result[key] = value
+                if key in scoped_query.search_model.search_field_name_list or key == MATCH_ALL_FIELD_NAME:
+                    result[key] = value
 
         return result
 
@@ -284,16 +290,17 @@ class SearchInterpreterScoped(SearchInterpreter):
         scoped_query = self.get_scoped_query_instance()
 
         for key, value in self.query.items():
-            key = self.do_prefix_remove(prefix=self.prefix, value=key)
-            if key:
-                try:
-                    scoped_query.do_scope_entry_init(
-                        key=key, value=value
-                    )
-                except DynamicSearchScopedQueryError:
-                    """Ignore and continue"""
-                else:
-                    result[key] = value
+            if value:
+                key = self.do_prefix_remove(prefix=self.prefix, value=key)
+                if key:
+                    try:
+                        scoped_query.do_scope_entry_init(
+                            key=key, value=value
+                        )
+                    except DynamicSearchScopedQueryError:
+                        """Ignore and continue."""
+                    else:
+                        result[key] = value
 
         return result
 

@@ -1,6 +1,7 @@
 import logging
 
 from django.apps import apps
+from django.db import OperationalError
 
 from mayan.celery import app
 
@@ -15,14 +16,9 @@ def task_download_files_stale_delete():
         app_label='storage', model_name='DownloadFile'
     )
 
-    queryset = DownloadFile.objects.stale()
+    logger.debug('Start')
 
-    logger.debug(
-        'Queryset count: %d', queryset.count()
-    )
-
-    for expired_download in queryset.all():
-        expired_download.delete()
+    DownloadFile.objects.stale_delete()
 
     logger.debug('Finished')
 
@@ -35,13 +31,28 @@ def task_shared_upload_stale_delete():
         app_label='storage', model_name='SharedUploadedFile'
     )
 
-    queryset = SharedUploadedFile.objects.stale()
+    logger.debug('Start')
 
-    logger.debug(
-        'Queryset count: %d', queryset.count()
-    )
-
-    for expired_upload in queryset.all():
-        expired_upload.delete()
+    SharedUploadedFile.objects.stale_delete()
 
     logger.debug('Finished')
+
+
+@app.task(bind=True, ignore_result=True, retry_backoff=True)
+def task_shared_upload_delete(self, shared_uploaded_file_id):
+    SharedUploadedFile = apps.get_model(
+        app_label='storage', model_name='SharedUploadedFile'
+    )
+
+    shared_uploaded_file = SharedUploadedFile.objects.get(
+        pk=shared_uploaded_file_id
+    )
+
+    try:
+        shared_uploaded_file.delete()
+    except OperationalError as exception:
+        logger.warning(
+            'Operational error attempting to delete shared upload file: '
+            '%s; %s. Retrying.', shared_uploaded_file, exception
+        )
+        raise self.retry(exc=exception)

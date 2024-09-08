@@ -2,10 +2,12 @@ from distutils import util
 from functools import reduce
 import itertools
 import logging
+import shlex
 import types
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.constants import LOOKUP_SEP
+from django.utils.text import slugify
 
 from .compatibility import Iterable
 from .exceptions import ResolverError, ResolverPipelineError
@@ -221,6 +223,40 @@ def any_to_bool(value):
     return value
 
 
+def comma_splitter(string):
+    splitter = shlex.shlex(string, posix=True)
+    splitter.whitespace = ','
+    splitter.whitespace_split = True
+    splitter.commenters = ''
+    return [
+        str(e) for e in splitter
+    ]
+
+
+def convert_to_internal_name(value):
+    slug = slugify(value=value)
+    slug = slug.replace('-', '_')
+    return slug
+
+
+def deduplicate_dictionary_values(dictionary):
+    result = {}
+
+    for key, value in dictionary.items():
+        value_test = value
+
+        count = 1
+        while True:
+            if value_test in result.values():
+                value_test = '{}_{}'.format(value, count)
+                count += 1
+            else:
+                result[key] = value_test
+                break
+
+    return result
+
+
 def flatten_list(value):
     if isinstance(value, (str, bytes)):
         yield value
@@ -233,6 +269,21 @@ def flatten_list(value):
                     yield item
                 else:
                     yield ''
+
+
+def flatten_map(dictionary, result, prefix=None, separator='_'):
+    if prefix:
+        prefix_base = '{}{}'.format(prefix, separator)
+    else:
+        prefix_base = ''
+
+    for key, value in dictionary.items():
+        prefix_string = '{}{}'.format(prefix_base, key)
+
+        if isinstance(value, dict):
+            flatten_map(dictionary=value, prefix=prefix_string, result=result)
+        else:
+            result[prefix_string] = value
 
 
 def get_class_full_name(klass):

@@ -3,7 +3,7 @@ import logging
 
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.menus import menu_list_facet
 from mayan.apps.common.utils import get_related_field
@@ -31,7 +31,9 @@ class ModelPermission:
 
         for namespace, permissions in itertools.groupby(cls.get_for_class(klass=klass), lambda entry: entry.namespace):
             permission_options = [
-                (permission.pk, str(permission)) for permission in permissions
+                (
+                    permission.pk, str(permission)
+                ) for permission in permissions
             ]
             permission_options.sort(
                 key=lambda entry: entry[1]
@@ -41,7 +43,9 @@ class ModelPermission:
             )
 
         # Sort by namespace label.
-        result.sort(key=lambda entry: entry[0].label)
+        result.sort(
+            key=lambda entry: entry[0].label
+        )
         return result
 
     @classmethod
@@ -51,13 +55,17 @@ class ModelPermission:
         )
 
         if as_content_type:
+            # This returns a dictionary but a queryset is needed.
             content_type_dictionary = ContentType.objects.get_for_models(
                 *cls._model_permissions.keys()
             )
+
+            # Convert the dictionary into a list of IDs.
             content_type_ids = [
                 content_type.pk for content_type in content_type_dictionary.values()
             ]
 
+            # Return a queryset of content types based on the ID list.
             return ContentType.objects.filter(pk__in=content_type_ids)
         else:
             return cls._model_permissions.keys()
@@ -140,8 +148,9 @@ class ModelPermission:
         Match a model class to a set of permissions. And connect the model
         to the ACLs via a GenericRelation field.
         """
-        # Hidden imports
+        # Hidden imports.
         from django.contrib.contenttypes.fields import GenericRelation
+
         from mayan.apps.common.classes import ModelCopy
         from mayan.apps.events.classes import (
             EventModelRegistry, ModelEventType
@@ -197,7 +206,7 @@ class ModelPermission:
 
                 model.add_to_class(
                     name='acls', value=GenericRelation(
-                        to=AccessControlList, verbose_name=_('ACLs')
+                        to=AccessControlList, verbose_name=_(message='ACLs')
                     )
                 )
 
@@ -219,7 +228,9 @@ class ModelPermission:
         )
         cls._inheritances_reverse[model_reverse].append(model)
 
-        cls._inheritances.setdefault(model, [])
+        cls._inheritances.setdefault(
+            model, []
+        )
         cls._inheritances[model].append(
             {'field_name': related, 'fk_field_cast': fk_field_cast}
         )

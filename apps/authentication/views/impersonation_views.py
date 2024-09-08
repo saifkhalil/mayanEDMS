@@ -1,11 +1,11 @@
 from django.http import HttpResponseRedirect
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import View
 
 from mayan.apps.common.settings import setting_home_view
 from mayan.apps.user_management.querysets import get_user_queryset
-from mayan.apps.views.http import URL
 from mayan.apps.views.generics import FormView
+from mayan.apps.views.http import URL
 from mayan.apps.views.view_mixins import (
     ExternalObjectViewMixin, RedirectionViewMixin
 )
@@ -15,7 +15,7 @@ from ..forms import (
 )
 from ..icons import icon_impersonate_start
 from ..literals import (
-    USER_IMPERSONATE_VARIABLE_ID, USER_IMPERSONATE_VARIABLE_DISABLE,
+    USER_IMPERSONATE_VARIABLE_DISABLE, USER_IMPERSONATE_VARIABLE_ID,
     USER_IMPERSONATE_VARIABLE_PERMANENT
 )
 from ..permissions import permission_users_impersonate
@@ -28,7 +28,9 @@ class UserImpersonateEndView(RedirectionViewMixin, View):
                 USER_IMPERSONATE_VARIABLE_DISABLE: ''
             }
         )
-        return HttpResponseRedirect(redirect_to=url.to_string())
+        return HttpResponseRedirect(
+            redirect_to=url.to_string()
+        )
 
 
 class UserImpersonateFormStartView(FormView):
@@ -45,11 +47,13 @@ class UserImpersonateFormStartView(FormView):
         url = URL(
             viewname=setting_home_view.value, query=query
         )
-        return HttpResponseRedirect(redirect_to=url.to_string())
+        return HttpResponseRedirect(
+            redirect_to=url.to_string()
+        )
 
     def get_extra_context(self):
         return {
-            'title': _('Impersonate user')
+            'title': _(message='Impersonate user')
         }
 
     def get_form_extra_kwargs(self):
@@ -73,10 +77,12 @@ class UserImpersonateStartView(ExternalObjectViewMixin, FormView):
         url = URL(
             query=query, viewname=setting_home_view.value
         )
-        return HttpResponseRedirect(redirect_to=url.to_string())
+        return HttpResponseRedirect(
+            redirect_to=url.to_string()
+        )
 
     def get_extra_context(self):
         return {
             'object': self.external_object,
-            'title': _('Impersonate user: %s') % self.external_object
+            'title': _(message='Impersonate user: %s') % self.external_object
         }

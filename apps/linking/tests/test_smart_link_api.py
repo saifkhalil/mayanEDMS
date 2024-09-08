@@ -3,7 +3,9 @@ from rest_framework import status
 from mayan.apps.documents.permissions import (
     permission_document_type_edit, permission_document_type_view
 )
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import event_smart_link_created, event_smart_link_edited
@@ -13,23 +15,22 @@ from ..permissions import (
     permission_smart_link_edit, permission_smart_link_view
 )
 
-from .literals import TEST_SMART_LINK_LABEL_EDITED, TEST_SMART_LINK_LABEL
+from .literals import TEST_SMART_LINK_LABEL, TEST_SMART_LINK_LABEL_EDITED
 from .mixins import (
-    SmartLinkAPIViewTestMixin, SmartLinkDocumentTypeAPIViewTestMixin,
-    SmartLinkTestMixin
+    SmartLinkAPIViewTestMixin, SmartLinkDocumentTypeAPIViewTestMixin
 )
 
 
-class SmartLinkAPIViewTestCase(
-    SmartLinkTestMixin, SmartLinkAPIViewTestMixin, BaseAPITestCase
-):
+class SmartLinkAPIViewTestCase(SmartLinkAPIViewTestMixin, BaseAPITestCase):
     def test_smart_link_create_api_view_no_permission(self):
         self._clear_events()
 
         response = self._request_test_smart_link_create_api_view()
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(SmartLink.objects.count(), 0)
+        self.assertEqual(
+            SmartLink.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -46,7 +47,9 @@ class SmartLinkAPIViewTestCase(
         self.assertEqual(response.data['id'], smart_link.pk)
         self.assertEqual(response.data['label'], TEST_SMART_LINK_LABEL)
 
-        self.assertEqual(SmartLink.objects.count(), 1)
+        self.assertEqual(
+            SmartLink.objects.count(), 1
+        )
         self.assertEqual(smart_link.label, TEST_SMART_LINK_LABEL)
 
         events = self._get_test_events()
@@ -65,7 +68,9 @@ class SmartLinkAPIViewTestCase(
         response = self._request_test_smart_link_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(SmartLink.objects.count(), 1)
+        self.assertEqual(
+            SmartLink.objects.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -81,7 +86,9 @@ class SmartLinkAPIViewTestCase(
         response = self._request_test_smart_link_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        self.assertEqual(SmartLink.objects.count(), 0)
+        self.assertEqual(
+            SmartLink.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -200,7 +207,9 @@ class SmartLinkAPIViewTestCase(
 
         response = self._request_test_smart_link_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -225,7 +234,7 @@ class SmartLinkAPIViewTestCase(
 
 
 class SmartLinkDocumentTypeAPIViewTestCase(
-    DocumentTestMixin, SmartLinkTestMixin, SmartLinkDocumentTypeAPIViewTestMixin,
+    DocumentTestMixin, SmartLinkDocumentTypeAPIViewTestMixin,
     BaseAPITestCase
 ):
     auto_upload_test_document = False
@@ -375,7 +384,9 @@ class SmartLinkDocumentTypeAPIViewTestCase(
 
         response = self._request_test_smart_link_document_type_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

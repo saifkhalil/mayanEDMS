@@ -2,7 +2,7 @@ import logging
 
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     SingleObjectCreateView, SingleObjectDeleteView, SingleObjectEditView,
@@ -11,7 +11,7 @@ from mayan.apps.views.generics import (
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from ..forms.document_type_forms import (
-    DocumentTypeFilenameGeneratorForm, DocumentTypeFilenameForm_create
+    DocumentTypeFilenameForm_create, DocumentTypeFilenameGeneratorForm
 )
 from ..icons import (
     icon_document_type_create, icon_document_type_delete,
@@ -19,8 +19,7 @@ from ..icons import (
     icon_document_type_filename, icon_document_type_filename_create,
     icon_document_type_filename_delete, icon_document_type_filename_edit,
     icon_document_type_filename_generator, icon_document_type_filename_list,
-    icon_document_type_list, icon_document_type_policies,
-    icon_document_type_setup
+    icon_document_type_list, icon_document_type_setup
 )
 from ..links.document_type_links import (
     link_document_type_create, link_document_type_filename_create
@@ -52,7 +51,9 @@ class DocumentTypeDocumentListView(
         context.update(
             {
                 'object': self.external_object,
-                'title': _('Documents of type: %s') % self.external_object
+                'title': _(
+                    message='Documents of type: %s'
+                ) % self.external_object
             }
         )
         return context
@@ -72,14 +73,14 @@ class DocumentTypeListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Document types are the most basic units of configuration. '
+                message='Document types are the most basic units of configuration. '
                 'Everything in the system will depend on them. '
                 'Define a document type for each type of physical '
                 'document you intend to upload. Example document types: '
                 'invoice, receipt, manual, prescription, balance sheet.'
             ),
-            'no_results_title': _('No document types available'),
-            'title': _('Document types')
+            'no_results_title': _(message='No document types available'),
+            'title': _(message='Document types')
         }
 
 
@@ -94,13 +95,11 @@ class DocumentTypeCreateView(SingleObjectCreateView):
 
     def get_extra_context(self):
         return {
-            'title': _('Create document type')
+            'title': _(message='Create document type')
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class DocumentTypeDeleteView(SingleObjectDeleteView):
@@ -114,9 +113,11 @@ class DocumentTypeDeleteView(SingleObjectDeleteView):
 
     def get_extra_context(self):
         return {
-            'message': _('All documents of this type will be deleted too.'),
+            'message': _(
+                message='All documents of this type will be deleted too.'
+            ),
             'object': self.object,
-            'title': _('Delete the document type: %s?') % self.object
+            'title': _(message='Delete the document type: %s?') % self.object
         }
 
 
@@ -133,51 +134,11 @@ class DocumentTypeEditView(SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit document type: %s') % self.object
+            'title': _(message='Edit document type: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
-
-
-class DocumentTypeDeletionPoliciesEditView(SingleObjectEditView):
-    fields = (
-        'trash_time_unit', 'trash_time_period', 'delete_time_unit',
-        'delete_time_period'
-    )
-    fieldsets = (
-        (
-            _('Trash'), {
-                'fields': ('trash_time_unit', 'trash_time_period'),
-            }
-        ), (
-            _('Delete'), {
-                'fields': ('delete_time_unit', 'delete_time_period')
-            }
-        )
-    )
-    model = DocumentType
-    object_permission = permission_document_type_edit
-    pk_url_kwarg = 'document_type_id'
-    post_action_redirect = reverse_lazy(
-        viewname='documents:document_type_list'
-    )
-    view_icon = icon_document_type_policies
-
-    def get_extra_context(self):
-        return {
-            'object': self.object,
-            'title': _(
-                'Deletion policies for document type: %s'
-            ) % self.object
-        }
-
-    def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class DocumentTypeFilenameCreateView(
@@ -194,7 +155,7 @@ class DocumentTypeFilenameCreateView(
             'document_type': self.external_object,
             'navigation_object_list': ('document_type',),
             'title': _(
-                'Create quick label for document type: %s'
+                message='Create quick label for document type: %s'
             ) % self.external_object
         }
 
@@ -214,7 +175,7 @@ class DocumentTypeFilenameDeleteView(SingleObjectDeleteView):
             'filename': self.object,
             'navigation_object_list': ('document_type', 'filename',),
             'title': _(
-                'Delete the quick label: %(label)s, from document type '
+                message='Delete the quick label: %(label)s, from document type '
                 '"%(document_type)s"?'
             ) % {
                 'document_type': self.object.document_type,
@@ -224,9 +185,8 @@ class DocumentTypeFilenameDeleteView(SingleObjectDeleteView):
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='documents:document_type_filename_list', kwargs={
-                'document_type_id': self.object.document_type.pk
-            }
+            kwargs={'document_type_id': self.object.document_type.pk},
+            viewname='documents:document_type_filename_list'
         )
 
 
@@ -243,7 +203,7 @@ class DocumentTypeFilenameEditView(SingleObjectEditView):
             'filename': self.object,
             'navigation_object_list': ('document_type', 'filename',),
             'title': _(
-                'Edit quick label "%(filename)s" from document type '
+                message='Edit quick label "%(filename)s" from document type '
                 '"%(document_type)s"'
             ) % {
                 'document_type': self.object.document_type,
@@ -253,9 +213,8 @@ class DocumentTypeFilenameEditView(SingleObjectEditView):
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='documents:document_type_filename_list', kwargs={
-                'document_type_id': self.object.document_type.pk
-            }
+            kwargs={'document_type_id': self.object.document_type.pk},
+            viewname='documents:document_type_filename_list'
         )
 
 
@@ -282,16 +241,16 @@ class DocumentTypeFilenameListView(
                 )
             ),
             'no_results_text': _(
-                'Quick labels are predetermined filenames that allow '
+                message='Quick labels are predetermined filenames that allow '
                 'the quick renaming of documents as they are uploaded '
                 'by selecting them from a list. Quick labels can also '
                 'be used after the documents have been uploaded.'
             ),
             'no_results_title': _(
-                'There are no quick labels for this document type'
+                message='There are no quick labels for this document type'
             ),
             'title': _(
-                'Quick labels for document type: %s'
+                message='Quick labels for document type: %s'
             ) % self.external_object
         }
 
@@ -313,11 +272,9 @@ class DocumentTypeFilenameGeneratorEditView(SingleObjectEditView):
         return {
             'object': self.object,
             'title': _(
-                'Filename generation setup for document type: %s'
+                message='Filename generation setup for document type: %s'
             ) % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}

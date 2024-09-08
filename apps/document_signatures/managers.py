@@ -2,16 +2,15 @@ import logging
 
 from django.core.files import File
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.django_gpg.exceptions import DecryptionError
 from mayan.apps.django_gpg.models import Key
-from mayan.apps.documents.models import DocumentFile
+from mayan.apps.documents.models.document_file_models import DocumentFile
 from mayan.apps.storage.utils import NamedTemporaryFile
 
 from .events import (
-    event_detached_signature_created,
-    event_embedded_signature_created
+    event_detached_signature_created, event_embedded_signature_created
 )
 
 logger = logging.getLogger(name=__name__)
@@ -78,7 +77,7 @@ class EmbeddedSignatureManager(models.Manager):
                 raise
             else:
                 # The result of key.sign_file does not contain the
-                # signtarure ID.
+                # signature ID.
                 # Verify the signed file to obtain the signature ID.
                 temporary_file_object.seek(0)
                 result = Key.objects.verify_file(
@@ -88,10 +87,10 @@ class EmbeddedSignatureManager(models.Manager):
                 # Reset the file pointer and use it to create the new
                 # signed document file.
                 temporary_file_object.seek(0)
-                document_file.document.file_new(
+                document_file.document.files_upload(
                     file_object=temporary_file_object,
                     filename='{}_{}'.format(
-                        str(document_file), _('signed')
+                        str(document_file), _(message='signed')
                     ), user=user
                 )
                 instance = self.get(signature_id=result.signature_id)

@@ -3,13 +3,11 @@
 <script src="{% static 'converter/js/mayan_image.js' %}" type="text/javascript"></script>
 
 <script>
-    MayanImage.setup({
-        templateInvalidImage: '{% spaceless %}{% include "documents/invalid_document.html" %}{% endspaceless %}'
-    });
+    MayanImage.setup();
 
     app.addAfterBaseLoadCallback(
         {
-            func: MayanImage.intialize,
+            func: MayanImage.initialize,
             self: MayanImage,
         }
     );

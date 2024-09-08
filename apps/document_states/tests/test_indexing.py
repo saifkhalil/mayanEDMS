@@ -1,6 +1,8 @@
-from mayan.apps.documents.tests.base import GenericDocumentTestCase
-from mayan.apps.document_indexing.models.index_instance_models import IndexInstanceNode
+from mayan.apps.document_indexing.models.index_instance_models import (
+    IndexInstanceNode
+)
 from mayan.apps.document_indexing.tests.mixins import IndexTemplateTestMixin
+from mayan.apps.documents.tests.base import GenericDocumentTestCase
 
 from .literals import (
     TEST_WORKFLOW_INDEX_TEMPLATE_EXPRESSION,
@@ -9,11 +11,14 @@ from .literals import (
     TEST_WORKFLOW_TEMPLATE_TRANSITION_INDEX_TEMPLATE_EXPRESSION,
     TEST_WORKFLOW_TEMPLATE_TRANSITION_LABEL_EDITED
 )
-from .mixins.workflow_template_mixins import WorkflowTemplateTestMixin
+from .mixins.workflow_instance_mixins import WorkflowInstanceTestMixin
+from .mixins.workflow_template_transition_mixins import (
+    WorkflowTemplateTransitionTestMixin
+)
 
 
 class WorkflowInstanceIndexingTestCase(
-    IndexTemplateTestMixin, WorkflowTemplateTestMixin,
+    IndexTemplateTestMixin, WorkflowInstanceTestMixin,
     GenericDocumentTestCase
 ):
     _test_index_template_node_expression = TEST_WORKFLOW_INDEX_TEMPLATE_EXPRESSION
@@ -98,7 +103,7 @@ class WorkflowInstanceIndexingTestCase(
 
 
 class WorkflowTemplateIndexingTestCase(
-    IndexTemplateTestMixin, WorkflowTemplateTestMixin,
+    IndexTemplateTestMixin, WorkflowTemplateTransitionTestMixin,
     GenericDocumentTestCase
 ):
     _test_index_template_node_expression = TEST_WORKFLOW_INDEX_TEMPLATE_EXPRESSION
@@ -161,7 +166,7 @@ class WorkflowTemplateIndexingTestCase(
         self._create_test_workflow_states_and_transitions()
         self._create_test_document_stub()
 
-        self._test_workflow_template_states[0].delete()
+        self._test_workflow_template_state_list[0].delete()
 
         self.assertFalse(
             IndexInstanceNode.objects.filter(
@@ -180,8 +185,8 @@ class WorkflowTemplateIndexingTestCase(
             test_workflow_instance.get_current_state()
         )
 
-        self._test_workflow_template_states[0].label = TEST_WORKFLOW_TEMPLATE_STATE_LABEL_EDITED
-        self._test_workflow_template_states[0].save()
+        self._test_workflow_template_state_list[0].label = TEST_WORKFLOW_TEMPLATE_STATE_LABEL_EDITED
+        self._test_workflow_template_state_list[0].save()
 
         value_edited = '{}-{}'.format(
             self._test_workflow_template.label,
@@ -203,7 +208,7 @@ class WorkflowTemplateIndexingTestCase(
 
 
 class WorkflowTemplateTranstitionIndexingTestCase(
-    IndexTemplateTestMixin, WorkflowTemplateTestMixin,
+    IndexTemplateTestMixin, WorkflowTemplateTransitionTestMixin,
     GenericDocumentTestCase
 ):
     _test_index_template_node_expression = TEST_WORKFLOW_TEMPLATE_TRANSITION_INDEX_TEMPLATE_EXPRESSION

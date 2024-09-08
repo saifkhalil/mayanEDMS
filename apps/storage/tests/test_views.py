@@ -41,7 +41,56 @@ class DownloadFileViewTestCase(
         self._create_test_download_file(user=self._test_user)
 
         self.grant_access(
-            obj=self.test_download_file,
+            obj=self._test_download_file,
+            permission=permission_download_file_delete
+        )
+
+        download_file_count = DownloadFile.objects.count()
+
+        self._clear_events()
+
+        response = self._request_test_download_file_delete_view()
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(
+            DownloadFile.objects.count(), download_file_count - 1
+        )
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 1)
+
+        self.assertEqual(events[0].action_object, None)
+        self.assertEqual(events[0].actor, self._test_case_user)
+        self.assertEqual(events[0].target, None)
+        self.assertEqual(events[0].verb, event_download_file_deleted.id)
+
+    def test_download_file_delete_view_owner_no_permission(self):
+        self._create_test_download_file()
+
+        download_file_count = DownloadFile.objects.count()
+
+        self._clear_events()
+
+        response = self._request_test_download_file_delete_view()
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(
+            DownloadFile.objects.count(), download_file_count - 1
+        )
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 1)
+
+        self.assertEqual(events[0].action_object, None)
+        self.assertEqual(events[0].actor, self._test_case_user)
+        self.assertEqual(events[0].target, None)
+        self.assertEqual(events[0].verb, event_download_file_deleted.id)
+
+    def test_download_file_delete_view_owner_with_access(self):
+        self._create_test_download_file()
+
+        self.grant_access(
+            obj=self._test_download_file,
             permission=permission_download_file_delete
         )
 
@@ -87,7 +136,7 @@ class DownloadFileViewTestCase(
         )
 
         self.grant_access(
-            obj=self.test_download_file,
+            obj=self._test_download_file,
             permission=permission_download_file_download
         )
 
@@ -96,10 +145,10 @@ class DownloadFileViewTestCase(
         response = self._request_test_download_file_download_view()
         self.assertEqual(response.status_code, 200)
 
-        with self.test_download_file.open(mode='rb') as file_object:
+        with self._test_download_file.open(mode='rb') as file_object:
             self.assert_download_response(
                 response=response, content=file_object.read(),
-                filename=str(self.test_download_file),
+                filename=str(self._test_download_file),
                 mime_type='text/plain'
             )
 
@@ -108,91 +157,8 @@ class DownloadFileViewTestCase(
 
         self.assertEqual(events[0].action_object, None)
         self.assertEqual(events[0].actor, self._test_case_user)
-        self.assertEqual(events[0].target, self.test_download_file)
+        self.assertEqual(events[0].target, self._test_download_file)
         self.assertEqual(events[0].verb, event_download_file_downloaded.id)
-
-    def test_download_file_list_view_not_owner_no_permission(self):
-        self._create_test_download_file(user=self._test_user)
-
-        self._clear_events()
-
-        response = self._request_test_download_file_list_view()
-        self.assertNotContains(
-            response=response, text=str(self.test_download_file),
-            status_code=200
-        )
-
-        events = self._get_test_events()
-        self.assertEqual(events.count(), 0)
-
-    def test_download_file_list_view_not_owner_with_access(self):
-        self._create_test_download_file(user=self._test_user)
-
-        self.grant_access(
-            obj=self.test_download_file,
-            permission=permission_download_file_view
-        )
-
-        self._clear_events()
-
-        response = self._request_test_download_file_list_view()
-
-        self.assertContains(
-            response=response, text=str(self.test_download_file),
-            status_code=200
-        )
-
-        events = self._get_test_events()
-        self.assertEqual(events.count(), 0)
-
-    def test_download_file_delete_view_owner_no_permission(self):
-        self._create_test_download_file()
-
-        download_file_count = DownloadFile.objects.count()
-
-        self._clear_events()
-
-        response = self._request_test_download_file_delete_view()
-        self.assertEqual(response.status_code, 302)
-
-        self.assertEqual(
-            DownloadFile.objects.count(), download_file_count - 1
-        )
-
-        events = self._get_test_events()
-        self.assertEqual(events.count(), 1)
-
-        self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_user)
-        self.assertEqual(events[0].target, None)
-        self.assertEqual(events[0].verb, event_download_file_deleted.id)
-
-    def test_download_file_delete_view_owner_with_access(self):
-        self._create_test_download_file()
-
-        self.grant_access(
-            obj=self.test_download_file,
-            permission=permission_download_file_delete
-        )
-
-        download_file_count = DownloadFile.objects.count()
-
-        self._clear_events()
-
-        response = self._request_test_download_file_delete_view()
-        self.assertEqual(response.status_code, 302)
-
-        self.assertEqual(
-            DownloadFile.objects.count(), download_file_count - 1
-        )
-
-        events = self._get_test_events()
-        self.assertEqual(events.count(), 1)
-
-        self.assertEqual(events[0].action_object, None)
-        self.assertEqual(events[0].actor, self._test_case_user)
-        self.assertEqual(events[0].target, None)
-        self.assertEqual(events[0].verb, event_download_file_deleted.id)
 
     def test_download_file_download_view_owner_no_permission(self):
         # Set the expected_content_types for
@@ -206,10 +172,10 @@ class DownloadFileViewTestCase(
         response = self._request_test_download_file_download_view()
         self.assertEqual(response.status_code, 200)
 
-        with self.test_download_file.open(mode='rb') as file_object:
+        with self._test_download_file.open(mode='rb') as file_object:
             self.assert_download_response(
                 response=response, content=file_object.read(),
-                filename=str(self.test_download_file),
+                filename=str(self._test_download_file),
                 mime_type='text/plain'
             )
 
@@ -218,7 +184,7 @@ class DownloadFileViewTestCase(
 
         self.assertEqual(events[0].action_object, None)
         self.assertEqual(events[0].actor, self._test_case_user)
-        self.assertEqual(events[0].target, self.test_download_file)
+        self.assertEqual(events[0].target, self._test_download_file)
         self.assertEqual(events[0].verb, event_download_file_downloaded.id)
 
     def test_download_file_download_view_owner_with_access(self):
@@ -229,7 +195,7 @@ class DownloadFileViewTestCase(
         self._create_test_download_file(content=TEST_BINARY_CONTENT)
 
         self.grant_access(
-            obj=self.test_download_file,
+            obj=self._test_download_file,
             permission=permission_download_file_download
         )
 
@@ -238,10 +204,10 @@ class DownloadFileViewTestCase(
         response = self._request_test_download_file_download_view()
         self.assertEqual(response.status_code, 200)
 
-        with self.test_download_file.open(mode='rb') as file_object:
+        with self._test_download_file.open(mode='rb') as file_object:
             self.assert_download_response(
                 response=response, content=file_object.read(),
-                filename=str(self.test_download_file),
+                filename=str(self._test_download_file),
                 mime_type='text/plain'
             )
 
@@ -250,8 +216,42 @@ class DownloadFileViewTestCase(
 
         self.assertEqual(events[0].action_object, None)
         self.assertEqual(events[0].actor, self._test_case_user)
-        self.assertEqual(events[0].target, self.test_download_file)
+        self.assertEqual(events[0].target, self._test_download_file)
         self.assertEqual(events[0].verb, event_download_file_downloaded.id)
+
+    def test_download_file_list_view_not_owner_no_permission(self):
+        self._create_test_download_file(user=self._test_user)
+
+        self._clear_events()
+
+        response = self._request_test_download_file_list_view()
+        self.assertNotContains(
+            response=response, text=str(self._test_download_file),
+            status_code=200
+        )
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
+
+    def test_download_file_list_view_not_owner_with_access(self):
+        self._create_test_download_file(user=self._test_user)
+
+        self.grant_access(
+            obj=self._test_download_file,
+            permission=permission_download_file_view
+        )
+
+        self._clear_events()
+
+        response = self._request_test_download_file_list_view()
+
+        self.assertContains(
+            response=response, text=str(self._test_download_file),
+            status_code=200
+        )
+
+        events = self._get_test_events()
+        self.assertEqual(events.count(), 0)
 
     def test_download_file_list_view_owner_no_permission(self):
         self._create_test_download_file()
@@ -260,7 +260,7 @@ class DownloadFileViewTestCase(
 
         response = self._request_test_download_file_list_view()
         self.assertContains(
-            response=response, text=str(self.test_download_file),
+            response=response, text=str(self._test_download_file),
             status_code=200
         )
 
@@ -271,7 +271,7 @@ class DownloadFileViewTestCase(
         self._create_test_download_file()
 
         self.grant_access(
-            obj=self.test_download_file,
+            obj=self._test_download_file,
             permission=permission_download_file_view
         )
 
@@ -279,7 +279,7 @@ class DownloadFileViewTestCase(
 
         response = self._request_test_download_file_list_view()
         self.assertContains(
-            response=response, text=str(self.test_download_file),
+            response=response, text=str(self._test_download_file),
             status_code=200
         )
 

@@ -1,10 +1,12 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.generics import get_object_or_404
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document
-from mayan.apps.documents.serializers.document_serializers import DocumentSerializer
+from mayan.apps.documents.models.document_models import Document
+from mayan.apps.documents.serializers.document_serializers import (
+    DocumentSerializer
+)
 from mayan.apps.rest_api import serializers
 from mayan.apps.user_management.serializers import UserSerializer
 
@@ -14,16 +16,16 @@ from .permissions import permission_document_check_out
 
 class DocumentCheckoutSerializer(serializers.ModelSerializer):
     document = DocumentSerializer(
-        label=_('Document')
+        label=_(message='Document')
     )
     user = UserSerializer(
-        label=_('User')
+        label=_(message='User')
     )
 
     class Meta:
         extra_kwargs = {
             'url': {
-                'label': _('URL'),
+                'label': _(message='URL'),
                 'lookup_url_kwarg': 'checkout_id',
                 'view_name': 'rest_api:checkedout-document-view'
             }
@@ -41,8 +43,8 @@ class DocumentCheckoutSerializer(serializers.ModelSerializer):
 class NewDocumentCheckoutSerializer(serializers.ModelSerializer):
     block_new_file = serializers.BooleanField()
     document_pk = serializers.IntegerField(
-        help_text=_('Primary key of the document to be checked out.'),
-        label=_('Document ID'), write_only=True
+        help_text=_(message='Primary key of the document to be checked out.'),
+        label=_(message='Document ID'), write_only=True
     )
     expiration_datetime = serializers.DateTimeField()
 

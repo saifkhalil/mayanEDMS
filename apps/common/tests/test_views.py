@@ -33,33 +33,35 @@ class ObjectCopyViewTestCase(ObjectCopyViewTestMixin, GenericViewTestCase):
     def test_object_copy_view_no_permission(self):
         test_object_count = self.TestModel.objects.count()
         response = self._request_object_copy_view()
-        self.assertTrue(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
         queryset = self.TestModel.objects.all()
         self.assertEqual(queryset.count(), test_object_count)
-        test_object_labels = queryset.values_list('label', flat=True)
+        test_object_label_list = queryset.values_list('label', flat=True)
 
         self.assertTrue(
-            TEST_OBJECT_LABEL in test_object_labels
+            TEST_OBJECT_LABEL in test_object_label_list
         )
         self.assertFalse(
-            '{}_1'.format(TEST_OBJECT_LABEL) in test_object_labels
+            '{}_1'.format(TEST_OBJECT_LABEL) in test_object_label_list
         )
 
     def test_object_copy_view_with_access(self):
-        self.grant_access(obj=self._test_object, permission=permission_object_copy)
+        self.grant_access(
+            obj=self._test_object, permission=permission_object_copy
+        )
 
         test_object_count = self.TestModel.objects.count()
         response = self._request_object_copy_view()
-        self.assertTrue(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
         queryset = self.TestModel.objects.all()
         self.assertEqual(queryset.count(), test_object_count + 1)
-        test_object_labels = queryset.values_list('label', flat=True)
+        test_object_label_list = queryset.values_list('label', flat=True)
 
         self.assertTrue(
-            TEST_OBJECT_LABEL in test_object_labels
+            TEST_OBJECT_LABEL in test_object_label_list
         )
         self.assertTrue(
-            '{}_1'.format(TEST_OBJECT_LABEL) in test_object_labels
+            '{}_1'.format(TEST_OBJECT_LABEL) in test_object_label_list
         )

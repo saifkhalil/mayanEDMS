@@ -1,6 +1,6 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.smart_settings.classes import SettingNamespace
+from mayan.apps.smart_settings.settings import setting_cluster
 
 from .literals import (
     DEFAULT_GRAPHVIZ_DOT_PATH, DEFAULT_WORKFLOWS_IMAGE_CACHE_MAXIMUM_SIZE,
@@ -10,46 +10,46 @@ from .literals import (
 )
 from .setting_callbacks import callback_update_workflow_image_cache_size
 
-namespace = SettingNamespace(
-    label=_('Workflows'), name='document_states'
+setting_namespace = setting_cluster.do_namespace_add(
+    label=_(message='Workflows'), name='document_states'
 )
 
-setting_graphviz_dot_path = namespace.add_setting(
+setting_graphviz_dot_path = setting_namespace.do_setting_add(
     default=DEFAULT_GRAPHVIZ_DOT_PATH,
     global_name='WORKFLOWS_GRAPHVIZ_DOT_PATH', help_text=_(
-        'File path to the graphviz dot program used to generate workflow '
+        message='File path to the graphviz dot program used to generate workflow '
         'previews.'
     ), is_path=True
 )
-setting_workflow_image_cache_maximum_size = namespace.add_setting(
+setting_workflow_image_cache_maximum_size = setting_namespace.do_setting_add(
     default=DEFAULT_WORKFLOWS_IMAGE_CACHE_MAXIMUM_SIZE,
     global_name='WORKFLOWS_IMAGE_CACHE_MAXIMUM_SIZE',
     help_text=_(
-        'The threshold at which the WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND '
+        message='The threshold at which the WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND '
         'will start deleting the oldest workflow image cache files. '
         'Specify the size in bytes.'
     ), post_edit_function=callback_update_workflow_image_cache_size
 )
 
-setting_workflow_image_cache_storage_backend = namespace.add_setting(
+setting_workflow_image_cache_storage_backend = setting_namespace.do_setting_add(
     default=DEFAULT_WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND,
     global_name='WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND', help_text=_(
-        'Path to the Storage subclass to use when storing the cached '
+        message='Path to the Storage subclass to use when storing the cached '
         'workflow image files.'
     )
 )
-setting_workflow_image_cache_storage_backend_arguments = namespace.add_setting(
+setting_workflow_image_cache_storage_backend_arguments = setting_namespace.do_setting_add(
     default=DEFAULT_WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND_ARGUMENTS,
     global_name='WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND_ARGUMENTS',
     help_text=_(
-        'Arguments to pass to the WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND.'
+        message='Arguments to pass to the WORKFLOWS_IMAGE_CACHE_STORAGE_BACKEND.'
     )
 )
-setting_workflow_state_escalation_check_interval = namespace.add_setting(
+setting_workflow_state_escalation_check_interval = setting_namespace.do_setting_add(
     default=DEFAULT_WORKFLOWS_WORKFLOW_STATE_ESCALATION_CHECK_INTERVAL,
     global_name='WORKFLOWS_WORKFLOW_STATE_ESCALATION_CHECK_INTERVAL',
     help_text=_(
-        'Interval in seconds on which the task to check for expired '
+        message='Interval in seconds on which the task to check for expired '
         'workflow states will be launched.'
     )
 )

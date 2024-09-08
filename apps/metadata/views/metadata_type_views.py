@@ -1,11 +1,9 @@
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.documents.models import DocumentType
-from mayan.apps.documents.permissions import (
-    permission_document_type_edit
-)
+from mayan.apps.documents.models.document_type_models import DocumentType
+from mayan.apps.documents.permissions import permission_document_type_edit
 from mayan.apps.views.generics import (
     MultipleObjectDeleteView, RelationshipView, SingleObjectCreateView,
     SingleObjectEditView, SingleObjectListView
@@ -15,12 +13,13 @@ from ..forms import (
     DocumentTypeMetadataTypeRelationshipFormSet, MetadataTypeForm
 )
 from ..icons import (
-    icon_document_type_metadata_type_list, icon_metadata_type_create,
-    icon_metadata_type_single_delete, icon_metadata_type_document_type_list,
-    icon_metadata_type_edit, icon_metadata_type_list, icon_metadata
+    icon_document_type_metadata_type_list, icon_metadata,
+    icon_metadata_type_create, icon_metadata_type_document_type_list,
+    icon_metadata_type_edit, icon_metadata_type_list,
+    icon_metadata_type_single_delete
 )
 from ..links import link_metadata_type_create
-from ..models import MetadataType
+from ..models.metadata_type_models import MetadataType
 from ..permissions import (
     permission_metadata_type_create, permission_metadata_type_delete,
     permission_metadata_type_edit, permission_metadata_type_view
@@ -28,7 +27,9 @@ from ..permissions import (
 
 
 class MetadataTypeCreateView(SingleObjectCreateView):
-    extra_context = {'title': _('Create metadata type')}
+    extra_context = {
+        'title': _(message='Create metadata type')
+    }
     form_class = MetadataTypeForm
     model = MetadataType
     post_action_redirect = reverse_lazy(
@@ -38,14 +39,12 @@ class MetadataTypeCreateView(SingleObjectCreateView):
     view_permission = permission_metadata_type_create
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class MetadataTypeDeleteView(MultipleObjectDeleteView):
     error_message = _(
-        'Error deleting metadata type "%(instance)s"; %(exception)s'
+        message='Error deleting metadata type "%(instance)s"; %(exception)s'
     )
     model = MetadataType
     object_permission = permission_metadata_type_delete
@@ -54,17 +53,17 @@ class MetadataTypeDeleteView(MultipleObjectDeleteView):
         viewname='metadata:metadata_type_list'
     )
     success_message_plural = _(
-        '%(count)d metadata types deleted successfully.'
+        message='%(count)d metadata types deleted successfully.'
     )
     success_message_single = _(
-        'Metadata type "%(object)s" deleted successfully.'
+        message='Metadata type "%(object)s" deleted successfully.'
     )
     success_message_singular = _(
-        '%(count)d metadata type deleted successfully.'
+        message='%(count)d metadata type deleted successfully.'
     )
-    title_plural = _('Delete the %(count)d selected metadata types.')
-    title_single = _('Delete metadata type: %(object)s.')
-    title_singular = _('Delete the %(count)d selected metadata type.')
+    title_plural = _(message='Delete the %(count)d selected metadata types.')
+    title_single = _(message='Delete metadata type: %(object)s.')
+    title_singular = _(message='Delete the %(count)d selected metadata type.')
     view_icon = icon_metadata_type_single_delete
 
 
@@ -81,13 +80,11 @@ class MetadataTypeEditView(SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit metadata type: %s') % self.object
+            'title': _(message='Edit metadata type: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
 
 class MetadataTypeListView(SingleObjectListView):
@@ -104,15 +101,15 @@ class MetadataTypeListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Metadata types are user defined properties that can be '
+                message='Metadata types are user defined properties that can be '
                 'assigned values. Once created they must be associated to '
                 'document types, either as optional or required, for each. '
                 'Setting a metadata type as required for a document type '
                 'will block the upload of documents of that type until a '
                 'metadata value is provided.'
             ),
-            'no_results_title': _('There are no metadata types'),
-            'title': _('Metadata types')
+            'no_results_title': _(message='There are no metadata types'),
+            'title': _(message='Metadata types')
         }
 
 
@@ -135,22 +132,20 @@ class DocumentTypeMetadataTypeRelationshipView(RelationshipView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'Create metadata type relationships to be able to associate '
+                message='Create metadata type relationships to be able to associate '
                 'them to this document type.'
             ),
             'no_results_title': _(
-                'There are no metadata type relationships available'
+                message='There are no metadata type relationships available'
             ),
             'object': self.get_object(),
             'title': _(
-                'Metadata type relationships for document type: %s'
+                message='Metadata type relationships for document type: %s'
             ) % self.get_object()
         }
 
     def get_form_extra_kwargs(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_initial(self):
         obj = self.get_object()
@@ -188,7 +183,7 @@ class MetadataTypesDocumentTypeRelationshipView(
             'form_display_mode_table': True,
             'object': self.get_object(),
             'title': _(
-                'Document type relationships for metadata type: %s'
+                message='Document type relationships for metadata type: %s'
             ) % self.get_object()
         }
 

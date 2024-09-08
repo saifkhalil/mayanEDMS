@@ -1,9 +1,17 @@
-from ..classes import MailerBackend
+from ..classes import MailerBackend, MailerBackendCredentials
 
 
-class TestBackend(MailerBackend):
+class MailingProfileCredentialTest(MailerBackendCredentials):
     """
-    User mailer backend to use with tests
+    Credential mailing profile backend to use with tests.
     """
     class_path = 'django.core.mail.backends.locmem.EmailBackend'
-    label = 'Django local memory backend'
+    label = 'Credential test local memory backend'
+
+
+class MailingProfileTest(MailerBackend):
+    """
+    Mailing profile backend to use with tests.
+    """
+    class_path = 'django.core.mail.backends.locmem.EmailBackend'
+    label = 'Test local memory backend'

@@ -1,6 +1,6 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.navigation.classes import Menu
+from mayan.apps.navigation.menus import Menu
 from mayan.apps.navigation.utils import factory_condition_queryset_access
 
 from .icons import icon_menu_tags
@@ -11,5 +11,5 @@ menu_tags = Menu(
         app_label='tags', model_name='Tag',
         object_permission=permission_tag_view,
         view_permission=permission_tag_create,
-    ), icon=icon_menu_tags, label=_('Tags'), name='tags'
+    ), icon=icon_menu_tags, label=_(message='Tags'), name='tags'
 )

@@ -1,19 +1,22 @@
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db import connection, models, transaction
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 from django.conf import settings
 from mayan.apps.databases.model_mixins import ExtraDataModelMixin
 from mayan.apps.documents.models.document_models import Document
-from mayan.apps.events.classes import EventManagerMethodAfter, EventManagerSave
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import (
+    EventManagerMethodAfter, EventManagerSave
+)
 
 from .events import (
-    event_cabinet_created, event_cabinet_deleted, event_cabinet_edited,
-    event_cabinet_document_added, event_cabinet_document_removed
+    event_cabinet_created, event_cabinet_deleted,
+    event_cabinet_document_added, event_cabinet_document_removed,
+    event_cabinet_edited
 )
 from .model_mixins import CabinetBusinessLogicMixin
 
@@ -25,17 +28,19 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
     the top level container is can have an ACL. All child container's
     access is delegated to their corresponding root container.
     """
+    _ordering_fields = ('label',)
+
     parent = TreeForeignKey(
         blank=True, db_index=True, null=True, on_delete=models.CASCADE,
-        related_name='children', to='self', verbose_name=_('Parent')
+        related_name='children', to='self', verbose_name=_(message='Parent')
     )
     label = models.CharField(
-        help_text=_('A short text used to identify the cabinet.'),
-        max_length=128, verbose_name=_('Label')
+        help_text=_(message='A short text used to identify the cabinet.'),
+        max_length=128, verbose_name=_(message='Label')
     )
     documents = models.ManyToManyField(
         blank=True, related_name='cabinets', to=Document,
-        verbose_name=_('Documents')
+        verbose_name=_(message='Documents')
     )
 
     users = models.ManyToManyField(related_name='user_cabinets',to=settings.AUTH_USER_MODEL, verbose_name=_('Users'))
@@ -47,8 +52,8 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
         # unique_together doesn't work if there is a FK
         # https://code.djangoproject.com/ticket/1751
         unique_together = ('parent', 'label')
-        verbose_name = _('Cabinet')
-        verbose_name_plural = _('Cabinets')
+        verbose_name = _(message='Cabinet')
+        verbose_name_plural = _(message='Cabinets')
 
     def __str__(self):
         return self.get_full_path()
@@ -90,9 +95,8 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
 
     def get_absolute_url(self):
         return reverse(
-            viewname='cabinets:cabinet_view', kwargs={
-                'cabinet_id': self.pk
-            }
+            kwargs={'cabinet_id': self.pk},
+            viewname='cabinets:cabinet_view'
         )
 
     @method_event(
@@ -129,16 +133,16 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
 
             if queryset.exists():
                 params = {
-                    'model_name': _('Cabinet'),
-                    'field_labels': _('Parent and Label')
+                    'field_labels': _(message='Parent and Label'),
+                    'model_name': _(message='Cabinet')
                 }
                 raise ValidationError(
                     message={
                         NON_FIELD_ERRORS: [
                             ValidationError(
                                 message=_(
-                                    '%(model_name)s with this %(field_labels)s already '
-                                    'exists.'
+                                    message='%(model_name)s with this '
+                                    '%(field_labels)s already exists.'
                                 ), code='unique_together', params=params
                             )
                         ]
@@ -154,8 +158,8 @@ class CabinetSearchResult(Cabinet):
     """
     class Meta:
         proxy = True
-        verbose_name = _('Cabinet')
-        verbose_name_plural = _('Cabinets')
+        verbose_name = _(message='Cabinet')
+        verbose_name_plural = _(message='Cabinets')
 
 
 class DocumentCabinet(Cabinet):
@@ -166,5 +170,5 @@ class DocumentCabinet(Cabinet):
     """
     class Meta:
         proxy = True
-        verbose_name = _('Document cabinet')
-        verbose_name_plural = _('Document cabinets')
+        verbose_name = _(message='Document cabinet')
+        verbose_name_plural = _(message='Document cabinets')

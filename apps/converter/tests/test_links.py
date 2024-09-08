@@ -2,16 +2,15 @@ from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 
 from ..links import link_transformation_delete
 
-from .mixins import TransformationTestMixin, TransformationViewTestMixin
+from .mixins import TransformationViewTestMixin
 
 
 class TransformationLinkConditionTestCase(
-    TransformationTestMixin, TransformationViewTestMixin,
-    GenericDocumentViewTestCase
+    TransformationViewTestMixin, GenericDocumentViewTestCase
 ):
-    create_test_case_superuser = True
+    auto_login_super_user = True
+    create_test_case_super_user = True
     create_test_case_user = False
-    auto_login_superuser = True
 
     def test_transformation_condition_link_view_with_super_user(self):
         self._create_test_transformation()
@@ -34,8 +33,7 @@ class TransformationLinkConditionTestCase(
 
 
 class TransformationLinkDisplayTestCase(
-    TransformationTestMixin, TransformationViewTestMixin,
-    GenericDocumentViewTestCase
+    TransformationViewTestMixin, GenericDocumentViewTestCase
 ):
     def test_transformation_delete_link_view_with_view_access(self):
         self._create_test_transformation()

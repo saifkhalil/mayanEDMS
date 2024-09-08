@@ -1,5 +1,5 @@
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.utils import parse_range
 from mayan.apps.converter.transformations import TransformationResize
@@ -8,7 +8,7 @@ from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from ..forms.misc_forms import PrintForm
 from ..literals import PAGE_RANGE_RANGE
-from ..settings import setting_print_width, setting_print_height
+from ..settings import setting_print_height, setting_print_width
 
 
 class PrintFormView(ExternalObjectViewMixin, FormView):
@@ -25,7 +25,7 @@ class PrintFormView(ExternalObjectViewMixin, FormView):
         )
 
     def dispatch(self, request, *args, **kwargs):
-        result = super().dispatch(request, *args, **kwargs)
+        result = super().dispatch(request=request, *args, **kwargs)
 
         self._add_recent_document()
 
@@ -34,14 +34,13 @@ class PrintFormView(ExternalObjectViewMixin, FormView):
     def get_extra_context(self):
         return {
             'form_action': reverse(
-                viewname=self.print_view_name, kwargs={
-                    self.print_view_kwarg: self.external_object.pk
-                }
+                kwargs={self.print_view_kwarg: self.external_object.pk},
+                viewname=self.print_view_name
             ),
             'object': self.external_object,
             'submit_method': 'GET',
             'submit_target': '_blank',
-            'title': _('Print: %s') % self.external_object
+            'title': _(message='Print: %s') % self.external_object
         }
 
 
@@ -52,7 +51,7 @@ class DocumentPrintBaseView(ExternalObjectViewMixin, SimpleView):
     template_name = 'documents/document_print.html'
 
     def dispatch(self, request, *args, **kwargs):
-        result = super().dispatch(request, *args, **kwargs)
+        result = super().dispatch(request=request, *args, **kwargs)
 
         self._add_recent_document()
 

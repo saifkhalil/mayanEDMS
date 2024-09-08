@@ -2,20 +2,24 @@ import logging
 
 from celery.backends.base import DisabledBackend
 
-from django.utils.translation import ugettext_lazy as _
+from django.apps import apps
+from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.common.apps import MayanAppConfig
-from mayan.apps.common.menus import menu_tools
+from mayan.apps.app_manager.apps import MayanAppConfig
+from mayan.apps.common.menus import menu_list_facet, menu_tools, menu_return
 from mayan.apps.common.signals import signal_perform_upgrade
-
-from mayan.apps.navigation.classes import SourceColumn
-from mayan.apps.views.html_widgets import TwoStateWidget
+from mayan.apps.forms import column_widgets
+from mayan.apps.navigation.source_columns import SourceColumn
 from mayan.celery import app as celery_app
 
-from .classes import CeleryQueue, Task
+from .classes import CeleryQueue, TaskType, Task, Worker
 from .handlers import handler_perform_upgrade
-from .links import link_queue_list
+from .links import (
+    link_queue_task_type_list, link_worker_list, link_worker_queue_list
+)
 from .literals import TEST_CELERY_RESULT_KEY, TEST_CELERY_RESULT_VALUE
+from .methods import factory_method_periodic_task_save
 
 logger = logging.getLogger(name=__name__)
 
@@ -25,7 +29,7 @@ class TaskManagerApp(MayanAppConfig):
     app_url = 'task_manager'
     has_tests = True
     name = 'mayan.apps.task_manager'
-    verbose_name = _('Task manager')
+    verbose_name = _(message='Task manager')
 
     def check_broker_connectivity(self):
         connection = celery_app.connection()
@@ -77,11 +81,17 @@ class TaskManagerApp(MayanAppConfig):
     def ready(self):
         super().ready()
 
+        PeriodicTask = apps.get_model(
+            app_label='django_celery_beat', model_name='PeriodicTask'
+        )
+
         try:
             self.check_broker_connectivity()
         except Exception as exception:
             print(
-                'Error checking Celery broker connectivity: {}'.format(exception)
+                'Error checking Celery broker connectivity: {}'.format(
+                    exception
+                )
             )
             exit(1)
 
@@ -95,50 +105,128 @@ class TaskManagerApp(MayanAppConfig):
 
         CeleryQueue.load_modules()
 
+        if settings.DEBUG or settings.TESTING:
+            PeriodicTask.add_to_class(
+                name='save', value=factory_method_periodic_task_save(
+                    super_save=PeriodicTask.save
+                )
+            )
+
         SourceColumn(
-            attribute='label', is_identifier=True, label=_('Label'),
+            attribute='label', is_identifier=True, label=_(message='Label'),
             source=CeleryQueue
         )
         SourceColumn(
-            attribute='name', include_label=True, label=_('Name'),
+            attribute='name', include_label=True, label=_(message='Name'),
             source=CeleryQueue
         )
         SourceColumn(
             attribute='default_queue', include_label=True,
-            label=_('Default queue?'), source=CeleryQueue,
-            widget=TwoStateWidget
+            label=_(message='Default queue?'), source=CeleryQueue,
+            widget=column_widgets.TwoStateWidget
         )
         SourceColumn(
-            attribute='transient', include_label=True,
-            label=_('Is transient?'), source=CeleryQueue,
-            widget=TwoStateWidget
+            attribute='transient', help_text=_(
+                message='Transient queues are not persistent. Tasks in a transient '
+                'queue are lost if the broker is restarted. Transient '
+                'queues use less resources and managed non critical tasks.'
+            ), include_label=True, label=_(message='Is transient?'),
+            source=CeleryQueue, widget=column_widgets.TwoStateWidget
         )
         SourceColumn(
-            attribute='task_type', include_label=True, label=_('Type'),
-            source=Task
+            attribute='get_task_type_count', source=CeleryQueue
+        )
+
+        SourceColumn(
+            attribute='label', label=_(message='Label'), source=TaskType
+        )
+        SourceColumn(
+            attribute='name', label=_(message='Name'), source=TaskType
+        )
+        SourceColumn(
+            attribute='dotted_path', label=_(message='Dotted path'),
+            source=TaskType
+        )
+        SourceColumn(
+            attribute='schedule', label=_(message='Schedule'),
+            source=TaskType
+        )
+
+        SourceColumn(
+            attribute='task_type', include_label=True, label=_(
+                message='Type'
+            ), source=Task
         )
         SourceColumn(
             attribute='get_time_started', include_label=True,
-            label=_('Start time'), source=Task
+            label=_(message='Start time'), source=Task
         )
         SourceColumn(
             func=lambda context: context['object'].kwargs['hostname'],
-            include_label=True, label=_('Host'), source=Task
+            include_label=True, label=_(message='Host'), source=Task
         )
         SourceColumn(
             func=lambda context: context['object'].kwargs['args'],
-            include_label=True, label=_('Arguments'), source=Task
+            include_label=True, label=_(message='Arguments'), source=Task
         )
         SourceColumn(
             func=lambda context: context['object'].kwargs['kwargs'],
-            include_label=True, label=_('Keyword arguments'), source=Task
+            include_label=True, label=_(message='Keyword arguments'),
+            source=Task
         )
         SourceColumn(
             func=lambda context: context['object'].kwargs['worker_pid'],
-            include_label=True, label=_('Worker process ID'), source=Task
+            include_label=True, label=_(message='Worker process ID'),
+            source=Task
         )
 
-        menu_tools.bind_links(links=(link_queue_list,))
+        SourceColumn(
+            attribute='label', is_identifier=True, label=_(message='Label'),
+            source=Worker
+        )
+        SourceColumn(
+            attribute='name', label=_(message='Name'), source=Worker
+        )
+        SourceColumn(
+            attribute='maximum_memory_per_child', help_text=_(
+                message='Maximum amount of resident memory a worker can execute '
+                'before it\'s replaced by a new process.'
+            ), label=_(message='Maximum memory per child'), source=Worker
+        )
+        SourceColumn(
+            attribute='maximum_tasks_per_child', help_text=_(
+                message='Maximum number of tasks a worker can execute before it\'s '
+                'replaced by a new process.'
+            ), label=_(message='Maximum tasks per child'), source=Worker
+        )
+        SourceColumn(
+            attribute='concurrency', help_text=_(
+                message='The number of worker processes/threads to launch. '
+                'Defaults to the number of CPUs available on the machine.'
+            ), label=_(message='Concurrency'), source=Worker
+        )
+        SourceColumn(
+            attribute='nice_level', help_text=_(
+                message='The nice value determines the priority of the process. '
+                'A higher value lowers the priority. The default '
+                'value is 0.'
+            ), label=_(message='Nice level'), source=Worker
+        )
+        SourceColumn(attribute='get_queue_count', source=Worker)
+
+        menu_list_facet.bind_links(
+            links=(link_queue_task_type_list,), sources=(CeleryQueue,)
+        )
+        menu_list_facet.bind_links(
+            links=(link_worker_queue_list,), sources=(Worker,)
+        )
+        menu_return.bind_links(
+            links=(link_worker_list,),
+            sources=(Worker, 'task_manager:worker_list')
+        )
+        menu_tools.bind_links(
+            links=(link_worker_list,)
+        )
 
         signal_perform_upgrade.connect(
             dispatch_uid='task_manager_handler_perform_upgrade',

@@ -1,9 +1,9 @@
 from rest_framework.test import APITestCase, APITransactionTestCase
 
 from mayan.apps.permissions.classes import Permission
-from mayan.apps.smart_settings.classes import SettingNamespace
+from mayan.apps.smart_settings.settings import setting_cluster
 from mayan.apps.testing.tests.base import (
-    GenericViewTestCase, GenericTransactionViewTestCase
+    GenericTransactionViewTestCase, GenericViewTestCase
 )
 
 from .mixins import TestAPIViewTestCaseMixin
@@ -19,7 +19,7 @@ class BaseAPITestCase(
 
     def setUp(self):
         super().setUp()
-        SettingNamespace.invalidate_cache_all()
+        setting_cluster.do_cache_invalidate()
         Permission.invalidate_cache()
 
 
@@ -34,5 +34,5 @@ class BaseAPITransactionTestCase(
 
     def setUp(self):
         super().setUp()
-        SettingNamespace.invalidate_cache_all()
+        setting_cluster.do_cache_invalidate()
         Permission.invalidate_cache()

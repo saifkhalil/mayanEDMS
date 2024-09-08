@@ -1,25 +1,27 @@
 from django.db.models.signals import post_migrate
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
 from mayan.apps.acls.permissions import (
     permission_acl_edit, permission_acl_view
 )
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
-    menu_multi_item, menu_object, menu_secondary, menu_setup
+    menu_multi_item, menu_object, menu_return, menu_secondary, menu_setup
 )
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 
+from .classes import AppImageErrorImage
 from .events import event_asset_edited
 from .handlers import handler_create_asset_cache
 from .links import (
-    link_asset_create, link_asset_multiple_delete,
-    link_asset_single_delete, link_asset_edit, link_asset_list,
+    link_asset_create, link_asset_multiple_delete, link_asset_single_delete,
+    link_asset_edit, link_asset_list, link_asset_setup,
     link_transformation_delete, link_transformation_edit,
     link_transformation_select
 )
+from .literals import IMAGE_ERROR_BROKEN_FILE
 from .permissions import (
     permission_asset_delete, permission_asset_edit, permission_asset_view
 )
@@ -32,7 +34,7 @@ class ConverterApp(MayanAppConfig):
     has_static_media = True
     has_tests = True
     name = 'mayan.apps.converter'
-    verbose_name = _('Converter')
+    verbose_name = _(message='Converter')
 
     def ready(self):
         super().ready()
@@ -42,6 +44,10 @@ class ConverterApp(MayanAppConfig):
             model_name='LayerTransformation'
         )
 
+        AppImageErrorImage(
+            name=IMAGE_ERROR_BROKEN_FILE,
+            template_name='converter/errors/broken_file.html'
+        )
         EventModelRegistry.register(model=Asset)
 
         ModelEventType.register(
@@ -79,7 +85,7 @@ class ConverterApp(MayanAppConfig):
         SourceColumn(
             func=lambda context: str(
                 context['object']
-            ), include_label=True, label=_('Transformation'),
+            ), include_label=True, label=_(message='Transformation'),
             source=LayerTransformation
         )
         SourceColumn(
@@ -95,15 +101,22 @@ class ConverterApp(MayanAppConfig):
                 link_asset_single_delete, link_asset_edit
             ), sources=(Asset,)
         )
+        menu_return.bind_links(
+            links=(link_asset_list,),
+            sources=(
+                Asset, 'converter:asset_list', 'converter:asset_create',
+                'converter:asset_multiple_delete'
+            )
+        )
         menu_secondary.bind_links(
-            links=(link_asset_list, link_asset_create,),
+            links=(link_asset_create,),
             sources=(
                 Asset, 'converter:asset_list', 'converter:asset_create',
                 'converter:asset_multiple_delete'
             )
         )
         menu_setup.bind_links(
-            links=(link_asset_list,)
+            links=(link_asset_setup,)
         )
 
         menu_object.bind_links(

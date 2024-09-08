@@ -9,10 +9,10 @@ from ..permissions import (
     permission_tag_view
 )
 
-from .mixins import TagAPIViewTestMixin, TagTestMixin
+from .mixins import TagAPIViewTestMixin
 
 
-class TagAPIViewTestCase(TagAPIViewTestMixin, TagTestMixin, BaseAPITestCase):
+class TagAPIViewTestCase(TagAPIViewTestMixin, BaseAPITestCase):
     def test_tag_create_api_view_no_permission(self):
         tag_count = Tag.objects.count()
 
@@ -198,7 +198,9 @@ class TagAPIViewTestCase(TagAPIViewTestMixin, TagTestMixin, BaseAPITestCase):
 
         response = self._request_test_tag_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

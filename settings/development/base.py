@@ -2,22 +2,14 @@ from .. import *  # NOQA
 
 ALLOWED_HOSTS = ['*']
 
+APPEARANCE_MENU_POLLING_INTERVAL = None
+
 DEBUG = True
 
 CELERY_BROKER_URL = 'memory://'
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = CELERY_TASK_ALWAYS_EAGER  # NOQA: F405
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-if 'rosetta' not in INSTALLED_APPS:   # NOQA: F405
-    try:
-        import rosetta  # NOQA: F401
-    except ImportError:
-        pass
-    else:
-        INSTALLED_APPS += (  # NOQA: F405
-            'rosetta',
-        )
 
 if 'django_extensions' not in INSTALLED_APPS:
     try:

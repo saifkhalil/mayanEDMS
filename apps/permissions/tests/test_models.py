@@ -25,8 +25,8 @@ class PermissionTestCase(GroupTestMixin, RoleTestMixin, BaseTestCase):
 
     def test_no_permission(self):
         with self.assertRaises(expected_exception=PermissionDenied):
-            Permission.check_user_permissions(
-                permissions=(self._test_permission,), user=self._test_user
+            Permission.check_user_permission(
+                permission=self._test_permission, user=self._test_user
             )
 
     def test_with_permissions(self):
@@ -35,8 +35,8 @@ class PermissionTestCase(GroupTestMixin, RoleTestMixin, BaseTestCase):
         self._test_role.groups.add(self._test_group)
 
         try:
-            Permission.check_user_permissions(
-                permissions=(self._test_permission,), user=self._test_user
+            Permission.check_user_permission(
+                permission=self._test_permission, user=self._test_user
             )
         except PermissionDenied:
             self.fail('PermissionDenied exception was not expected.')
@@ -46,8 +46,8 @@ class PermissionTestCase(GroupTestMixin, RoleTestMixin, BaseTestCase):
         test_anonymous_user = AnonymousUser()
 
         with self.assertRaises(expected_exception=PermissionDenied):
-            Permission.check_user_permissions(
-                permissions=(self._test_permission,), user=test_anonymous_user
+            Permission.check_user_permission(
+                permission=self._test_permission, user=test_anonymous_user
             )
 
 
@@ -55,11 +55,13 @@ class RoleModelTestCase(RoleTestMixin, BaseTestCase):
     def test_method_get_absolute_url(self):
         self._create_test_role()
 
-        self.assertTrue(self._test_role.get_absolute_url())
+        self.assertTrue(
+            self._test_role.get_absolute_url()
+        )
 
 
 class StoredPermissionManagerTestCase(BaseTestCase):
-    create_test_case_superuser = False
+    create_test_case_super_user = False
     create_test_case_user = False
 
     def test_purge_obsolete_with_invalid(self):
@@ -90,4 +92,6 @@ class StoredPermissionManagerTestCase(BaseTestCase):
 
         StoredPermission.objects.purge_obsolete()
 
-        self.assertEqual(StoredPermission.objects.count(), permission_count)
+        self.assertEqual(
+            StoredPermission.objects.count(), permission_count
+        )

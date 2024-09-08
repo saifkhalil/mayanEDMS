@@ -2,15 +2,14 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
     menu_multi_item, menu_object, menu_tools, menu_user
 )
 from mayan.apps.events.classes import ModelEventType
-from mayan.apps.navigation.classes import Separator
 
 from .classes import AuthenticationBackend
 from .events import (
@@ -33,7 +32,7 @@ class AuthenticationApp(MayanAppConfig):
     app_url = 'authentication'
     has_tests = True
     name = 'mayan.apps.authentication'
-    verbose_name = _('Authentication')
+    verbose_name = _(message='Authentication')
 
     def ready(self):
         super().ready()
@@ -74,7 +73,7 @@ class AuthenticationApp(MayanAppConfig):
 
         menu_user.bind_links(
             links=(
-                Separator(), link_password_change, link_logout
+                link_password_change, link_logout
             ), position=99
         )
 

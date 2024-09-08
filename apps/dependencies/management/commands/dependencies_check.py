@@ -1,5 +1,5 @@
 from django.core import management
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ...classes import Dependency
 
@@ -10,7 +10,7 @@ class Command(management.BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--csv', action='store_true', dest='csv', help=_(
-                'Outputs the dependencies as a comma delimited values list.'
+                message='Outputs the dependencies as a comma delimited values list.'
             ),
         )
 

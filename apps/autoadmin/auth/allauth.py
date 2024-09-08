@@ -8,7 +8,7 @@ except ImportError:
     raise
 
 from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .literals import ADMIN_EMAIL_ADDRESSES
 
@@ -36,7 +36,7 @@ class AutoadminAccountAdapter(DefaultAccountAdapter):
 
     def confirm_email(self, request, email_address):
         """
-        Give superuser privileges automagically if the email address of a
+        Give super user privileges automagically if the email address of a
         user confirming their email is listed in ``settings.ADMINS``.
         """
         super().confirm_email(request=request, email_address=email_address)
@@ -48,7 +48,7 @@ class AutoadminAccountAdapter(DefaultAccountAdapter):
 
             messages.info(
                 request=request, message=_(
-                    'Welcome Admin! You have been given superuser '
+                    message='Welcome Admin! You have been given super user '
                     'privileges. Use them with caution.'
                 )
             )

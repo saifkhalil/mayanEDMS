@@ -1,11 +1,11 @@
 import qrcode
 
-from django import forms
-
 from .widgets import Base64ImageWidget, ImageWidget
 
+from mayan.apps.forms import form_fields
 
-class ImageField(forms.fields.Field):
+
+class ImageField(form_fields.Field):
     widget = ImageWidget
 
     def __init__(self, *args, **kwargs):
@@ -14,7 +14,7 @@ class ImageField(forms.fields.Field):
         self.widget.attrs['alt'] = self.image_alt_text
 
 
-class ReadOnlyImageField(forms.ImageField):
+class ReadOnlyImageField(form_fields.ImageField):
     def clean(self, data, initial=None):
         return ''
 
@@ -24,7 +24,7 @@ class QRCodeImageField(ReadOnlyImageField):
 
     def prepare_value(self, value):
         instance = qrcode.QRCode()
-        instance.add_data(value)
+        instance.add_data(data=value)
         instance.make(fit=True)
 
         qrcode_image = instance.make_image()

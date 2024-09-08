@@ -3,7 +3,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('sources', '0004_auto_20150616_1931'),
+        ('sources', '0004_auto_20150616_1931')
     ]
 
     operations = [
@@ -12,11 +12,11 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ('label',), 'verbose_name': 'Source',
                 'verbose_name_plural': 'Sources'
-            },
+            }
         ),
         migrations.RenameField(
             model_name='source',
             old_name='title',
-            new_name='label',
-        ),
+            new_name='label'
+        )
     ]

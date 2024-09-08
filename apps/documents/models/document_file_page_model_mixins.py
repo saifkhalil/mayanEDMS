@@ -4,7 +4,7 @@ from furl import furl
 
 from django.urls import reverse
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.converter.classes import ConverterBase
 from mayan.apps.converter.exceptions import AppImageError
@@ -14,7 +14,7 @@ from mayan.apps.converter.transformations import BaseTransformation
 from mayan.apps.file_caching.models import CachePartitionFile
 from mayan.apps.lock_manager.backends.base import LockingBackend
 
-from ..literals import IMAGE_ERROR_FILE_PAGE_TRANSFORMATION_ERROR
+from ..literals import IMAGE_ERROR_DOCUMENT_FILE_PAGE_TRANSFORMATION_ERROR
 
 logger = logging.getLogger(name=__name__)
 
@@ -71,7 +71,9 @@ class DocumentFilePageBusinessLogicMixin:
                         transformation_instance_list=combined_transformation_list
                     )
                     with self.cache_partition.create_file(filename=combined_cache_filename) as file_object:
-                        file_object.write(image.getvalue())
+                        file_object.write(
+                            image.getvalue()
+                        )
                 else:
                     logger.debug(
                         'transformations cache file "%s" found', combined_cache_filename
@@ -106,16 +108,16 @@ class DocumentFilePageBusinessLogicMixin:
             )
         except Exception as exception:
             raise AppImageError(
-                error_name=IMAGE_ERROR_FILE_PAGE_TRANSFORMATION_ERROR
+                error_name=IMAGE_ERROR_DOCUMENT_FILE_PAGE_TRANSFORMATION_ERROR
             ) from exception
 
         final_url = furl()
         final_url.path = reverse(
-            viewname='rest_api:documentfilepage-image', kwargs={
+            kwargs={
                 'document_id': self.document_file.document_id,
                 'document_file_id': self.document_file_id,
                 'document_file_page_id': self.pk
-            }
+            }, viewname='rest_api:documentfilepage-image'
         )
         # Remove leading '?' character.
         final_url.query = BaseTransformation.list_as_query_string(
@@ -161,7 +163,9 @@ class DocumentFilePageBusinessLogicMixin:
         )
 
         # Interactive transformations second.
-        result.extend(transformation_instance_list or [])
+        result.extend(
+            transformation_instance_list or []
+        )
 
         return result
 
@@ -176,23 +180,30 @@ class DocumentFilePageBusinessLogicMixin:
 
             try:
                 with self.document_file.get_intermediate_file() as file_object:
-                    converter = ConverterBase.get_converter_class()(
+                    converter_class = ConverterBase.get_converter_class()
+                    converter_instance = converter_class(
                         file_object=file_object
                     )
-                    converter.seek_page(page_number=self.page_number - 1)
+                    converter_instance.seek_page(
+                        page_number=self.page_number - 1
+                    )
 
-                    page_image = converter.get_page()
+                    page_image = converter_instance.get_page()
 
                     # Since open "wb+" doesn't create files, create it
                     # explicitly.
                     with self.cache_partition.create_file(filename=cache_filename) as file_object:
-                        file_object.write(page_image.getvalue())
+                        file_object.write(
+                            page_image.getvalue()
+                        )
 
                     # Apply runtime transformations.
                     for transformation in transformation_instance_list or ():
-                        converter.transform(transformation=transformation)
+                        converter_instance.transform(
+                            transformation=transformation
+                        )
 
-                    return converter.get_page()
+                    return converter_instance.get_page()
             except Exception as exception:
                 logger.error(
                     'Error creating document file page cache file from '
@@ -205,29 +216,32 @@ class DocumentFilePageBusinessLogicMixin:
             logger.debug('Page cache file "%s" found', cache_filename)
 
             with cache_file.open() as file_object:
-                converter = ConverterBase.get_converter_class()(
+                converter_class = ConverterBase.get_converter_class()
+                converter_instance = converter_class(
                     file_object=file_object
                 )
 
-                converter.seek_page(page_number=0)
+                converter_instance.seek_page(page_number=0)
 
                 # This code is also repeated below to allow using a context
                 # manager with cache_file.open and close it automatically.
                 # Apply runtime transformations.
                 for transformation in transformation_instance_list or ():
-                    converter.transform(transformation=transformation)
+                    converter_instance.transform(
+                        transformation=transformation
+                    )
 
-                return converter.get_page()
+                return converter_instance.get_page()
 
     def get_label(self):
         return _(
-            '%(document_file)s - page %(page_num)d of %(total_pages)d'
+            message='%(document_file)s - page %(page_num)d of %(total_pages)d'
         ) % {
             'document_file': self.document_file,
             'page_num': self.page_number,
             'total_pages': self.get_pages_last_number() or 1
         }
-    get_label.short_description = _('Label')
+    get_label.short_description = _(message='Label')
 
     def get_lock_name(
         self, _combined_cache_filename=None, maximum_layer_order=None,

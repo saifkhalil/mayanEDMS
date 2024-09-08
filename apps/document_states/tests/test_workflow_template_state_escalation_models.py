@@ -2,13 +2,13 @@ from mayan.apps.documents.tests.base import GenericDocumentTestCase
 
 from ..events import event_workflow_instance_transitioned
 
-from .mixins.workflow_template_mixins import WorkflowTemplateTestMixin
-from .mixins.workflow_template_state_escalation_mixins import WorkflowTemplateStateEscalationTestMixin
+from .mixins.workflow_template_state_escalation_mixins import (
+    WorkflowTemplateStateEscalationTestMixin
+)
 
 
 class WorkflowTemplateStateEscalationModelTestCase(
-    WorkflowTemplateStateEscalationTestMixin, WorkflowTemplateTestMixin,
-    GenericDocumentTestCase
+    WorkflowTemplateStateEscalationTestMixin, GenericDocumentTestCase
 ):
     auto_upload_test_document = False
 
@@ -25,7 +25,11 @@ class WorkflowTemplateStateEscalationModelTestCase(
         test_workflow_instance = self._test_document.workflows.first()
         test_workflow_instance_state = test_workflow_instance.get_current_state()
 
-        self._create_test_workflow_template_state_escalation()
+        self._create_test_workflow_template_state_escalation(
+            extra_kwargs={
+                'unit': 'microseconds'
+            }
+        )
 
         self._clear_events()
 
@@ -54,7 +58,10 @@ class WorkflowTemplateStateEscalationModelTestCase(
         test_workflow_instance_state = test_workflow_instance.get_current_state()
 
         self._create_test_workflow_template_state_escalation(
-            extra_data={'condition': 'TRUE'}
+            extra_kwargs={
+                'condition': 'TRUE',
+                'unit': 'microseconds'
+            }
         )
 
         self._clear_events()
@@ -84,7 +91,10 @@ class WorkflowTemplateStateEscalationModelTestCase(
         test_workflow_instance_state = test_workflow_instance.get_current_state()
 
         self._create_test_workflow_template_state_escalation(
-            extra_data={'condition': '{{ none }}'}
+            extra_kwargs={
+                'condition': '{{ none }}',
+                'unit': 'microseconds'
+            }
         )
 
         self._clear_events()

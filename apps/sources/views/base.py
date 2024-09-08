@@ -5,55 +5,33 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.encoding import force_str
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.acls.models import AccessControlList
-from mayan.apps.navigation.classes import Link
 from mayan.apps.views.generics import MultiFormView
+from mayan.apps.views.utils import request_is_ajax
 from mayan.apps.views.view_mixins import ViewIconMixin
 
-from ..icons import icon_upload_view_link
-from ..links import factory_conditional_active_by_source
-from ..menus import menu_sources
-from ..models import Source
+from .view_mixins import SourceActionViewMixin, SourceLinkNavigationViewMixin
 
 logger = logging.getLogger(name=__name__)
 
 
-class UploadBaseView(ViewIconMixin, MultiFormView):
-    object_permission = None
-    prefixes = {'source_form': 'source', 'document_form': 'document'}
-    template_name = 'appearance/generic_form.html'
-
-    @staticmethod
-    def get_tab_link_for_source(source, document=None):
-        if document:
-            args = (
-                '"{}"'.format(document.pk), '"{}"'.format(source.pk),
-            )
-            view = 'sources:document_file_upload'
-        else:
-            args = ('"{}"'.format(source.pk),)
-            view = 'sources:document_upload_interactive'
-
-        return Link(
-            args=args,
-            conditional_active=factory_conditional_active_by_source(
-                source=source
-            ), icon=icon_upload_view_link, keep_query=True,
-            remove_from_query=['page'], text=source.label, view=view
-        )
+class UploadBaseView(
+    SourceActionViewMixin, SourceLinkNavigationViewMixin, ViewIconMixin,
+    MultiFormView
+):
+    prefixes = {'document_form': 'document', 'source_form': 'source'}
+    template_name = 'appearance/form_container.html'
 
     def dispatch(self, request, *args, **kwargs):
-        self.interactive_sources_enabled = Source.objects.interactive().filter(
-            enabled=True
-        )
+        self.queryset_source_valid = self.get_queryset_source_valid()
 
-        if not self.interactive_sources_enabled.exists():
+        if not self.queryset_source_valid.exists():
             messages.error(
                 message=_(
-                    'No interactive document sources have been defined or '
-                    'none have been enabled, create one before proceeding.'
+                    message='There are no enabled sources that support this '
+                    'operation. Create a new one or enable and existing one.'
                 ), request=request
             )
             return HttpResponseRedirect(
@@ -63,21 +41,18 @@ class UploadBaseView(ViewIconMixin, MultiFormView):
         self.source = self.get_source()
 
         try:
-            return super().dispatch(request, *args, **kwargs)
+            return super().dispatch(request=request, *args, **kwargs)
         except Exception as exception:
-            if settings.DEBUG:
+            if settings.DEBUG or settings.TESTING:
                 raise
-            elif request.is_ajax():
+            elif request_is_ajax(request=request):
                 return JsonResponse(
                     data={
-                        'error': str(exception)
+                        'error': force_str(s=exception)
                     }, status=500
                 )
             else:
                 raise
-
-    def get_active_tab_links(self):
-        return ()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -91,35 +66,28 @@ class UploadBaseView(ViewIconMixin, MultiFormView):
             )
         )
 
-        active_link = self.get_active_tab_links()
-        menu_sources.bound_links[
-            'sources:document_upload_interactive'
-        ] = active_link
-        menu_sources.bound_links[
-            'sources:document_file_upload'
-        ] = active_link
-
         return context
 
     def get_form_classes(self):
         result = {
-            'document_form': self.document_form,
+            'document_form': self.document_form
         }
 
-        source_form = self.source.get_backend().get_upload_form_class()
+        backend_instance = self.source.get_backend_instance()
+
+        view_source_action = self.get_view_source_action()
+
+        action = self.source.get_action(name=view_source_action)
+
+        source_form = backend_instance.get_upload_form_class(action=action)
+
         if source_form:
             result['source_form'] = source_form
 
         return result
 
     def get_source(self):
-        queryset = self.interactive_sources_enabled
-
-        if self.object_permission:
-            queryset = AccessControlList.objects.restrict_queryset(
-                permission=self.object_permission, queryset=queryset,
-                user=self.request.user
-            )
+        queryset = self.queryset_source_valid
 
         if 'source_id' in self.kwargs:
             pk = self.kwargs['source_id']
@@ -131,3 +99,15 @@ class UploadBaseView(ViewIconMixin, MultiFormView):
                 pk = None
 
         return get_object_or_404(klass=queryset, pk=pk)
+
+    def get_source_link_action(self):
+        return self.get_view_source_action()
+
+    def get_source_link_permission(self):
+        return self.object_permission
+
+    def get_source_link_queryset(self):
+        return self.queryset_source_valid
+
+    def get_view_source_action(self):
+        return self.view_source_action

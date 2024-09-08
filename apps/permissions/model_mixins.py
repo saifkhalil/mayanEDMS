@@ -2,7 +2,7 @@ import logging
 
 from django.apps import apps
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.user_management.permissions import permission_group_view
 
@@ -32,7 +32,7 @@ class RoleBusinessLogicMixin:
             permission=permission_group_view, queryset=self.groups.all(),
             user=user
         )
-    get_group_count.short_description = _('Group count')
+    get_group_count.short_description = _(message='Group count')
 
     def get_permission_count(self):
         """
@@ -40,7 +40,7 @@ class RoleBusinessLogicMixin:
         has granted. The count is filtered by access.
         """
         return self.permissions.count()
-    get_permission_count.short_description = _('Permission count')
+    get_permission_count.short_description = _(message='Permission count')
 
     def grant(self, permission):
         self.permissions.add(permission.stored_permission)
@@ -85,7 +85,9 @@ class StoredPermissionBusinessLogicMixin:
         try:
             permission = self.volatile_permission
         except KeyError:
-            return _('Unknown or obsolete permission: %s') % self.name
+            return _(
+                message='Unknown or obsolete permission: %s'
+            ) % self.name
         else:
             return permission.label
 
@@ -97,7 +99,7 @@ class StoredPermissionBusinessLogicMixin:
             )
         except KeyError:
             return _(
-                'Unknown or obsolete permission namespace: %s'
+                message='Unknown or obsolete permission namespace: %s'
             ) % self.namespace
         else:
             return permission_namespace.label
@@ -107,14 +109,14 @@ class StoredPermissionBusinessLogicMixin:
         Helper method to check if a user has been granted this permission.
         The check is done sequentially over all of the user's groups and
         roles. The check is interrupted at the first positive result.
-        The check always returns True for superusers or staff users.
+        The check always returns True for super users or staff users.
         """
         Role = apps.get_model(app_label='permissions', model_name='Role')
 
         if user.is_superuser or user.is_staff:
             logger.debug(
-                'Permission "%s" granted to user "%s" as superuser or staff',
-                self, user
+                'Permission "%s" granted to user "%s" as super user or '
+                'staff', self, user
             )
             return True
 

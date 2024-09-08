@@ -1,13 +1,13 @@
 from django.apps import apps
 from django.db.models.signals import post_delete
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import menu_list_facet, menu_tools
 from mayan.apps.documents.menus import menu_documents
 from mayan.apps.documents.permissions import permission_document_view
 from mayan.apps.documents.signals import signal_post_document_file_upload
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 
 from .classes import DuplicateBackend
 from .handlers import (
@@ -25,7 +25,7 @@ class DuplicatesApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.duplicates'
-    verbose_name = _('Duplicates')
+    verbose_name = _(message='Duplicates')
 
     def ready(self):
         super().ready()
@@ -51,13 +51,13 @@ class DuplicatesApp(MayanAppConfig):
                 document=context['object'],
                 permission=permission_document_view,
                 user=context['request'].user
-            ).count(), include_label=True, label=_('Duplicates'),
+            ).count(), include_label=True, label=_(message='Duplicates'),
             order=99, source=DuplicateSourceDocument
         )
 
         SourceColumn(
             attribute='backend', include_label=True,
-            label=_('Duplicate backend'), order=99,
+            label=_(message='Duplicate backend'), order=99,
             source=DuplicateTargetDocument
         )
 

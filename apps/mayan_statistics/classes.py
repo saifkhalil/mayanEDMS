@@ -1,5 +1,5 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from celery.schedules import crontab
 
@@ -17,7 +17,9 @@ class StatisticNamespace(AppsModuleLoaderMixin):
 
     @classmethod
     def get_all(cls):
-        return list(cls._registry.values())
+        return list(
+            cls._registry.values()
+        )
 
     @classmethod
     def get(cls, slug):
@@ -42,7 +44,7 @@ class StatisticNamespace(AppsModuleLoaderMixin):
         return self._statistics
 
 
-StatisticNamespace.verbose_name = _('Statistics namespace')
+StatisticNamespace.verbose_name = _(message='Statistics namespace')
 
 
 class StatisticType:
@@ -57,7 +59,7 @@ class StatisticType:
                     key: StatisticType.evaluate(data=value)
                 }
         except AttributeError:
-            if type(data) == map:
+            if type(data) is map:
                 data = list(data)
 
         return data
@@ -95,7 +97,9 @@ class StatisticType:
 
     @classmethod
     def get_all(cls):
-        return list(cls._registry.values())
+        return list(
+            cls._registry.values()
+        )
 
     @classmethod
     def get_task_names(cls):
@@ -125,7 +129,7 @@ class StatisticType:
                     'task': task_execute_statistic.dotted_path,
                     'schedule': self.schedule,
                     'args': (self.slug,)
-                },
+                }
             }
         )
 
@@ -159,7 +163,7 @@ class StatisticType:
         if results:
             return results.datetime
         else:
-            return _('Never')
+            return _(message='Never')
 
     def get_results(self, only=None):
         StatisticResult = apps.get_model(
@@ -204,14 +208,14 @@ class StatisticType:
 
 class StatisticTypeDoughnutChart(StatisticType):
     renderer = RendererChartJSDoughnut
-    type_label = _('Doughnut chart')
+    type_label = _(message='Doughnut chart')
 
 
 class StatisticTypeLineChart(StatisticType):
     renderer = RendererChartJSLine
-    type_label = _('Line chart')
+    type_label = _(message='Line chart')
 
 
 class StatisticTypePieChart(StatisticType):
     renderer = RendererChartJSPie
-    type_label = _('Pie chart')
+    type_label = _(message='Pie chart')

@@ -1,11 +1,12 @@
 from rest_framework import status
 
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import (
-    event_ocr_document_version_finished,
-    event_ocr_document_version_submitted
+    event_ocr_document_version_finished, event_ocr_document_version_submitted
 )
 from ..permissions import permission_document_version_ocr
 

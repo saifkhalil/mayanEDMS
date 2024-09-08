@@ -20,14 +20,15 @@ class IconDriver:
         context = self.get_context()
         if extra_context:
             context.update(extra_context)
-        return get_template(template_name=self.template_name).render(
-            context=context
-        )
+
+        template = get_template(template_name=self.template_name)
+
+        return template.render(context=context)
 
 
 class FontAwesomeDriver(IconDriver):
     name = 'fontawesome'
-    template_name = 'appearance/icons/font_awesome_symbol.html'
+    template_name = 'appearance/icons/font_awesome/symbol.html'
 
     def __init__(self, symbol):
         self.symbol = symbol
@@ -36,34 +37,9 @@ class FontAwesomeDriver(IconDriver):
         return {'symbol': self.symbol}
 
 
-class FontAwesomeDualClassesDriver(IconDriver):
-    name = 'fontawesome-dual-classes'
-    template_name = 'appearance/icons/font_awesome_layers.html'
-
-    def __init__(self, primary_class, secondary_class):
-        self.primary_class = primary_class
-        self.secondary_class = secondary_class
-
-    def get_context(self):
-        return {
-            'data': (
-                {
-                    'class': 'fas fa-circle',
-                    'transform': 'down-3 right-10',
-                    'mask': '{}'.format(self.primary_class)
-                },
-                {'class': 'far fa-circle', 'transform': 'down-3 right-10'},
-                {
-                    'class': '{}'.format(self.secondary_class),
-                    'transform': 'shrink-4 down-3 right-10'
-                }
-            )
-        }
-
-
 class FontAwesomeDualDriver(IconDriver):
     name = 'fontawesome-dual'
-    template_name = 'appearance/icons/font_awesome_layers.html'
+    template_name = 'appearance/icons/font_awesome/layers.html'
 
     def __init__(self, primary_symbol, secondary_symbol):
         self.primary_symbol = primary_symbol
@@ -71,24 +47,28 @@ class FontAwesomeDualDriver(IconDriver):
 
     def get_context(self):
         return {
+            'css_classes': 'appearance-fa-dual-symbol',
             'data': (
                 {
                     'class': 'fas fa-circle',
-                    'transform': 'down-3 right-10',
+                    'transform': 'shrink-2 down-4 right-6',
                     'mask': 'fas fa-{}'.format(self.primary_symbol)
                 },
-                {'class': 'far fa-circle', 'transform': 'down-3 right-10'},
+                {
+                    'class': 'far fa-circle',
+                    'transform': 'shrink-2 down-4 right-6'
+                },
                 {
                     'class': 'fas fa-{}'.format(self.secondary_symbol),
-                    'transform': 'shrink-4 down-3 right-10'
+                    'transform': 'shrink-8 down-4 right-6'
                 }
             )
         }
 
 
 class FontAwesomeCSSDriver(IconDriver):
-    name = 'fontawesomecss'
-    template_name = 'appearance/icons/font_awesome_css.html'
+    name = 'fontawesome-css'
+    template_name = 'appearance/icons/font_awesome/css.html'
 
     def __init__(self, css_classes):
         self.css_classes = css_classes
@@ -99,7 +79,7 @@ class FontAwesomeCSSDriver(IconDriver):
 
 class FontAwesomeMasksDriver(IconDriver):
     name = 'fontawesome-masks'
-    template_name = 'appearance/icons/font_awesome_masks.html'
+    template_name = 'appearance/icons/font_awesome/masks.html'
 
     def __init__(self, data):
         self.data = data
@@ -110,28 +90,13 @@ class FontAwesomeMasksDriver(IconDriver):
 
 class FontAwesomeLayersDriver(IconDriver):
     name = 'fontawesome-layers'
-    template_name = 'appearance/icons/font_awesome_layers.html'
+    template_name = 'appearance/icons/font_awesome/layers.html'
 
     def __init__(self, data):
         self.data = data
 
     def get_context(self):
-        return {
-            'data': self.data,
-        }
-
-
-class FontAwesomeStackDriver(IconDriver):
-    name = 'fontawesome-stack'
-    template_name = 'appearance/icons/font_awesome_stack.html'
-
-    def __init__(self, data):
-        self.data = data
-
-    def get_context(self):
-        return {
-            'data': self.data,
-        }
+        return {'css_classes': 'appearance-fa-layers', 'data': self.data}
 
 
 class Icon:
@@ -145,8 +110,6 @@ class Icon:
 
 IconDriver.register(driver_class=FontAwesomeCSSDriver)
 IconDriver.register(driver_class=FontAwesomeDriver)
-IconDriver.register(driver_class=FontAwesomeDualClassesDriver)
 IconDriver.register(driver_class=FontAwesomeDualDriver)
 IconDriver.register(driver_class=FontAwesomeLayersDriver)
 IconDriver.register(driver_class=FontAwesomeMasksDriver)
-IconDriver.register(driver_class=FontAwesomeStackDriver)

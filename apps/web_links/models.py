@@ -1,11 +1,11 @@
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.databases.model_mixins import ExtraDataModelMixin
-from mayan.apps.documents.models import DocumentType
-from mayan.apps.events.classes import EventManagerSave
+from mayan.apps.documents.models.document_type_models import DocumentType
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerSave
 
 from .events import event_web_link_created, event_web_link_edited
 from .managers import WebLinkManager
@@ -19,37 +19,39 @@ class WebLink(ExtraDataModelMixin, WebLinkBusinessLogicMixin, models.Model):
     This model stores the basic fields for a web link. Web links allow
     generating links from documents to external resources.
     """
+    _ordering_fields = ('enabled', 'label')
+
     label = models.CharField(
-        db_index=True, help_text=_('A short text describing the web link.'),
-        max_length=96, unique=True, verbose_name=_('Label')
+        db_index=True, help_text=_(
+            message='A short text describing the web link.'
+        ), max_length=96, unique=True, verbose_name=_(message='Label')
     )
     template = models.TextField(
         help_text=_(
-            'Template that will be used to craft the final URL of the '
+            message='Template that will be used to craft the final URL of the '
             'web link.'
-        ), verbose_name=_('Template')
+        ), verbose_name=_(message='Template')
     )
     enabled = models.BooleanField(
-        default=True, verbose_name=_('Enabled')
+        default=True, verbose_name=_(message='Enabled')
     )
     document_types = models.ManyToManyField(
         related_name='web_links', to=DocumentType,
-        verbose_name=_('Document types')
+        verbose_name=_(message='Document types')
     )
 
     class Meta:
         ordering = ('label',)
-        verbose_name = _('Web link')
-        verbose_name_plural = _('Web links')
+        verbose_name = _(message='Web link')
+        verbose_name_plural = _(message='Web links')
 
     def __str__(self):
         return self.label
 
     def get_absolute_url(self):
         return reverse(
-            viewname='web_links:web_link_edit', kwargs={
-                'web_link_id': self.pk
-            }
+            kwargs={'web_link_id': self.pk},
+            viewname='web_links:web_link_edit'
         )
 
     @method_event(
@@ -70,7 +72,7 @@ class WebLink(ExtraDataModelMixin, WebLinkBusinessLogicMixin, models.Model):
 class ResolvedWebLink(ResolvedWebLinkBusinessLogicMixin, WebLink):
     """
     Proxy model to represent an already resolved web link. Used for easier
-    colums registration.
+    columns registration.
     """
     objects = WebLinkManager()
 

@@ -24,7 +24,7 @@ icon_dashboard_total_document = Icon(
 # Misc
 
 icon_document_image_loading = Icon(
-    driver_name='fontawesomecss', css_classes='far fa-clock fa-2x'
+    driver_name='fontawesome-css', css_classes='far fa-clock fa-2x fa-spin'
 )
 icon_document_return = Icon(
     driver_name='fontawesome-dual', primary_symbol='book',
@@ -93,14 +93,13 @@ icon_document_type_filename_generator = Icon(
     ]
 )
 
-icon_document_type_policies = Icon(driver_name='fontawesome', symbol='times')
+icon_document_type_retention_policies = Icon(
+    driver_name='fontawesome', symbol='clock'
+)
 icon_document_type_setup = icon_document_type
 
 # Document
 
-icon_document_file_page_count_update = Icon(
-    driver_name='fontawesome', symbol='copy'
-)
 icon_document_list = Icon(driver_name='fontawesome', symbol='book')
 icon_document_preview = Icon(driver_name='fontawesome', symbol='eye')
 icon_document_properties_detail = Icon(
@@ -121,6 +120,9 @@ icon_document_file_delete = Icon(
 )
 icon_document_file_edit = Icon(
     driver_name='fontawesome', symbol='pencil-alt'
+)
+icon_document_file_introspect = Icon(
+    driver_name='fontawesome', symbol='copy'
 )
 icon_document_file_list = Icon(
     driver_name='fontawesome', symbol='hdd'
@@ -302,8 +304,8 @@ icon_document_recently_created_list = Icon(
 # Trashed document
 
 icon_trash_can_empty = Icon(
-    driver_name='fontawesome-dual-classes', primary_class='fas fa-trash-alt',
-    secondary_class='fas fa-minus'
+    driver_name='fontawesome-dual', primary_symbol='trash-alt',
+    secondary_symbol='minus'
 )
 icon_trashed_document_delete = Icon(
     driver_name='fontawesome', symbol='times'

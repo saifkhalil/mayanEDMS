@@ -1,17 +1,17 @@
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 from django.utils.html import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
-from mayan.apps.documents.models import Document
+from mayan.apps.documents.models.document_models import Document
 from mayan.apps.documents.views.document_views import DocumentListView
 from mayan.apps.views.generics import SingleObjectListView
 from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from ..html_widgets import node_tree
 from ..icons import (
-    icon_index, icon_document_index_instance_list, icon_index_instance_list,
+    icon_document_index_instance_list, icon_index, icon_index_instance_list,
     icon_index_instance_node_with_documents
 )
 from ..links import link_index_template_create
@@ -34,12 +34,12 @@ class IndexInstanceListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'This could mean that no index templates have been '
+                message='This could mean that no index templates have been '
                 'created or that there are index templates '
                 'but they are no properly defined.'
             ),
-            'no_results_title': _('There are no index instances available.'),
-            'title': _('Indexes')
+            'no_results_title': _(message='There are no index instances available.'),
+            'title': _(message='Indexes')
         }
 
     def get_source_queryset(self):
@@ -77,13 +77,13 @@ class IndexInstanceNodeView(DocumentListView):
             {
                 'column_class': 'col-xs-12 col-sm-6 col-md-4 col-lg-3',
                 'navigation': mark_safe(
-                    s=_('Navigation: %s') % node_tree(
+                    s=_(message='Navigation: %s') % node_tree(
                         node=self.index_instance_node, user=self.request.user
                     )
                 ),
                 'object': self.index_instance_node,
                 'title': _(
-                    'Contents for index: %s'
+                    message='Contents for index: %s'
                 ) % self.index_instance_node.get_full_path()
             }
         )
@@ -103,9 +103,8 @@ class IndexInstanceNodeView(DocumentListView):
             klass=IndexInstanceNode, pk=self.kwargs['index_instance_node_id']
         )
         AccessControlList.objects.check_access(
-            obj=instance, permissions=(
-                permission_index_instance_view,
-            ), user=self.request.user
+            obj=instance, permission=permission_index_instance_view,
+            user=self.request.user
         )
         return instance
 
@@ -140,16 +139,16 @@ class DocumentIndexInstanceNodeListView(
             'hide_object': True,
             'no_results_icon': icon_index,
             'no_results_text': _(
-                'Assign the document type of this document '
+                message='Assign the document type of this document '
                 'to an index to have it appear in instances of '
                 'those indexes organization units. '
             ),
             'no_results_title': _(
-                'This document is not in any index'
+                message='This document is not in any index'
             ),
             'object': self.external_object,
             'title': _(
-                'Indexes nodes containing document: %s'
+                message='Indexes nodes containing document: %s'
             ) % self.external_object
         }
 

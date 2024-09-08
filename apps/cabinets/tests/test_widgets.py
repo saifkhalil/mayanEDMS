@@ -9,7 +9,9 @@ from mayan.apps.documents.search import (
 )
 from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 from mayan.apps.dynamic_search.literals import SEARCH_MODEL_NAME_KWARG
-from mayan.apps.dynamic_search.tests.mixins.view_mixins import SearchViewTestMixin
+from mayan.apps.dynamic_search.tests.mixins.search_view_mixins import (
+    SearchViewTestMixin
+)
 
 from ..permissions import permission_cabinet_view
 
@@ -31,7 +33,9 @@ class DocumentSearchResultWidgetViewTestCase(
         self._test_object_permission = permission_document_view
         self._test_object_text = self._test_document.label
         self._test_search_model = search_model_document
-        self._test_search_term_data = {'uuid': str(self._test_document.uuid)}
+        self._test_search_term_data = {
+            'uuid': str(self._test_document.uuid)
+        }
 
     def test_document_cabinet_widget_no_permission(self):
         response = self._request_search_results_view(
@@ -188,7 +192,9 @@ class DocumentFilePageSearchResultWidgetViewTestCase(
 ):
     def setUp(self):
         super().setUp()
-        self._test_object_text = str(self._test_document_file.pages.first())
+        self._test_object_text = str(
+            self._test_document_file.pages.first()
+        )
         self._test_object_permission = permission_document_file_view
         self._test_search_model = search_model_document_file_page
         self._test_search_term_data = {

@@ -1,6 +1,8 @@
 from rest_framework import status
 
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
+from mayan.apps.documents.tests.mixins.document_mixins import (
+    DocumentTestMixin
+)
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import event_smart_link_edited
@@ -14,12 +16,11 @@ from .literals import (
     TEST_SMART_LINK_CONDITION_EXPRESSION_EDITED,
     TEST_SMART_LINK_CONDITION_OPERATOR
 )
-from .mixins import SmartLinkConditionAPIViewTestMixin, SmartLinkTestMixin
+from .mixins import SmartLinkConditionAPIViewTestMixin
 
 
 class SmartLinkConditionAPIViewTestCase(
-    DocumentTestMixin, SmartLinkTestMixin,
-    SmartLinkConditionAPIViewTestMixin, BaseAPITestCase
+    DocumentTestMixin, SmartLinkConditionAPIViewTestMixin, BaseAPITestCase
 ):
     auto_upload_test_document = False
 
@@ -52,7 +53,9 @@ class SmartLinkConditionAPIViewTestCase(
             response.data['operator'], TEST_SMART_LINK_CONDITION_OPERATOR
         )
 
-        self.assertEqual(SmartLinkCondition.objects.count(), 1)
+        self.assertEqual(
+            SmartLinkCondition.objects.count(), 1
+        )
         self.assertEqual(
             smart_link_condition.operator, TEST_SMART_LINK_CONDITION_OPERATOR
         )
@@ -75,7 +78,9 @@ class SmartLinkConditionAPIViewTestCase(
         response = self._request_smart_link_condition_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(SmartLinkCondition.objects.count(), 1)
+        self.assertEqual(
+            SmartLinkCondition.objects.count(), 1
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)
@@ -92,7 +97,9 @@ class SmartLinkConditionAPIViewTestCase(
         response = self._request_smart_link_condition_delete_api_view()
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        self.assertEqual(SmartLinkCondition.objects.count(), 0)
+        self.assertEqual(
+            SmartLinkCondition.objects.count(), 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 1)

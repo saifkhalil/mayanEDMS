@@ -1,8 +1,10 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.authentication.link_conditions import condition_user_is_authenticated
-from mayan.apps.navigation.classes import Link
+from mayan.apps.authentication.link_conditions import (
+    condition_user_is_authenticated
+)
+from mayan.apps.navigation.links import Link
 
 from .icons import (
     icon_message_create, icon_message_delete, icon_message_list,
@@ -45,45 +47,45 @@ def get_unread_message_count(context):
 
 
 link_message_create = Link(
-    icon=icon_message_create, permissions=(permission_message_create,),
-    text=_('Create message'), view='messaging:message_create'
+    icon=icon_message_create, permission=permission_message_create,
+    text=_(message='Create message'), view='messaging:message_create'
 )
 link_message_multiple_delete = Link(
-    icon=icon_message_delete, tags='dangerous', text=_('Delete'),
+    icon=icon_message_delete, tags='dangerous', text=_(message='Delete'),
     view='messaging:message_multiple_delete'
 )
 link_message_single_delete = Link(
     args='object.pk', icon=icon_message_delete,
-    permissions=(permission_message_delete,),
-    tags='dangerous', text=_('Delete'),
+    permission=permission_message_delete,
+    tags='dangerous', text=_(message='Delete'),
     view='messaging:message_single_delete'
 )
 link_message_list = Link(
     condition=condition_user_is_authenticated,
     badge_text=get_unread_message_count, icon=icon_message_list,
-    text='', view='messaging:message_list'
+    title=_(message='Messages'), view='messaging:message_list'
 )
 link_message_single_mark_read = Link(
     args='object.pk', conditional_disable=condition_is_read,
-    icon=icon_message_mark_read, text=_('Mark as read'),
-    permissions=(permission_message_view,),
+    icon=icon_message_mark_read, text=_(message='Mark as read'),
+    permission=permission_message_view,
     view='messaging:message_single_mark_read'
 )
 link_message_single_mark_unread = Link(
     args='object.pk', conditional_disable=condition_is_unread,
-    icon=icon_message_mark_unread, text=_('Mark as unread'),
-    permissions=(permission_message_view,),
+    icon=icon_message_mark_unread, text=_(message='Mark as unread'),
+    permission=permission_message_view,
     view='messaging:message_single_mark_unread'
 )
 link_message_multiple_mark_read = Link(
-    icon=icon_message_mark_read, text=_('Mark as read'),
+    icon=icon_message_mark_read, text=_(message='Mark as read'),
     view='messaging:message_multiple_mark_read'
 )
 link_message_multiple_mark_unread = Link(
-    icon=icon_message_mark_unread, text=_('Mark as unread'),
+    icon=icon_message_mark_unread, text=_(message='Mark as unread'),
     view='messaging:message_multiple_mark_unread'
 )
 link_message_all_mark_read = Link(
-    icon=icon_message_mark_read_all, text=_('Mark all as read'),
+    icon=icon_message_mark_read_all, text=_(message='Mark all as read'),
     view='messaging:message_all_mark_read'
 )

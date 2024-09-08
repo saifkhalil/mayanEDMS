@@ -1,13 +1,13 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
     menu_list_facet, menu_object, menu_secondary
 )
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 
 from .events import (
     event_document_comment_created, event_document_comment_deleted,
@@ -29,7 +29,7 @@ class DocumentCommentsApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.document_comments'
-    verbose_name = _('Document comments')
+    verbose_name = _(message='Document comments')
 
     def ready(self):
         super().ready()

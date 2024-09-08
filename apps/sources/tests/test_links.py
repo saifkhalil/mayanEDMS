@@ -3,7 +3,7 @@ from mayan.apps.documents.permissions import (
 )
 from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 
-from ..links import link_document_create_multiple, link_document_file_upload
+from ..links import link_document_upload_wizard, link_document_file_upload
 
 from .mixins.base_mixins import SourceTestMixin
 
@@ -17,7 +17,7 @@ class SourcesNewDocumentLinkTestCase(
         self.add_test_view()
         context = self.get_test_view()
         context['user'] = self._test_case_user
-        return link_document_create_multiple.resolve(context=context)
+        return link_document_upload_wizard.resolve(context=context)
 
     def test_document_create_link_no_permission(self):
         resolved_link = self._get_document_create_link()

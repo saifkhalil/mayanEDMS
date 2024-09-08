@@ -1,12 +1,12 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .classes import DocumentFileAction
 
 
 class DocumentFileActionAppendNewPages(DocumentFileAction):
-    action_id = 2
-    label = _('Append. Create a new version and append the new file pages.')
+    action_id = 'append'
+    label = _(message='Append. Create a new version and append the new file pages.')
 
     @staticmethod
     def execute(document, document_file, comment, user):
@@ -29,7 +29,7 @@ class DocumentFileActionAppendNewPages(DocumentFileAction):
         )
 
         document_version = DocumentVersion(
-            document=document, comment=comment
+            active=True, document=document, comment=comment
         )
         document_version._event_actor = user
         document_version.save()
@@ -41,9 +41,9 @@ class DocumentFileActionAppendNewPages(DocumentFileAction):
 
 
 class DocumentFileActionNothing(DocumentFileAction):
-    action_id = 3
+    action_id = 'keep'
     label = _(
-        'Keep. Do not create a new version and keep the current '
+        message='Keep. Do not create a new version and keep the current '
         'version pages.'
     )
 
@@ -53,8 +53,8 @@ class DocumentFileActionNothing(DocumentFileAction):
 
 
 class DocumentFileActionUseNewPages(DocumentFileAction):
-    action_id = 1
-    label = _('Replace. Create a new version and use the new file pages.')
+    action_id = 'replace'
+    label = _(message='Replace. Create a new version and use the new file pages.')
 
     @staticmethod
     def execute(document, document_file, comment, user):
@@ -63,7 +63,7 @@ class DocumentFileActionUseNewPages(DocumentFileAction):
         )
 
         document_version = DocumentVersion(
-            document=document, comment=comment
+            active=True, document=document, comment=comment
         )
         document_version._event_actor = user
         document_version.save()

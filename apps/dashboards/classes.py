@@ -13,7 +13,9 @@ class Dashboard:
 
     @classmethod
     def get_all(cls):
-        return sorted(cls._registry.values(), key=lambda x: x.label)
+        return sorted(
+            cls._registry.values(), key=lambda x: x.label
+        )
 
     def __init__(self, name, label):
         self.name = name
@@ -24,6 +26,9 @@ class Dashboard:
 
     def add_widget(self, widget, order=0):
         self.widgets[widget] = {'widget': widget, 'order': order}
+
+    def get_widget_count(self):
+        return len(self.widgets)
 
     def get_widgets(self):
         """
@@ -36,7 +41,9 @@ class Dashboard:
                 lambda x: x['widget'] not in self.removed_widgets,
                 sorted(
                     self.widgets.values(),
-                    key=lambda x: (x['order'], x['widget'].label)
+                    key=lambda x: (
+                        x['order'], x['widget'].label
+                    )
                 )
             )
         )
@@ -82,12 +89,16 @@ class BaseDashboardWidget:
     def render(self, request):
         self.request = request
         context = self.get_base_context()
-        context.update(self.get_context())
-        context.update({'request': request})
+        context.update(
+            self.get_context()
+        )
+        context.update(
+            {'request': request}
+        )
 
         if self.template_name:
             return loader.render_to_string(
-                template_name=self.template_name, context=context,
+                context=context, template_name=self.template_name
             )
 
 
@@ -101,7 +112,9 @@ class DashboardWidgetNumeric(BaseDashboardWidget):
 
     def get_base_context(self):
         return {
-            'count': intcomma(value=self.get_count()),
+            'count': intcomma(
+                value=self.get_count()
+            ),
             'count_raw': self.count,
             'icon': self.icon,
             'label': self.label,

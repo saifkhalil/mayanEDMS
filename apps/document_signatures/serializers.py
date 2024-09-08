@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.reverse import reverse
 
@@ -14,7 +14,7 @@ from .models import DetachedSignature, EmbeddedSignature
 
 class BaseSignatureSerializer(serializers.HyperlinkedModelSerializer):
     document_file_url = MultiKwargHyperlinkedIdentityField(
-        label=_('Document file URL'), view_kwargs=(
+        label=_(message='Document file URL'), view_kwargs=(
             {
                 'lookup_field': 'document_file_id',
                 'lookup_url_kwarg': 'document_file_id'
@@ -46,26 +46,26 @@ class BaseSignatureSerializer(serializers.HyperlinkedModelSerializer):
 
         if key:
             return reverse(
-                viewname='rest_api:key-detail', kwargs={
+                format=self.context['format'], kwargs={
                     'key_id': key.pk
                 }, request=self.context['request'],
-                format=self.context['format']
+                viewname='rest_api:key-detail'
             )
 
 
 class BaseSignSerializer(serializers.HyperlinkedModelSerializer):
     key = FilteredPrimaryKeyRelatedField(
         help_text=_(
-            'Primary key of the secret key used to sign the document '
+            message='Primary key of the secret key used to sign the document '
             'file.'
-        ), label=_('Key ID'), source_queryset=Key.objects.private_keys(),
+        ), label=_(message='Key ID'), source_queryset=Key.objects.private_keys(),
         source_permission=permission_key_sign
     )
     passphrase = serializers.CharField(
         help_text=_(
-            'The passphrase to unlock the key and allow it to be used to '
-            'sign the document file.'
-        ), label=_('Passphrase'), required=False, write_only=True
+            message='The passphrase to unlock the key and allow it to be '
+            'used to sign the document file.'
+        ), label=_(message='Passphrase'), required=False, write_only=True
     )
 
     class Meta:
@@ -77,16 +77,16 @@ class DetachedSignatureSerializer(BaseSignatureSerializer):
         view_kwargs=(
             {
                 'lookup_field': 'document_file.document_id',
-                'lookup_url_kwarg': 'document_id',
+                'lookup_url_kwarg': 'document_id'
             },
             {
                 'lookup_field': 'document_file_id',
-                'lookup_url_kwarg': 'document_file_id',
+                'lookup_url_kwarg': 'document_file_id'
             },
             {
                 'lookup_field': 'pk',
-                'lookup_url_kwarg': 'detached_signature_id',
-            },
+                'lookup_url_kwarg': 'detached_signature_id'
+            }
         ),
         view_name='rest_api:detachedsignature-detail'
     )
@@ -107,7 +107,7 @@ class EmbeddedSignatureSerializer(
     BaseSignatureSerializer, serializers.HyperlinkedModelSerializer
 ):
     url = MultiKwargHyperlinkedIdentityField(
-        label=_('URL'), view_kwargs=(
+        label=_(message='URL'), view_kwargs=(
             {
                 'lookup_field': 'document_file.document.pk',
                 'lookup_url_kwarg': 'document_id'
@@ -119,7 +119,7 @@ class EmbeddedSignatureSerializer(
             {
                 'lookup_field': 'pk',
                 'lookup_url_kwarg': 'embedded_signature_id'
-            },
+            }
         ), view_name='rest_api:embeddedsignature-detail'
     )
 

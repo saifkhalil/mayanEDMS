@@ -3,114 +3,10 @@ import logging
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.utils.encoding import force_text
-from django.utils.functional import classproperty
-from django.utils.translation import ugettext_lazy as _
-
-from mayan.apps.common.class_mixins import AppsModuleLoaderMixin
-from mayan.apps.common.utils import get_class_full_name
+from django.utils.encoding import force_str
+from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(name=__name__)
-
-
-class BackendMetaclass(type):
-    def __new__(mcs, name, bases, attrs):
-        new_class = super().__new__(
-            mcs, name, bases, attrs
-        )
-
-        base_backend_class = BackendMetaclass._get_base_backend_class(
-            klass=new_class
-        )
-
-        _loader_module_name = getattr(new_class, '_loader_module_name')
-
-        # Check if `_loader_module_name` is set as to not process the
-        # metaclass.
-        if _loader_module_name and base_backend_class:
-            if base_backend_class != new_class:
-                # Get this new child class full name, to be used as the
-                # registry key.
-                new_class_full_name = get_class_full_name(klass=new_class)
-                if _loader_module_name in new_class_full_name:
-                    # Only load classes defined in the loader module.
-                    # This ensures miscellaneous classes like NullBackends
-                    # are not registered.
-                    base_backend_class.register(klass=new_class)
-
-        return new_class
-
-    @staticmethod
-    def _get_base_backend_class(klass):
-        # Filter class hierarchy. Select only the class with App loader
-        # support. This means that is the class meant to work as the
-        # app's backend class.
-        base_backend_class = [
-            parent for parent in klass.mro() if '_loader_module_name' in parent.__dict__ and parent._loader_module_name
-        ]
-
-        # No more than one app backend class should be returned.
-        if len(base_backend_class) > 1:
-            raise ImproperlyConfigured(
-                'More than one backend parent class was returned. Should be '
-                'only one.'
-            )
-
-        if base_backend_class:
-            return base_backend_class[0]
-        else:
-            return None
-
-
-class BaseBackend(AppsModuleLoaderMixin, metaclass=BackendMetaclass):
-    _backend_identifier = 'backend_class_path'
-    _registry = {}
-
-    @classproperty
-    def backend_class_path(cls):
-        return cls.get_class_path()
-
-    @classproperty
-    def backend_id(cls):
-        return getattr(cls, cls._backend_identifier)
-
-    @classmethod
-    def get(cls, name):
-        return cls._registry.get(cls, {})[name]
-
-    @classmethod
-    def get_all(cls):
-        return list(cls._registry.get(cls, {}).values())
-
-    @classmethod
-    def get_choices(cls):
-        choices = [
-            (
-                backend.backend_id, backend.label
-            ) for backend in cls.get_all()
-        ]
-
-        choices.sort(key=lambda x: x[1])
-
-        return choices
-
-    @classmethod
-    def get_class_path(cls):
-        return get_class_full_name(klass=cls)
-
-    @classmethod
-    def register(cls, klass):
-        # Initialize the app backend class registry.
-        cls._registry.setdefault(
-            cls, {}
-        )
-
-        # Get this new child class full name, to be used as the
-        # registry key.
-        registry_key = klass.backend_id
-
-        # Add the new child class to the app backend class registry.
-        cls._registry[cls][registry_key] = klass
 
 
 class ModelAttribute:
@@ -152,7 +48,9 @@ class ModelAttribute:
             if model.__class__ == models.base.ModelBase:
                 return []
 
-            return cls.get_for(model=type(model))
+            return cls.get_for(
+                model=type(model)
+            )
 
     @classmethod
     def register(cls, klass):
@@ -177,32 +75,11 @@ class ModelAttribute:
                 self.name if show_name else self.label, self.description
             )
         else:
-            return force_text(s=self.name if show_name else self.label)
-
-
-class ModelBaseBackend(BaseBackend):
-    _backend_app_label = None
-    _backend_model_name = None
-
-    @classmethod
-    def register(cls, klass):
-        super().register(klass=klass)
-
-    def get_model_instance(self):
-        BackendModel = apps.get_model(
-            app_label=self._backend_app_label,
-            model_name=self._backend_model_name
-        )
-
-        return BackendModel.objects.get(pk=self.model_instance_id)
-
-    def __init__(self, model_instance_id, **kwargs):
-        self.model_instance_id = model_instance_id
-        self.kwargs = kwargs
+            return force_str(s=self.name if show_name else self.label)
 
 
 class ModelField(ModelAttribute):
-    class_label = _('Model fields')
+    class_label = _(message='Model fields')
     class_name = 'field'
 
     def __init__(self, *args, **kwargs):
@@ -250,17 +127,17 @@ class ModelField(ModelAttribute):
 
 
 class ModelFieldRelated(ModelField):
-    class_label = _('Model related fields')
+    class_label = _(message='Model related fields')
     class_name = 'related_field'
 
 
 class ModelProperty(ModelAttribute):
-    class_label = _('Model properties')
+    class_label = _(message='Model properties')
     class_name = 'property'
 
 
 class ModelReverseField(ModelField):
-    class_label = _('Model reverse fields')
+    class_label = _(message='Model reverse fields')
     class_name = 'reverse_field'
 
     def __init__(self, *args, **kwargs):
@@ -305,7 +182,8 @@ class ModelQueryFields:
     def add_select_related_field(self, field_name):
         if field_name in self.select_related_fields:
             raise ImproperlyConfigured(
-                '"{}" model already has a "{}" query select related field.'.format(
+                '"{}" model already has a "{}" query select '
+                'related field.'.format(
                     self.model, field_name
                 )
             )
@@ -314,7 +192,8 @@ class ModelQueryFields:
     def add_prefetch_related_field(self, field_name):
         if field_name in self.prefetch_related_fields:
             raise ImproperlyConfigured(
-                '"{}" model already has a "{}" query prefetch related field.'.format(
+                '"{}" model already has a "{}" query prefetch '
+                'related field.'.format(
                     self.model, field_name
                 )
             )
@@ -394,7 +273,11 @@ class QuerysetParametersSerializer:
 
         kwargs = {}
 
-        for parameter in decomposed_queryset.get('kwargs', ()):
+        parameter_list = decomposed_queryset.get(
+            'kwargs', ()
+        )
+
+        for parameter in parameter_list:
             if 'content_type_id' in parameter:
                 content_type = ContentType.objects.get(
                     pk=parameter['content_type_id']
@@ -409,37 +292,10 @@ class QuerysetParametersSerializer:
                 parameter['name']
             ] = value
 
-        return getattr(
+        queryset_method = getattr(
             queryset, decomposed_queryset['method_name']
-        )(**kwargs)
-
-
-class StoredBaseBackend(BaseBackend):
-    _backend_app_label = None
-    _backend_model_name = None
-
-    @classmethod
-    def register(cls, klass):
-        super().register(klass=klass)
-        klass.get_model_instance()
-
-    @classmethod
-    def get_model_instance(cls):
-        StoredBackendModel = apps.get_model(
-            app_label=cls._backend_app_label,
-            model_name=cls._backend_model_name
         )
-
-        backend_path = get_class_full_name(klass=cls)
-
-        instance, created = StoredBackendModel.objects.get_or_create(
-            backend_path=backend_path
-        )
-        cls._backend_stored_model_id = instance.pk
-        return instance
-
-    def __init__(self, **kwargs):
-        self.kwargs = kwargs
+        return queryset_method(**kwargs)
 
 
 ModelAttribute.register(klass=ModelProperty)

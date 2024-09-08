@@ -1,6 +1,6 @@
 from django.apps import apps
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.dashboards.classes import (
     DashboardWidgetList, DashboardWidgetNumeric
@@ -8,29 +8,25 @@ from mayan.apps.dashboards.classes import (
 from mayan.apps.mayan_statistics.icons import icon_statistics
 
 from .icons import (
-    icon_dashboard_documents_in_trash, icon_dashboard_document_types,
-    icon_dashboard_pages_per_month, icon_dashboard_new_documents_this_month,
-    icon_dashboard_total_document,
-
-    icon_document_recently_accessed_list
+    icon_dashboard_document_types, icon_dashboard_documents_in_trash,
+    icon_dashboard_new_documents_this_month, icon_dashboard_pages_per_month,
+    icon_dashboard_total_document, icon_document_recently_accessed_list
 )
 from .links.document_links import (
-    link_document_recently_accessed_list,
-    link_document_recently_created_list
+    link_document_recently_accessed_list, link_document_recently_created_list
 )
 from .links.favorite_links import link_document_favorites_list
 from .permissions import (
-    permission_document_view, permission_document_type_view
+    permission_document_type_view, permission_document_view
 )
 from .statistics import (
     new_document_pages_this_month, new_documents_this_month
 )
 
-# from mayan.apps.cabinets.models import Cabinet
 
 class DashboardWidgetDocumentFilePagesTotal(DashboardWidgetNumeric):
     icon = icon_dashboard_pages_per_month
-    label = _('Total pages')
+    label = _(message='Total pages')
     link = reverse_lazy(
         viewname='statistics:statistic_detail', kwargs={
             'slug': 'total-document-pages-at-each-month'
@@ -53,7 +49,7 @@ class DashboardWidgetDocumentFilePagesTotal(DashboardWidgetNumeric):
 
 class DashboardWidgetDocumentsTotal(DashboardWidgetNumeric):
     icon = icon_dashboard_total_document
-    label = _('Total documents')
+    label = _(message='Total documents')
     link = reverse_lazy(viewname='documents:document_list')
 
     def get_count(self):
@@ -71,7 +67,7 @@ class DashboardWidgetDocumentsTotal(DashboardWidgetNumeric):
 
 class DashboardWidgetDocumentsInTrash(DashboardWidgetNumeric):
     icon = icon_dashboard_documents_in_trash
-    label = _('Documents in trash')
+    label = _(message='Documents in trash')
     link = reverse_lazy(viewname='documents:document_list_deleted')
 
     def get_count(self):
@@ -89,7 +85,7 @@ class DashboardWidgetDocumentsInTrash(DashboardWidgetNumeric):
 
 class DashboardWidgetDocumentsTypesTotal(DashboardWidgetNumeric):
     icon = icon_dashboard_document_types
-    label = _('Document types')
+    label = _(message='Document types')
     link = reverse_lazy(viewname='documents:document_type_list')
 
     def get_count(self):
@@ -107,7 +103,7 @@ class DashboardWidgetDocumentsTypesTotal(DashboardWidgetNumeric):
 
 class DashboardWidgetDocumentsNewThisMonth(DashboardWidgetNumeric):
     icon = icon_dashboard_new_documents_this_month
-    label = _('New documents this month')
+    label = _(message='New documents this month')
     link = reverse_lazy(
         viewname='statistics:statistic_detail', kwargs={
             'slug': 'new-documents-per-month'
@@ -121,7 +117,7 @@ class DashboardWidgetDocumentsNewThisMonth(DashboardWidgetNumeric):
 
 class DashboardWidgetDocumentsPagesNewThisMonth(DashboardWidgetNumeric):
     icon = icon_dashboard_pages_per_month
-    label = _('New pages this month')
+    label = _(message='New pages this month')
     link = reverse_lazy(
         viewname='statistics:statistic_detail', kwargs={
             'slug': 'new-document-pages-per-month'

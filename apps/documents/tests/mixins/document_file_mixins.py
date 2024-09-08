@@ -2,8 +2,7 @@ from django.db.models import Q
 
 from mayan.apps.converter.layers import layer_saved_transformations
 
-from ...document_file_actions import DocumentFileActionUseNewPages
-from ...literals import PAGE_RANGE_ALL
+from ...literals import DEFAULT_DOCUMENT_FILE_ACTION_NAME, PAGE_RANGE_ALL
 from ...models.document_file_models import DocumentFile
 
 from ..literals import (
@@ -38,15 +37,17 @@ class DocumentFileAPIViewTestMixin:
         )
 
     def _request_test_document_file_upload_api_view(self):
-        pk_list = list(DocumentFile.objects.values_list('pk', flat=True))
+        pk_list = list(
+            DocumentFile.objects.values_list('pk', flat=True)
+        )
 
         with open(file=TEST_FILE_SMALL_PATH, mode='rb') as file_descriptor:
             response = self.post(
                 viewname='rest_api:documentfile-list', kwargs={
                     'document_id': self._test_document.pk,
                 }, data={
-                    'action': DocumentFileActionUseNewPages.backend_id,
-                    'comment': '', 'file_new': file_descriptor,
+                    'action_name': DEFAULT_DOCUMENT_FILE_ACTION_NAME,
+                    'comment': '', 'file_new': file_descriptor
                 }
             )
 
@@ -56,8 +57,8 @@ class DocumentFileAPIViewTestMixin:
             )
             self._test_document.refresh_from_db()
             self._test_document_version = self._test_document.versions.last()
-            self._test_document_version_pages = self._test_document_version.pages.all()
-            self._test_document_version_page = self._test_document_version_pages.first()
+            self._test_document_version_page_list = self._test_document_version.pages.all()
+            self._test_document_version_page = self._test_document_version_page_list.first()
         except DocumentFile.DoesNotExist:
             self._test_document_file = None
 
@@ -72,25 +73,49 @@ class DocumentFileLinkTestMixin:
 
 
 class DocumentFileTestMixin:
-    def _upload_test_document_file(self, action=None, user=None):
+    def _upload_test_document_file(self, action_name=None, user=None):
         self._calculate_test_document_file_path()
 
-        if not action:
-            action = DocumentFileActionUseNewPages.backend_id
+        if not action_name:
+            action_name = DEFAULT_DOCUMENT_FILE_ACTION_NAME
+
+        document_file_count = DocumentFile.objects.count()
+
+        pk_list = list(
+            DocumentFile.objects.values_list('pk', flat=True)
+        )
 
         with open(file=self._test_document_path, mode='rb') as file_object:
-            self._test_document_file = self._test_document.file_new(
-                action=action, comment=TEST_DOCUMENT_FILE_COMMENT,
-                file_object=file_object, user=user
+            self._test_document.files_upload(
+                action_name=action_name, comment=TEST_DOCUMENT_FILE_COMMENT,
+                file_object=file_object,
+                filename='test_document_file_{}'.format(document_file_count),
+                user=user
             )
 
-        self._test_document_file_page = self._test_document_file.pages.first()
-        self._test_document_file_pages.extend(
-            list(self._test_document_file.pages.all())
+        self._test_document_file = DocumentFile.objects.get(
+            ~Q(pk__in=pk_list)
         )
-        self._test_document_files.append(self._test_document_file)
-        self._test_document_version = self._test_document.version_active
-        self._test_document_versions.append(self._test_document_version)
+        self._test_document_file_page = self._test_document_file.pages.first()
+        self._test_document_file_page_list.extend(
+            list(
+                self._test_document_file.pages.all()
+            )
+        )
+        self._test_document_file_list.append(self._test_document_file)
+
+        for _test_document_version_list in self._test_document_version_list:
+            _test_document_version_list.refresh_from_db()
+
+        self._test_document_version = self._test_document.versions.last()
+        self._test_document_version_list.append(self._test_document_version)
+
+        self._test_document_version_page = self._test_document_version.pages.first()
+        self._test_document_version_page_list.extend(
+            list(
+                self._test_document_version.pages.all()
+            )
+        )
 
 
 class DocumentFileViewTestMixin:
@@ -118,6 +143,18 @@ class DocumentFileViewTestMixin:
             }
         )
 
+    def _request_test_document_file_introspect_multiple_view(self):
+        return self.post(
+            viewname='documents:document_file_introspect_multiple',
+            data={'id_list': self._test_document_file.pk}
+        )
+
+    def _request_test_document_file_introspect_single_view(self):
+        return self.post(
+            viewname='documents:document_file_introspect_single',
+            kwargs={'document_file_id': self._test_document_file.pk}
+        )
+
     def _request_test_document_file_list_view(self):
         return self.get(
             viewname='documents:document_file_list', kwargs={
@@ -135,7 +172,7 @@ class DocumentFileViewTestMixin:
     def _request_test_document_file_print_form_view(self):
         return self.get(
             viewname='documents:document_file_print_form', kwargs={
-                'document_file_id': self._test_document_file.pk,
+                'document_file_id': self._test_document_file.pk
             }, data={
                 'page_group': PAGE_RANGE_ALL
             }
@@ -144,7 +181,7 @@ class DocumentFileViewTestMixin:
     def _request_test_document_file_print_view(self):
         return self.get(
             viewname='documents:document_file_print_view', kwargs={
-                'document_file_id': self._test_document_file.pk,
+                'document_file_id': self._test_document_file.pk
             }, query={
                 'page_group': PAGE_RANGE_ALL
             }
@@ -183,24 +220,12 @@ class DocumentFilePageAPIViewTestMixin:
         return self.get(
             viewname='rest_api:documentfilepage-list', kwargs={
                 'document_id': self._test_document.pk,
-                'document_file_id': self._test_document_file.pk,
+                'document_file_id': self._test_document_file.pk
             }
         )
 
 
 class DocumentFilePageViewTestMixin:
-    def _request_test_document_file_page_count_update_view(self):
-        return self.post(
-            viewname='documents:document_file_page_count_update',
-            kwargs={'document_file_id': self._test_document_file.pk}
-        )
-
-    def _request_test_document_file_multiple_page_count_update_view(self):
-        return self.post(
-            viewname='documents:document_file_multiple_page_count_update',
-            data={'id_list': self._test_document_file.pk}
-        )
-
     def _request_test_document_file_page_list_view(self):
         return self.get(
             viewname='documents:document_file_page_list', kwargs={
@@ -225,7 +250,7 @@ class DocumentFilePageViewTestMixin:
     def _request_test_document_file_page_view(self, document_file_page):
         return self.get(
             viewname='documents:document_file_page_view', kwargs={
-                'document_file_page_id': document_file_page.pk,
+                'document_file_page_id': document_file_page.pk
             }
         )
 

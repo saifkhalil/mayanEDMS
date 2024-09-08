@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from mayan.apps.converter.layers import layer_saved_transformations
 from mayan.apps.converter.permissions import (
@@ -21,7 +21,7 @@ from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 from ..classes import DocumentVersionModification
 from ..events import event_document_viewed
 from ..forms.document_version_forms import (
-    DocumentVersionModificationBackendForm, DocumentVersionForm,
+    DocumentVersionForm, DocumentVersionModificationBackendForm,
     DocumentVersionPreviewForm
 )
 from ..forms.misc_forms import PageNumberForm
@@ -44,7 +44,7 @@ from ..permissions import (
 from ..settings import setting_preview_height, setting_preview_width
 from ..tasks import task_document_version_delete
 
-from .misc_views import PrintFormView, DocumentPrintBaseView
+from .misc_views import DocumentPrintBaseView, PrintFormView
 from .view_mixins import RecentDocumentViewMixin
 
 logger = logging.getLogger(name=__name__)
@@ -60,7 +60,7 @@ class DocumentVersionActiveView(ExternalObjectViewMixin, ConfirmView):
         return {
             'object': self.external_object,
             'title': _(
-                'Make the document version "%s" the active version?'
+                message='Make the document version "%s" the active version?'
             ) % self.external_object
         }
 
@@ -69,12 +69,14 @@ class DocumentVersionActiveView(ExternalObjectViewMixin, ConfirmView):
         self.external_object.active_set()
         messages.success(
             message=_(
-                'Successfully changed the active document version.'
+                message='Successfully changed the active document version.'
             ), request=self.request
         )
 
 
-class DocumentVersionCreateView(ExternalObjectViewMixin, SingleObjectCreateView):
+class DocumentVersionCreateView(
+    ExternalObjectViewMixin, SingleObjectCreateView
+):
     external_object_permission = permission_document_version_create
     external_object_pk_url_kwarg = 'document_id'
     external_object_queryset = Document.valid.all()
@@ -85,7 +87,7 @@ class DocumentVersionCreateView(ExternalObjectViewMixin, SingleObjectCreateView)
         return {
             'object': self.external_object,
             'title': _(
-                'Create a document version for document: %s'
+                message='Create a document version for document: %s'
             ) % self.external_object
         }
 
@@ -104,23 +106,23 @@ class DocumentVersionDeleteView(MultipleObjectDeleteView):
     pk_url_kwarg = 'document_version_id'
     source_queryset = DocumentVersion.valid.all()
     success_message_single = _(
-        'Document version "%(object)s" deletion queued successfully.'
+        message='Document version "%(object)s" deletion queued successfully.'
     )
     success_message_singular = _(
-        '%(count)d document version deletion queued successfully.'
+        message='%(count)d document version deletion queued successfully.'
     )
     success_message_plural = _(
-        '%(count)d document version deletions queued successfully.'
+        message='%(count)d document version deletions queued successfully.'
     )
-    title_single = _('Delete document version "%(object)s".')
-    title_singular = _('Delete %(count)d document version.')
-    title_plural = _('Delete %(count)d document versions.')
+    title_single = _(message='Delete document version "%(object)s".')
+    title_singular = _(message='Delete %(count)d document version.')
+    title_plural = _(message='Delete %(count)d document versions.')
     view_icon = icon_document_version_delete
 
     def get_extra_context(self, **kwargs):
         context = {
             'message': _(
-                'The process will be performed in the background. '
+                message='The process will be performed in the background.'
             )
         }
 
@@ -134,11 +136,12 @@ class DocumentVersionDeleteView(MultipleObjectDeleteView):
         return context
 
     def get_post_action_redirect(self):
-        # Use [0] instead of first(). First returns None and it is not usable.
+        # Use [0] instead of first(). First returns None and it is not
+        # usable.
         return reverse(
-            viewname='documents:document_version_list', kwargs={
+            kwargs={
                 'document_id': self.object_list[0].document_id
-            }
+            }, viewname='documents:document_version_list'
         )
 
     def object_action(self, instance, form=None):
@@ -159,19 +162,16 @@ class DocumentVersionEditView(SingleObjectEditView):
 
     def get_extra_context(self):
         return {
-            'title': _('Edit document version: %s') % self.object
+            'title': _(message='Edit document version: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_post_action_redirect(self):
         return reverse(
-            viewname='documents:document_version_preview', kwargs={
-                'document_version_id': self.object.pk
-            }
+            kwargs={'document_version_id': self.object.pk},
+            viewname='documents:document_version_preview'
         )
 
 
@@ -196,13 +196,16 @@ class DocumentVersionListView(
                 )
             ),
             'no_results_text': _(
-                'Versions are views that can display document file pages as '
-                'they are, remap or merge them into different layouts.'
+                message='Versions are views that can display document file '
+                'pages as they are, remap or merge them into different '
+                'layouts.'
             ),
-            'no_results_title': _('No versions available'),
+            'no_results_title': _(message='No versions available'),
             'object': self.external_object,
             'table_cell_container_classes': 'td-container-thumbnail',
-            'title': _('Versions of document: %s') % self.external_object
+            'title': _(
+                message='Versions of document: %s'
+            ) % self.external_object
         }
 
     def get_source_queryset(self):
@@ -234,7 +237,8 @@ class DocumentVersionModifyView(ExternalObjectViewMixin, FormView):
 
         messages.success(
             message=_(
-                'Document version modification backend queued successfully.'
+                message='Document version modification backend queued '
+                'successfully.'
             ), request=self.request
         )
 
@@ -244,7 +248,7 @@ class DocumentVersionModifyView(ExternalObjectViewMixin, FormView):
         context = {
             'object': self.external_object,
             'title': _(
-                'Execute version modification action for document '
+                message='Execute version modification action for document '
                 'version: %s'
             ) % self.external_object
         }
@@ -260,7 +264,7 @@ class DocumentVersionPreviewView(SingleObjectDetailView):
     view_icon = icon_document_version_preview
 
     def dispatch(self, request, *args, **kwargs):
-        result = super().dispatch(request, *args, **kwargs)
+        result = super().dispatch(request=request, *args, **kwargs)
         self.object.document.add_as_recent_document_for_user(
             user=request.user
         )
@@ -275,7 +279,9 @@ class DocumentVersionPreviewView(SingleObjectDetailView):
         return {
             'hide_labels': True,
             'object': self.object,
-            'title': _('Preview of document version: %s') % self.object
+            'title': _(
+                message='Preview of document version: %s'
+            ) % self.object
         }
 
     def get_form_extra_kwargs(self):
@@ -286,9 +292,7 @@ class DocumentVersionPreviewView(SingleObjectDetailView):
             ),
         )
 
-        return {
-            'transformation_instance_list': transformation_instance_list
-        }
+        return {'transformation_instance_list': transformation_instance_list}
 
 
 class DocumentVersionPrintFormView(PrintFormView):
@@ -317,23 +321,25 @@ class DocumentVersionPrintView(DocumentPrintBaseView):
         )
 
 
-class DocumentVersionTransformationsClearView(MultipleObjectConfirmActionView):
+class DocumentVersionTransformationsClearView(
+    MultipleObjectConfirmActionView
+):
     object_permission = permission_transformation_delete
     pk_url_kwarg = 'document_version_id'
     source_queryset = DocumentVersion.valid.all()
     success_message = _(
-        'Transformation clear request processed for %(count)d document '
-        'version.'
+        message='Transformation clear request processed for %(count)d '
+        'document version.'
     )
     success_message_plural = _(
-        'Transformation clear request processed for %(count)d document '
-        'versions.'
+        message='Transformation clear request processed for %(count)d '
+        'document versions.'
     )
     view_icon = icon_document_version_transformation_list_clear
 
     def get_extra_context(self):
         result = {
-            'title': ungettext(
+            'title': ngettext(
                 singular='Clear all the page transformations for the selected document version?',
                 plural='Clear all the page transformations for the selected document version?',
                 number=self.object_list.count()
@@ -345,7 +351,7 @@ class DocumentVersionTransformationsClearView(MultipleObjectConfirmActionView):
                 {
                     'object': self.object_list.first(),
                     'title': _(
-                        'Clear all the page transformations for the '
+                        message='Clear all the page transformations for the '
                         'document version: %s?'
                     ) % self.object_list.first()
                 }
@@ -362,7 +368,7 @@ class DocumentVersionTransformationsClearView(MultipleObjectConfirmActionView):
         except Exception as exception:
             messages.error(
                 message=_(
-                    'Error deleting the page transformations for '
+                    message='Error deleting the page transformations for '
                     'document version: %(document_version)s; %(error)s.'
                 ) % {
                     'document_version': instance, 'error': exception
@@ -370,7 +376,9 @@ class DocumentVersionTransformationsClearView(MultipleObjectConfirmActionView):
             )
 
 
-class DocumentVersionTransformationsCloneView(ExternalObjectViewMixin, FormView):
+class DocumentVersionTransformationsCloneView(
+    ExternalObjectViewMixin, FormView
+):
     external_object_permission = permission_transformation_edit
     external_object_pk_url_kwarg = 'document_version_id'
     external_object_queryset = DocumentVersion.valid.all()
@@ -399,7 +407,7 @@ class DocumentVersionTransformationsCloneView(ExternalObjectViewMixin, FormView)
             else:
                 messages.error(
                     message=_(
-                        'Error cloning the page transformations for '
+                        message='Error cloning the page transformations for '
                         'document version: %(document_version)s; %(error)s.'
                     ) % {
                         'document_version': self.external_object,
@@ -408,22 +416,20 @@ class DocumentVersionTransformationsCloneView(ExternalObjectViewMixin, FormView)
                 )
         else:
             messages.success(
-                message=_('Transformations cloned successfully.'),
+                message=_(message='Transformations cloned successfully.'),
                 request=self.request
             )
 
         return super().form_valid(form=form)
 
     def get_form_extra_kwargs(self):
-        return {
-            'instance': self.external_object
-        }
+        return {'instance': self.external_object}
 
     def get_extra_context(self):
         context = {
             'object': self.external_object,
             'title': _(
-                'Clone page transformations of document version: %s'
+                message='Clone page transformations of document version: %s'
             ) % self.external_object
         }
 

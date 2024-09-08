@@ -91,7 +91,7 @@ class DocumentCheckoutViewTestMixin:
     def _request_test_document_multiple_check_in_post_view(self):
         return self.post(
             viewname='checkouts:check_in_document_multiple', data={
-                'id_list': as_id_list(items=self._test_documents)
+                'id_list': as_id_list(items=self._test_document_list)
             }
         )
 
@@ -99,7 +99,7 @@ class DocumentCheckoutViewTestMixin:
         return self.get(
             viewname='checkouts:check_out_document', kwargs={
                 'document_id': self._test_document.pk
-            },
+            }
         )
 
     def _request_test_document_check_out_post_view(self, follow=False):
@@ -119,7 +119,7 @@ class DocumentCheckoutViewTestMixin:
                 'block_new_file': True,
                 'expiration_datetime_unit': TIME_DELTA_UNIT_DAYS,
                 'expiration_datetime_amount': 99,
-                'id_list': as_id_list(items=self._test_documents)
+                'id_list': as_id_list(items=self._test_document_list)
             }
         )
 

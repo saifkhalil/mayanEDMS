@@ -1,22 +1,18 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
 
 
-def handler_create_default_document_source(sender, **kwargs):
-    from .source_backends.literals import SOURCE_UNCOMPRESS_CHOICE_ASK
-    from .source_backends.web_form_backends import SourceBackendWebForm
+from .literals import STORAGE_NAME_SOURCE_CACHE_FOLDER
+from .settings import setting_source_cache_maximum_size
 
-    Source = apps.get_model(
-        app_label='sources', model_name='Source'
+
+def handler_create_source_cache(sender, **kwargs):
+    Cache = apps.get_model(app_label='file_caching', model_name='Cache')
+
+    Cache.objects.update_or_create(
+        defaults={
+            'maximum_size': setting_source_cache_maximum_size.value,
+        }, defined_storage_name=STORAGE_NAME_SOURCE_CACHE_FOLDER
     )
-
-    if not Source.objects.filter(backend_path=SourceBackendWebForm.get_class_path()).count():
-        Source.objects.create_backend(
-            backend_path=SourceBackendWebForm.get_class_path(),
-            backend_data={
-                'uncompress': SOURCE_UNCOMPRESS_CHOICE_ASK
-            }, label=_('Default')
-        )
 
 
 def handler_delete_interval_source_periodic_task(sender, instance, **kwargs):
@@ -43,4 +39,4 @@ def handler_initialize_periodic_tasks(sender, **kwargs):
 
     for source in Source.objects.filter(enabled=True):
         backend_instance = source.get_backend_instance()
-        backend_instance.save()
+        backend_instance.update()

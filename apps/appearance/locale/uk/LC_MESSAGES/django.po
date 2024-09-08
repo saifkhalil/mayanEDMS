@@ -1,0 +1,214 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Translators:
+# olenchenko <olenchenko@gmail.com>, 2024
+# Kostiantyn Tyshkovets <shukach_13@ukr.net>, 2024
+# Leo Lado, 2024
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Mayan EDMS\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-11 10:33+0000\n"
+"PO-Revision-Date: 2024-07-11 12:52+0000\n"
+"Last-Translator: Leo Lado, 2024\n"
+"Language-Team: Ukrainian (https://app.transifex.com/rosarior/teams/13584/uk/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+
+#: apps.py:58 events.py:6 permissions.py:6 settings.py:12
+msgid "Appearance"
+msgstr "Вигляд"
+
+#: dependencies.py:8
+msgid "Fancybox"
+msgstr "Fancybox"
+
+#: dependencies.py:12
+msgid "FontAwesome"
+msgstr "FontAwesome"
+
+#: dependencies.py:16
+msgid "jQuery"
+msgstr "jQuery"
+
+#: dependencies.py:20
+msgid "JQuery Form"
+msgstr "JQuery Form"
+
+#: dependencies.py:24
+msgid "JQuery Match Height"
+msgstr "JQuery Match Height"
+
+#: dependencies.py:28
+msgid "Select 2"
+msgstr "Виберіть 2"
+
+#: dependencies.py:32
+msgid "Toastr"
+msgstr "Toastr"
+
+#: events.py:10
+msgid "Theme created"
+msgstr "Тему створено"
+
+#: events.py:13
+msgid "Theme edited"
+msgstr "Тему відредаговано"
+
+#: events.py:16
+msgid "User theme edited"
+msgstr "Тему користувача відредаговано"
+
+#: links.py:21
+msgid "Reload the current content"
+msgstr ""
+
+#: links.py:27
+msgid "Theme settings"
+msgstr "Налаштування теми"
+
+#: links.py:34
+msgid "Edit theme settings"
+msgstr "Редагувати налаштування теми"
+
+#: links.py:40 views.py:34
+msgid "Create new theme"
+msgstr "Створити нову тему"
+
+#: links.py:45
+msgid "Delete"
+msgstr "Видалити"
+
+#: links.py:49
+msgid "Edit"
+msgstr "Редагувати"
+
+#: links.py:53 links.py:61 models.py:33 views.py:103
+msgid "Themes"
+msgstr "Теми"
+
+#: models.py:20
+msgid "A short text describing the theme."
+msgstr "Короткий опис теми"
+
+#: models.py:21
+msgid "Label"
+msgstr "Мітка"
+
+#: models.py:25
+msgid ""
+"The CSS stylesheet to change the appearance of the different user interface "
+"elements."
+msgstr ""
+"Таблиця стилів CSS для зміни зовнішнього вигляду різних елементів інтерфейсу"
+" користувача."
+
+#: models.py:27
+msgid "Stylesheet"
+msgstr "Таблиця стилів"
+
+#: models.py:32 models.py:69
+msgid "Theme"
+msgstr "Тема"
+
+#: models.py:65
+msgid "User"
+msgstr "Користувач"
+
+#: models.py:73
+msgid "User theme setting"
+msgstr "Налаштування теми користувача"
+
+#: models.py:74
+msgid "User theme settings"
+msgstr "Налаштування теми користувача"
+
+#: permissions.py:10
+msgid "Create new themes"
+msgstr "Створити нові теми"
+
+#: permissions.py:13
+msgid "Delete themes"
+msgstr "Видалити теми"
+
+#: permissions.py:16
+msgid "Edit themes"
+msgstr "Редагувати теми"
+
+#: permissions.py:19
+msgid "View existing themes"
+msgstr "Переглянути існуючі теми"
+
+#: settings.py:18
+msgid "Custom HTTP response code for AJAX redirections."
+msgstr "Спеціальний HTTP код відповіді для перенаправлень AJAX."
+
+#: settings.py:24
+msgid "Maximum number of characters that will be displayed as the view title."
+msgstr ""
+"Максимальна кількість символів, що буде відображена, при перегляді "
+"заголовку."
+
+#: settings.py:34
+msgid "Position where the system messages will be displayed."
+msgstr "Позиція, де відображатимуться системні повідомлення."
+
+#: settings.py:40
+msgid ""
+"Delay in milliseconds after which the menus will be checked for updates."
+msgstr ""
+"Затримка в мілісекундах, після якої меню буде перевірено на оновлення."
+
+#: settings.py:47
+msgid ""
+"Maximum number of requests that can be made before throttling is enabled."
+msgstr ""
+"Максимальна кількість запитів, які можна зробити до ввімкнення тротлінгу."
+
+#: settings.py:54
+msgid ""
+"Time in milliseconds after which a throttled request will clear allowing an "
+"additional request to be performed."
+msgstr ""
+"Час у мілісекундах, після якого обмежений запит очищається, що дозволяє "
+"виконати додатковий запит."
+
+#: templatetags/appearance_tags.py:77
+msgid "None"
+msgstr "None"
+
+#: views.py:59
+#, python-format
+msgid "Delete theme: %s"
+msgstr "Видалити тему: %s "
+
+#: views.py:76
+#, python-format
+msgid "Edit theme: %s"
+msgstr "Редагувати тему: %s"
+
+#: views.py:97
+msgid ""
+"Themes allow changing the visual appearance without requiring code changes."
+msgstr "Теми дозволяють змінювати візуальний вигляд, не вимагаючи зміни коду."
+
+#: views.py:101
+msgid "There are no themes"
+msgstr "Теми відсутні"
+
+#: views.py:127
+#, python-format
+msgid "Theme settings for user: %s"
+msgstr "Налаштування теми для користувача: %s"
+
+#: views.py:150
+#, python-format
+msgid "Edit theme settings for user: %s"
+msgstr "Змінити налаштування теми для користувача: %s"

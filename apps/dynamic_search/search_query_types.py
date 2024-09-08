@@ -1,6 +1,6 @@
 import logging
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .exceptions import (
     DynamicSearchException, DynamicSearchQueryError,
@@ -23,7 +23,9 @@ class BackendQueryType:
 
     @classmethod
     def register(cls, klass, search_backend):
-        cls._registry.setdefault(search_backend, {})
+        cls._registry.setdefault(
+            search_backend, {}
+        )
 
         search_backend_dictionary = cls._registry[search_backend]
 
@@ -71,7 +73,9 @@ class QueryType(metaclass=QueryTypeMetaclass):
     @classmethod
     def check(cls, value):
         if value.startswith(cls.alias):
-            return value[len(cls.alias):]
+            return value[
+                len(cls.alias):
+            ]
 
     @classmethod
     def check_all(cls, value):
@@ -164,49 +168,49 @@ class QueryType(metaclass=QueryTypeMetaclass):
 
 class QueryTypeExact(QueryType):
     alias = '='
-    label = _('Exact')
+    label = _(message='Exact')
     name = 'EXACT'
 
 
 class QueryTypeFuzzy(QueryType):
     alias = '~'
-    label = _('Fuzzy')
+    label = _(message='Fuzzy')
     name = 'FUZZY'
 
 
 class QueryTypeGreaterThan(QueryType):
     alias = '>'
-    label = _('Greater than')
+    label = _(message='Greater than')
     name = 'GREATERTHAN'
 
 
 class QueryTypeGreaterThanOrEqual(QueryType):
     alias = '>='
-    label = _('Greater than or equal')
+    label = _(message='Greater than or equal')
     name = 'GREATERTHANOREQUAL'
 
 
 class QueryTypeLessThan(QueryType):
     alias = '<'
-    label = _('Less than')
+    label = _(message='Less than')
     name = 'LESSTHAN'
 
 
 class QueryTypeLessThanOrEqual(QueryType):
     alias = '<='
-    label = _('Less than or equal')
+    label = _(message='Less than or equal')
     name = 'LESSTHANOREQUAL'
 
 
 class QueryTypePartial(QueryType):
     alias = '*'
-    label = _('Partial')
+    label = _(message='Partial')
     name = 'PARTIAL'
 
 
 class QueryTypeRange(QueryType):
     alias = '[]'
-    label = _('Range')
+    label = _(message='Range')
     name = 'RANGE'
 
     @classmethod
@@ -241,13 +245,13 @@ class QueryTypeRange(QueryType):
 
 class QueryTypeRangeExclusive(QueryTypeRange):
     alias = '{}'
-    label = _('Range exclusive')
+    label = _(message='Range exclusive')
     name = 'RANGEEXCLUSIVE'
 
 
 class QueryTypeRegularExpression(QueryType):
     alias = '%'
-    label = _('Regular expression')
+    label = _(message='Regular expression')
     name = 'REGULAREXPRESSION'
 
 

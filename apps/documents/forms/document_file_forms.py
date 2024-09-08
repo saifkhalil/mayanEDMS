@@ -1,8 +1,7 @@
-from django import forms
 from django.template.defaultfilters import filesizeformat
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from mayan.apps.views.forms import DetailForm
+from mayan.apps.forms import form_widgets, forms
 
 from ..fields import DocumentFileField
 from ..models.document_file_models import DocumentFile
@@ -31,25 +30,25 @@ class DocumentFilePreviewForm(forms.Form):
     document_file = DocumentFileField()
 
 
-class DocumentFilePropertiesForm(DetailForm):
+class DocumentFilePropertiesForm(forms.DetailForm):
     """
     Detail class form to display a document file properties
     """
     fieldsets = (
         (
-            _('Original'), {
+            _(message='Original'), {
                 'fields': ('filename', 'size')
             }
         ), (
-            _('Detected'), {
+            _(message='Detected'), {
                 'fields': ('mimetype', 'encoding', 'pages')
             }
         ), (
-            _('Storage'), {
+            _(message='Storage'), {
                 'fields': ('file', 'exists', 'checksum')
             }
         ), (
-            _('Other'), {
+            _(message='Other'), {
                 'fields': ('timestamp', 'comment')
             }
         )
@@ -58,35 +57,35 @@ class DocumentFilePropertiesForm(DetailForm):
     class Meta:
         extra_fields = [
             {
-                'label': _('Date added'),
+                'label': _(message='Date added'),
                 'field': 'timestamp',
-                'widget': forms.widgets.DateTimeInput
+                'widget': form_widgets.DateTimeInput
             },
             {
-                'label': _('MIME type'),
+                'label': _(message='MIME type'),
                 'field': 'mimetype'
             },
             {
-                'label': _('Encoding'),
+                'label': _(message='Encoding'),
                 'field': 'encoding'
             },
             {
-                'label': _('Size'),
+                'label': _(message='Size'),
                 'func': lambda document_file: filesizeformat(
                     bytes_=document_file.size
                 ) if document_file.size else '-', 'field': 'size'
             },
             {
-                'label': _('Exists in storage'), 'field': 'exists'
+                'label': _(message='Exists in storage'), 'field': 'exists'
             },
             {
-                'label': _('Path in storage'), 'field': 'file'
+                'label': _(message='Path in storage'), 'field': 'file'
             },
             {
-                'label': _('Checksum'), 'field': 'checksum'
+                'label': _(message='Checksum'), 'field': 'checksum'
             },
             {
-                'label': _('Pages'),
+                'label': _(message='Pages'),
                 'func': lambda document_file: document_file.pages.count(),
                 'field': 'pages'
             }

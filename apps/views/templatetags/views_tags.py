@@ -3,7 +3,7 @@ import logging
 from django.template import Context, Library, Variable, VariableDoesNotExist
 from django.template.defaultfilters import truncatechars
 from django.template.loader import get_template
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.appearance.settings import setting_max_title_length
 
@@ -27,27 +27,27 @@ def views_calculate_title(context):
         )
     else:
         if context.get('delete_view'):
-            title = _('Confirm delete')
+            title = _(message='Confirm delete')
             title_full = title
         else:
             if context.get('form'):
                 if context.get('object'):
-                    title = _('Edit %s') % context.get('object')
+                    title = _(message='Edit %s') % context.get('object')
                     title_full = title
                 else:
-                    title = _('Confirm')
+                    title = _(message='Confirm')
                     title_full = title
             else:
                 if context.get('read_only'):
-                    title = _('Details for: %s') % context.get('object')
+                    title = _(message='Details for: %s') % context.get('object')
                     title_full = title
                 else:
                     if context.get('object'):
-                        title = _('Edit: %s') % context.get('object')
+                        title = _(message='Edit: %s') % context.get('object')
                         title_full = title
                     else:
                         if context.get('create_view') or context.get('form'):
-                            title = _('Create')
+                            title = _(message='Create')
                             title_full = title
 
     return {'title': title, 'title_full': title_full}
@@ -108,9 +108,15 @@ def views_render_subtemplate(context, template_name, template_context):
     Renders the specified template with the mixed parent and
     subtemplate contexts.
     """
-    new_context = Context(context.flatten())
-    new_context.update(Context(template_context))
-    return get_template(template_name).render(new_context.flatten())
+    new_context = Context(
+        context.flatten()
+    )
+    new_context.update(
+        Context(template_context)
+    )
+    return get_template(template_name=template_name).render(
+        context=new_context.flatten()
+    )
 
 
 @register.simple_tag(takes_context=True)
@@ -134,4 +140,6 @@ def views_update_query_string(context, **kwargs):
     for key, value in kwargs.items():
         query[key] = value
 
-    return '?{}'.format(query.urlencode())
+    return '?{}'.format(
+        query.urlencode()
+    )

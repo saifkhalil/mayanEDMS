@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     ConfirmView, SingleObjectDeleteView, SingleObjectListView
@@ -27,13 +27,13 @@ class GlobalErrorLogEntryList(SingleObjectListView):
             'hide_object': True,
             'no_results_icon': icon_object_errors,
             'no_results_text': _(
-                'This view displays the error log of different objects. '
+                message='This view displays the error log of different objects. '
                 'An empty list is a good thing.'
             ),
             'no_results_title': _(
-                'There are no error log entries'
+                message='There are no error log entries'
             ),
-            'title': _('Global error log')
+            'title': _(message='Global error log')
         }
 
 
@@ -47,14 +47,14 @@ class ObjectErrorLogEntryListClearView(
         return {
             'object': self.external_object,
             'title': _(
-                'Clear error log entries for: %s' % self.external_object
+                message='Clear error log entries for: %s' % self.external_object
             )
         }
 
     def view_action(self):
         self.external_object.error_log.clear(user=self.request.user)
         messages.success(
-            message=_('Object error log cleared successfully'),
+            message=_(message='Object error log cleared successfully'),
             request=self.request
         )
 
@@ -71,13 +71,11 @@ class ObjectErrorLogEntryDeleteView(
         return {
             'external_object': self.external_object,
             'navigation_object_list': ('external_object', 'object'),
-            'title': _('Delete error log entry: %s') % self.object
+            'title': _(message='Delete error log entry: %s') % self.object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_source_queryset(self):
         return self.external_object.error_log.all()
@@ -94,14 +92,16 @@ class ObjectErrorLogEntryListView(
             'hide_object': True,
             'no_results_icon': icon_object_errors,
             'no_results_text': _(
-                'This view displays the error log of an object. '
+                message='This view displays the error log of an object. '
                 'An empty list is a good thing.'
             ),
             'no_results_title': _(
-                'There are no error log entries'
+                message='There are no error log entries'
             ),
             'object': self.external_object,
-            'title': _('Error log entries for: %s' % self.external_object)
+            'title': _(
+                message='Error log entries for: %s' % self.external_object
+            )
         }
 
     def get_source_queryset(self):

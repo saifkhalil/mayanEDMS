@@ -1,25 +1,20 @@
 from mayan.apps.acls.classes import ModelPermission
 from mayan.apps.converter.models import LayerTransformation
-from mayan.apps.converter.tests.mixins import (
-    TransformationTestMixin, TransformationViewTestMixin
-)
+from mayan.apps.converter.tests.mixins import TransformationViewTestMixin
 from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 
 from ..layers import layer_redactions
-from ..transformations import TransformationRedactionPercent
 from ..permissions import (
     permission_redaction_create, permission_redaction_delete,
     permission_redaction_edit, permission_redaction_view
 )
+from ..transformations import TransformationRedactionPercent
 
-from .literals import (
-    TEST_REDACTION_ARGUMENT, TEST_REDACTION_ARGUMENT_EDITED
-)
+from .literals import TEST_REDACTION_ARGUMENT, TEST_REDACTION_ARGUMENT_EDITED
 
 
 class RedactionViewTestCase(
-    TransformationTestMixin, TransformationViewTestMixin,
-    GenericDocumentViewTestCase
+    TransformationViewTestMixin, GenericDocumentViewTestCase
 ):
     _test_layer = layer_redactions
     _test_transformation_argument = TEST_REDACTION_ARGUMENT

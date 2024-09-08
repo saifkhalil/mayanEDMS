@@ -22,9 +22,8 @@ class ExternalObjectAPIViewMixinTestCase(
                 'HTTP_AUTHORIZATION': 'Token {}'.format(
                     self._test_case_user_token
                 )
-            }, viewname='rest_api:{}'.format(self._test_view_name), kwargs={
-                'test_object_id': self._test_object.pk
-            }
+            }, kwargs={'test_object_id': self._test_object.pk},
+            viewname='rest_api:{}'.format(self._test_view_name)
         )
 
     def _test_view_factory(self, test_object=None):
@@ -34,8 +33,8 @@ class ExternalObjectAPIViewMixinTestCase(
         class TestView(ExternalObjectAPIViewMixin, generics.RetrieveAPIView):
             external_object_queryset = self.TestModel.objects.all()
             external_object_pk_url_kwarg = 'test_object_id'
-            mayan_external_object_permissions = {
-                'GET': (self._test_permission,)
+            mayan_external_object_permission_map = {
+                'GET': self._test_permission
             }
             serializer_class = TestModelSerializer
 
@@ -85,7 +84,7 @@ class ChildExternalObjectAPIViewMixinTestCase(
 
             def get_source_queryset(self):
                 # Normally this would return a queryset based on the
-                # external object. This incomplete method is good enought for
+                # external object. This incomplete method is good enough for
                 # the test.
                 return self.get_external_object()
 

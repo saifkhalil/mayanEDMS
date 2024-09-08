@@ -1,22 +1,21 @@
 from django.apps import apps
 from django.db.models.signals import post_migrate
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
 from mayan.apps.acls.permissions import (
     permission_acl_edit, permission_acl_view
 )
-
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.classes import ModelCopy
 from mayan.apps.common.menus import (
-    menu_list_facet, menu_multi_item, menu_object, menu_related,
+    menu_list_facet, menu_multi_item, menu_object, menu_related, menu_return,
     menu_secondary, menu_setup
 )
 from mayan.apps.common.signals import signal_perform_upgrade
 from mayan.apps.dashboards.dashboards import dashboard_administrator
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 from mayan.apps.rest_api.fields import DynamicSerializerField
 from mayan.apps.user_management.links import link_group_list
 
@@ -25,9 +24,9 @@ from .dashboard_widgets import DashboardWidgetRoleTotal
 from .events import event_role_created, event_role_edited
 from .handlers import handler_permission_initialize, handler_purge_permissions
 from .links import (
-    link_group_role_list, link_role_create, link_role_single_delete,
-    link_role_multiple_delete, link_role_edit, link_role_group_list,
-    link_role_list, link_role_permission_list
+    link_group_role_list, link_role_create, link_role_delete_single,
+    link_role_delete_multiple, link_role_edit, link_role_group_list,
+    link_role_list, link_role_permission_list, link_role_setup
 )
 from .methods import method_group_roles_add, method_group_roles_remove
 from .permissions import (
@@ -41,13 +40,13 @@ class PermissionsApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.permissions'
-    verbose_name = _('Permissions')
+    verbose_name = _(message='Permissions')
 
     def ready(self):
         super().ready()
 
-        Role = self.get_model('Role')
-        StoredPermission = self.get_model('StoredPermission')
+        Role = self.get_model(model_name='Role')
+        StoredPermission = self.get_model(model_name='StoredPermission')
         Group = apps.get_model(app_label='auth', model_name='Group')
 
         DynamicSerializerField.add_serializer(
@@ -56,7 +55,9 @@ class PermissionsApp(MayanAppConfig):
         )
 
         Group.add_to_class(name='roles_add', value=method_group_roles_add)
-        Group.add_to_class(name='roles_remove', value=method_group_roles_remove)
+        Group.add_to_class(
+            name='roles_remove', value=method_group_roles_remove
+        )
 
         EventModelRegistry.register(model=Role)
         EventModelRegistry.register(
@@ -101,16 +102,13 @@ class PermissionsApp(MayanAppConfig):
             source=Role
         )
         SourceColumn(
-            func=lambda context: context['object'].get_group_count(
-                user=context['request'].user
-            ), include_label=True, label=_('Group count'), source=Role
+            attribute='get_group_count', kwargs={'user': 'request.user'},
+            include_label=True, label=_(message='Group count'), source=Role
         )
 
         dashboard_administrator.add_widget(
             widget=DashboardWidgetRoleTotal, order=99
         )
-
-        menu_setup.bind_links(links=(link_role_list,))
 
         # Group
 
@@ -133,18 +131,15 @@ class PermissionsApp(MayanAppConfig):
                 link_role_group_list, link_role_permission_list
             ), sources=(Role,)
         )
-
         menu_multi_item.bind_links(
-            links=(link_role_multiple_delete,),
+            links=(link_role_delete_multiple,),
             sources=('permissions:role_list',)
         )
-
         menu_object.bind_links(
             links=(
-                link_role_single_delete, link_role_edit
+                link_role_delete_single, link_role_edit
             ), sources=(Role,)
         )
-
         menu_related.bind_links(
             links=(link_group_list,), sources=(
                 'permissions:role_create',
@@ -152,13 +147,22 @@ class PermissionsApp(MayanAppConfig):
                 'permissions:role_list', Role
             )
         )
-
-        menu_secondary.bind_links(
-            links=(link_role_list, link_role_create), sources=(
-                'permissions:role_create',
+        menu_return.bind_links(
+            links=(link_role_list,), sources=(
+                Role, 'permissions:role_create',
                 'permissions:role_multiple_delete',
-                'permissions:role_list', Role
+                'permissions:role_list'
             )
+        )
+        menu_secondary.bind_links(
+            links=(link_role_create,), sources=(
+                Role, 'permissions:role_create',
+                'permissions:role_multiple_delete',
+                'permissions:role_list'
+            )
+        )
+        menu_setup.bind_links(
+            links=(link_role_setup,)
         )
 
         # Initialize the permissions post migrate of this app for new

@@ -2,12 +2,13 @@ from django.shortcuts import get_object_or_404
 
 from mayan.apps.views.http import URL
 
-from .models import DocumentMetadata, MetadataType
+from .models.metadata_instance_models import DocumentMetadata
+from .models.metadata_type_models import MetadataType
 
 
 def decode_metadata_from_query_string(query_string=None):
     """
-    Parse a URL query string to a list of metadata
+    Parse a URL query string to a list of metadata.
     """
     metadata_dict = {
         'metadata_type_id': {},
@@ -39,7 +40,7 @@ def decode_metadata_from_query_string(query_string=None):
 def save_metadata_list(metadata_list, document, create=False, user=None):
     """
     Take a list of metadata dictionaries and associate them to a
-    document
+    document.
     """
     for item in metadata_list:
         save_metadata(
@@ -50,7 +51,7 @@ def save_metadata_list(metadata_list, document, create=False, user=None):
 def save_metadata(metadata_dict, document, create=False, user=None):
     """
     Take a dictionary of metadata type & value and associate it to a
-    document
+    document.
     """
     parameters = {
         'document': document,
@@ -70,10 +71,9 @@ def save_metadata(metadata_dict, document, create=False, user=None):
     else:
         try:
             document_metadata = DocumentMetadata.objects.get(
-                document=document,
-                metadata_type=get_object_or_404(
+                document=document, metadata_type=get_object_or_404(
                     klass=MetadataType, pk=metadata_dict['metadata_type_id']
-                ),
+                )
             )
         except DocumentMetadata.DoesNotExist:
             document_metadata = None

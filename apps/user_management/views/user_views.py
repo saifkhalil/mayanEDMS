@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     AddRemoveView, MultipleObjectDeleteView, SingleObjectCreateView,
@@ -13,8 +13,8 @@ from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 
 from ..icons import (
     icon_current_user_detail, icon_user_create, icon_user_edit,
-    icon_user_group_list, icon_user_list, icon_user_single_delete,
-    icon_user_set_options, icon_user_setup
+    icon_user_group_list, icon_user_list, icon_user_set_options,
+    icon_user_setup, icon_user_single_delete
 )
 from ..links import link_user_create
 from ..literals import FIELDS_ALL, FIELDSETS_ALL, FIELDSETS_USER
@@ -29,7 +29,7 @@ from .view_mixins import DynamicUserFormFieldViewMixin
 
 class UserCreateView(SingleObjectCreateView):
     extra_context = {
-        'title': _('Create new user')
+        'title': _(message='Create new user')
     }
     fields = FIELDS_ALL
     fieldsets = FIELDSETS_ALL
@@ -41,9 +41,9 @@ class UserCreateView(SingleObjectCreateView):
         super().form_valid(form=form)
         return HttpResponseRedirect(
             redirect_to=reverse(
-                viewname='authentication:user_set_password', kwargs={
+                kwargs={
                     'user_id': self.object.pk
-                }
+                }, viewname='authentication:user_set_password'
             )
         )
 
@@ -52,25 +52,33 @@ class UserCreateView(SingleObjectCreateView):
 
 
 class UserDeleteView(MultipleObjectDeleteView):
-    error_message = _('Error deleting user "%(instance)s"; %(exception)s')
+    error_message = _(
+        message='Error deleting user "%(instance)s"; %(exception)s'
+    )
     object_permission = permission_user_delete
     pk_url_kwarg = 'user_id'
     post_action_redirect = reverse_lazy(
         viewname='user_management:user_list'
     )
-    success_message_plural = _('%(count)d users deleted successfully.')
-    success_message_single = _('User "%(object)s" deleted successfully.')
-    success_message_singular = _('%(count)d user deleted successfully.')
-    title_plural = _('Delete the %(count)d selected users.')
-    title_single = _('Delete user: %(object)s.')
-    title_singular = _('Delete the %(count)d selected user.')
+    success_message_plural = _(
+        message='%(count)d users deleted successfully.'
+    )
+    success_message_single = _(
+        message='User "%(object)s" deleted successfully.'
+    )
+    success_message_singular = _(
+        message='%(count)d user deleted successfully.'
+    )
+    title_plural = _(message='Delete the %(count)d selected users.')
+    title_single = _(message='Delete user: %(object)s.')
+    title_singular = _(message='Delete the %(count)d selected user.')
     view_icon = icon_user_single_delete
 
     def get_extra_context(self, **kwargs):
         if self.request.user in self.object_list:
             return {
                 'message': _(
-                    'Warning! You are about to delete your own user '
+                    message='Warning! You are about to delete your own user '
                     'account. You will lose access to the system. This '
                     'process is not reversible.'
                 )
@@ -90,7 +98,7 @@ class UserDetailView(DynamicUserFormFieldViewMixin, SingleObjectDetailView):
     def get_extra_context(self, **kwargs):
         return {
             'object': self.object,
-            'title': _('Details of user: %s') % self.object
+            'title': _(message='Details of user: %s') % self.object
         }
 
     def get_source_queryset(self):
@@ -109,7 +117,7 @@ class UserEditView(DynamicUserFormFieldViewMixin, SingleObjectEditView):
     def get_extra_context(self):
         return {
             'object': self.object,
-            'title': _('Edit user: %s') % self.object
+            'title': _(message='Edit user: %s') % self.object
         }
 
     def get_instance_extra_data(self):
@@ -120,10 +128,10 @@ class UserEditView(DynamicUserFormFieldViewMixin, SingleObjectEditView):
 
 
 class UserGroupAddRemoveView(AddRemoveView):
-    list_available_title = _('Available groups')
+    list_available_title = _(message='Available groups')
     # Translators: "User groups" here refer to the list of groups of a
     # specific user. The user's group membership.
-    list_added_title = _('User groups')
+    list_added_title = _(message='User groups')
     main_object_method_add_name = 'groups_add'
     main_object_method_remove_name = 'groups_remove'
     main_object_permission = permission_user_edit
@@ -138,7 +146,7 @@ class UserGroupAddRemoveView(AddRemoveView):
     def get_extra_context(self):
         return {
             'object': self.main_object,
-            'title': _('Groups of user: %s') % self.main_object
+            'title': _(message='Groups of user: %s') % self.main_object
         }
 
     def get_list_added_queryset(self):
@@ -163,11 +171,11 @@ class UserListView(SingleObjectListView):
                 context=RequestContext(request=self.request)
             ),
             'no_results_text': _(
-                'User accounts can be create from this view. After creating '
+                message='User accounts can be create from this view. After creating '
                 'a user account you will prompted to set a password for it. '
             ),
-            'no_results_title': _('There are no user accounts'),
-            'title': _('Users')
+            'no_results_title': _(message='There are no user accounts'),
+            'title': _(message='Users')
         }
 
     def get_source_queryset(self):
@@ -186,15 +194,13 @@ class UserOptionsEditView(ExternalObjectViewMixin, SingleObjectEditView):
     def get_extra_context(self):
         return {
             'title': _(
-                'Edit options for user: %s'
+                message='Edit options for user: %s'
             ) % self.external_object,
             'object': self.external_object
         }
 
     def get_instance_extra_data(self):
-        return {
-            '_event_actor': self.request.user
-        }
+        return {'_event_actor': self.request.user}
 
     def get_object(self):
         return self.external_object.user_options

@@ -3,12 +3,10 @@
 class MayanImage {
     constructor (options) {
         this.element = options.element;
-        this.load();
     }
 
     static async setup (options) {
         this.options = options || {};
-        this.options.templateInvalidImage = this.options.templateInvalidImage || '<span>Error loading image</span>';
 
         $().fancybox({
             afterShow: function (instance, current) {
@@ -20,7 +18,7 @@ class MayanImage {
             animationDuration : 100,
             buttons : [
                 'fullScreen',
-                'close',
+                'close'
             ],
             idleTime: false,
             infobar: true,
@@ -28,35 +26,65 @@ class MayanImage {
         });
     }
 
-    static async intialize () {
-        $('img.lazy-load').lazyload({
-            appear: async function(elements_left, settings) {
-                new MayanImage({element: $(this)});
-            },
-            threshold: 400,
-        });
-
-        $('img.lazy-load-carousel').lazyload({
-            appear: async function(elements_left, settings) {
-                new MayanImage({element: $(this)});
-            },
-            container: $('#carousel-container'),
-            threshold: 2000,
-        });
-
-        $('.lazy-load').on('load', function() {
+    static async initialize () {
+        const eventHandlerImageError = function (event) {
             const $this = $(this);
 
-            $this.siblings('.spinner-container').remove();
+            $this.siblings('.lazyload-spinner-container').remove();
+            $this.removeClass('pull-left');
+
+            $.ajax({
+                async: true,
+                dataType: 'json',
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $this.off('error', eventHandlerImageError);
+
+                    if (jqXHR.hasOwnProperty('responseJSON')) {
+                        if (jqXHR.responseJSON.hasOwnProperty('app_image_error_image_template')) {
+                            const $container = $this.parent().parent().parent();
+                            const template = jqXHR.responseJSON['app_image_error_image_template']
+                            $container.html(template);
+                        }
+                    }
+                },
+                // Need to set mimeType only when run from local file.
+                mimeType: 'text/html; charset=utf-8',
+                type: 'GET',
+                url: $this.attr('src'),
+            });
+        }
+
+        const observer = new IntersectionObserver(function(items) {
+            items.forEach((item) => {
+                if (item.isIntersecting) {
+                    const $this = $(item.target);
+                    const dataSrc = $this.attr('data-src');
+
+                    $this.attr('src', dataSrc);
+                    $this.on('error', eventHandlerImageError);
+                    observer.unobserve(item.target);
+                }
+            });
+        });
+
+        $('img.lazy-load,img.lazy-load-carousel').each(async function(index) {
+            const $this = $(this);
+            observer.observe(this);
+        });
+
+        $('.lazy-load').on('load', async function() {
+            const $this = $(this);
+
+            $this.siblings('.lazyload-spinner-container').remove();
             $this.removeClass('lazy-load pull-left');
             clearTimeout(MayanImage.timer);
-            MayanImage.timer = setTimeout(MayanImage.timerFunction, 250);
+            MayanImage.timer = setTimeout(MayanImage.timerFunction, 50);
         });
 
-        $('.lazy-load-carousel').on('load', function() {
+        $('.lazy-load-carousel').on('load', async function() {
             const $this = $(this);
 
-            $this.siblings('.spinner-container').remove();
+            $this.siblings('.lazyload-spinner-container').remove();
             $this.removeClass('lazy-load-carousel pull-left');
         });
     }
@@ -64,33 +92,6 @@ class MayanImage {
     static timerFunction () {
         $.fn.matchHeight._update();
     }
-
-    async load () {
-        const self = this;
-        const container = this.element.parent().parent().parent();
-        const dataURL = this.element.attr('data-url');
-
-        if (dataURL === '') {
-            container.html(MayanImage.options.templateInvalidImage);
-        } else {
-            this.element.attr('src', dataURL);
-            setTimeout(function () {
-                self.element.on('error', function () {
-                    // Check the .complete property to see if it is a real
-                    // error or it was a cached image
-                    if (this.complete === false) {
-                        // It is a cached image, set the src attribute to
-                        // trigger its display.
-                        this.src = dataURL;
-                    } else {
-                        container.html(
-                            MayanImage.options.templateInvalidImage
-                        );
-                    }
-                });
-            }, 1);
-        }
-    };
 }
 
 MayanImage.timer = setTimeout(null);

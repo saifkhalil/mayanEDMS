@@ -1,6 +1,5 @@
 from rest_framework import status
 
-from mayan.apps.documents.tests.mixins.document_mixins import DocumentTestMixin
 from mayan.apps.rest_api.tests.base import BaseAPITestCase
 
 from ..events import (
@@ -12,14 +11,11 @@ from ..permissions import (
     permission_signature_capture_edit, permission_signature_capture_view
 )
 
-from .mixins import (
-    SignatureCaptureAPIViewTestMixin, SignatureCaptureTestMixin
-)
+from .mixins import SignatureCaptureAPIViewTestMixin
 
 
 class SignatureCaptureAPIViewTestCase(
-    DocumentTestMixin, SignatureCaptureAPIViewTestMixin,
-    SignatureCaptureTestMixin, BaseAPITestCase
+    SignatureCaptureAPIViewTestMixin, BaseAPITestCase
 ):
     auto_upload_test_document = False
 
@@ -552,7 +548,9 @@ class SignatureCaptureAPIViewTestCase(
 
         response = self._request_test_signature_capture_list_api_view()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+        self.assertEqual(
+            response.data['count'], 0
+        )
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

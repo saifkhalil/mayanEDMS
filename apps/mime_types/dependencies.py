@@ -1,24 +1,24 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.dependencies.classes import BinaryDependency, PythonDependency
 
 from .backends.literals import DEFAULT_FILE_PATH, DEFAULT_MIMETYPE_PATH
 
-
 BinaryDependency(
     label='File::MimeInfo', help_text=_(
-        'This module can be used to determine the MIME type of a file. '
-        'It tries to implement the freedesktop specification for a shared '
-        'MIME database.'
+        message='This module can be used to determine the MIME type of a '
+        'file. It tries to implement the freedesktop specification for a '
+        'shared MIME database.'
     ), module=__name__, name='libfile-mimeinfo-perl',
     path=DEFAULT_MIMETYPE_PATH
 )
 BinaryDependency(
-    label='file', help_text=_('determine file type using content tests'),
-    module=__name__, name='file', path=DEFAULT_FILE_PATH
+    label='file', help_text=_(
+        message='determine file type using content tests'
+    ), module=__name__, name='file', path=DEFAULT_FILE_PATH
 )
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         The MIT License (MIT)
 
         Copyright (c) 2001-2014 Adam Hupp
@@ -40,5 +40,5 @@ PythonDependency(
         LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
-    ''', module=__name__, name='python-magic', version_string='==0.4.26'
+    ''', module=__name__, name='python-magic', version_string='==0.4.27'
 )

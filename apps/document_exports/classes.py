@@ -3,7 +3,7 @@ from PIL import Image
 
 from django.apps import apps
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.locales.utils import to_language
 
@@ -30,12 +30,12 @@ class DocumentVersionExporter:
             )
 
     def export(self, file_object):
-        pages_queryset = self.document_version.pages
+        queryset_pages = self.document_version.pages
 
-        if pages_queryset.exists():
+        if queryset_pages.exists():
             # Only export the version if there is at least one page.
             export_file_created = False
-            for page in pages_queryset:
+            for page in queryset_pages:
                 if page.content_object:
                     # Ensure only pages that point to actual content are
                     # exported.
@@ -56,7 +56,7 @@ class DocumentVersionExporter:
 
         download_file = DownloadFile(
             filename='{}.pdf'.format(self.document_version),
-            label=_('Document version export to PDF'),
+            label=_(message='Document version export to PDF'),
             user=user
         )
         download_file._event_actor = user

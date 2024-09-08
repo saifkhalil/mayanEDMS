@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.db import migrations
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.timezone import make_aware
 
 from ..classes import GPGBackend
@@ -14,18 +14,24 @@ def code_save_keys(apps, schema_editor):
     )
 
     for key in Key.objects.using(alias=schema_editor.connection.alias).all():
-        key_data = force_text(s=key.key_data)
+        key_data = force_str(s=key.key_data)
         import_results, key_info = GPGBackend.get_instance().import_and_list_keys(
             key_data=key_data
         )
 
         key.creation_date = make_aware(
-            value=datetime.fromtimestamp(int(key_info['date']))
+            value=datetime.fromtimestamp(
+                int(
+                    key_info['date']
+                )
+            )
         )
         if key_info['expires']:
             key.expiration_date = make_aware(
                 value=datetime.fromtimestamp(
-                    int(key_info['expires'])
+                    int(
+                        key_info['expires']
+                    )
                 )
             )
         key.save()
@@ -38,18 +44,24 @@ def code_save_keys_reverse(apps, schema_editor):
     )
 
     for key in Key.objects.using(alias=schema_editor.connection.alias).all():
-        key_data = force_text(s=key.key_data)
+        key_data = force_str(s=key.key_data)
         import_results, key_info = GPGBackend.get_instance().import_and_list_keys(
             key_data=key_data
         )
 
         key.creation_date = make_aware(
-            value=datetime.fromtimestamp(int(key_info['date']))
+            value=datetime.fromtimestamp(
+                int(
+                    key_info['date']
+                )
+            )
         ).date()
         if key_info['expires']:
             key.expiration_date = make_aware(
                 value=datetime.fromtimestamp(
-                    int(key_info['expires'])
+                    int(
+                        key_info['expires']
+                    )
                 )
             ).date()
         key.save()

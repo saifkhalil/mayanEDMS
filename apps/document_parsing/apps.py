@@ -2,16 +2,17 @@ import logging
 
 from django.apps import apps
 from django.db.models.signals import post_save
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
     menu_list_facet, menu_multi_item, menu_secondary, menu_tools
 )
 from mayan.apps.databases.classes import ModelFieldRelated, ModelProperty
 from mayan.apps.documents.signals import signal_post_document_file_upload
 from mayan.apps.events.classes import ModelEventType
+from mayan.apps.logging.classes import ErrorLogDomain
 
 from .events import (
     event_parsing_document_file_content_deleted,
@@ -30,6 +31,7 @@ from .links import (
     link_document_file_parsing_single_submit,
     link_document_type_parsing_settings, link_document_type_parsing_submit
 )
+from .literals import ERROR_LOG_DOMAIN_NAME
 from .methods import (
     method_document_content, method_document_file_content,
     method_document_file_parsing_submit, method_document_parsing_submit
@@ -48,7 +50,7 @@ class DocumentParsingApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.document_parsing'
-    verbose_name = _('Document parsing')
+    verbose_name = _(message='Document parsing')
 
     def ready(self):
         super().ready()
@@ -83,6 +85,10 @@ class DocumentParsingApp(MayanAppConfig):
             value=method_document_file_parsing_submit
         )
 
+        ErrorLogDomain(
+            label=_(message='Document parsing'), name=ERROR_LOG_DOMAIN_NAME
+        )
+
         ModelEventType.register(
             model=Document, event_types=(
                 event_parsing_document_file_content_deleted,
@@ -104,8 +110,8 @@ class DocumentParsingApp(MayanAppConfig):
 
         ModelProperty(
             description=_(
-                'A generator returning the document file\'s pages parsed content.'
-            ), label=_('Content'), model=Document,
+                message='A generator returning the document file\'s pages parsed content.'
+            ), label=_(message='Content'), model=Document,
             name='content'
         )
 

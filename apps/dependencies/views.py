@@ -1,5 +1,5 @@
 from django.http import Http404
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import SimpleView, SingleObjectListView
 
@@ -15,14 +15,25 @@ from .utils import PyPIClient
 
 
 class CheckVersionView(SimpleView):
-    template_name = 'appearance/generic_template.html'
+    template_name = 'appearance/content_container.html'
     view_icon = icon_check_version
     view_permission = permission_dependencies_view
 
     def get_extra_context(self):
         return {
-            'content': PyPIClient().check_version_verbose(),
-            'title': _('Check for updates')
+            'paragraphs': (
+                PyPIClient().check_version_verbose(),
+                _(
+                    message='This process only checks the Python component of '
+                    'Mayan EDMS.'
+                ),
+                _(
+                    message='It does not verify versions of other '
+                    'components like packaging or deployment technologies, '
+                    'such as container or virtual machine images.'
+                ),
+            ),
+            'title': _(message='Check for updates')
         }
 
 
@@ -37,7 +48,7 @@ class DependencyGroupEntryListView(SingleObjectListView):
             'object': self.get_object(),
             'subtitle': self.get_object().help_text,
             'title': _(
-                'Entries for dependency group: %s'
+                message='Entries for dependency group: %s'
             ) % self.get_object()
         }
 
@@ -51,7 +62,7 @@ class DependencyGroupEntryListView(SingleObjectListView):
             )
         except KeyError:
             raise Http404(
-                _('Group %s not found.') % self.kwargs[
+                _(message='Group %s not found.') % self.kwargs[
                     'dependency_group_name'
                 ]
             )
@@ -65,7 +76,7 @@ class DependencyGroupListView(SingleObjectListView):
         return {
             'hide_link': True,
             'hide_object': True,
-            'title': _('Dependency groups')
+            'title': _(message='Dependency groups')
         }
 
     def get_source_queryset(self):
@@ -87,7 +98,7 @@ class DependencyGroupEntryDetailView(SingleObjectListView):
             'hide_object': True,
             'navigation_object_list': ('group', 'entry'),
             'title': _(
-                'Dependency group and entry: %(group)s, %(entry)s'
+                message='Dependency group and entry: %(group)s, %(entry)s'
             ) % {
                 'group': group, 'entry': entry
             }
@@ -100,7 +111,7 @@ class DependencyGroupEntryDetailView(SingleObjectListView):
             )
         except KeyError:
             raise Http404(
-                _('Group %s not found.') % self.kwargs[
+                _(message='Group %s not found.') % self.kwargs[
                     'dependency_group_name'
                 ]
             )
@@ -112,7 +123,7 @@ class DependencyGroupEntryDetailView(SingleObjectListView):
             )
         except KeyError:
             raise Http404(
-                _('Entry %s not found.') % self.kwargs[
+                _(message='Entry %s not found.') % self.kwargs[
                     'dependency_group_entry_name'
                 ]
             )
@@ -122,14 +133,14 @@ class DependencyGroupEntryDetailView(SingleObjectListView):
 
 
 class DependencyLicensesView(SimpleView):
-    template_name = 'appearance/generic_form.html'
+    template_name = 'appearance/form_container.html'
     view_icon = icon_dependency_licenses
 
     def get_extra_context(self):
         # Use a function so that DependenciesLicensesForm get initialized
-        # at every request
+        # at every request.
         return {
             'form': DependenciesLicensesForm(),
             'read_only': True,
-            'title': _('Other packages licenses')
+            'title': _(message='Other packages licenses')
         }

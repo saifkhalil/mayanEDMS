@@ -1,17 +1,16 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.dependencies.classes import BinaryDependency, PythonDependency
 
 from .backends.python_gnupg import gpg_path
 
-
 BinaryDependency(
     label='GNU privacy guard', help_text=_(
-        'GNU privacy guard - a PGP implementation.'
+        message='GNU privacy guard - a PGP implementation.'
     ), module=__name__, name='gnupg1', path=gpg_path
 )
 PythonDependency(
-    copyright_text='''
+    legal_text='''
         Copyright (c) 2008-2014 by Vinay Sajip.
         All rights reserved.
 
@@ -37,5 +36,5 @@ PythonDependency(
         LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
         OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
         ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-    ''', module=__name__, name='python_gnupg', version_string='==0.4.8'
+    ''', module=__name__, name='python_gnupg', version_string='==0.5.2'
 )

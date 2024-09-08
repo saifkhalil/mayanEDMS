@@ -4,14 +4,12 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
+from mayan.apps.common.validators import YAMLValidator, validate_internal_name
 from mayan.apps.databases.model_mixins import ExtraDataModelMixin
-from mayan.apps.common.validators import (
-    YAMLValidator, validate_internal_name
-)
-from mayan.apps.events.classes import EventManagerSave
 from mayan.apps.events.decorators import method_event
+from mayan.apps.events.event_managers import EventManagerSave
 from mayan.apps.storage.classes import DefinedStorageLazy
 
 from .classes import Layer
@@ -33,25 +31,27 @@ class Asset(AssetBusinessLogicMixin, ExtraDataModelMixin, models.Model):
     This model keeps track of files that will be available for use with
     transformations.
     """
+    _ordering_fields = ('internal_name', 'label')
+
     label = models.CharField(
-        max_length=96, unique=True, verbose_name=_('Label')
+        max_length=96, unique=True, verbose_name=_(message='Label')
     )
     internal_name = models.CharField(
         db_index=True, help_text=_(
-            'This value will be used when referencing this asset. '
+            message='This value will be used when referencing this asset. '
             'Can only contain letters, numbers, and underscores.'
         ), max_length=255, unique=True, validators=[validate_internal_name],
-        verbose_name=_('Internal name')
+        verbose_name=_(message='Internal name')
     )
     file = models.FileField(
         storage=DefinedStorageLazy(name=STORAGE_NAME_ASSETS),
-        upload_to=model_upload_to, verbose_name=_('File')
+        upload_to=model_upload_to, verbose_name=_(message='File')
     )
 
     class Meta:
         ordering = ('label',)
-        verbose_name = _('Asset')
-        verbose_name_plural = _('Assets')
+        verbose_name = _(message='Asset')
+        verbose_name_plural = _(message='Assets')
 
     def __str__(self):
         return self.label
@@ -65,9 +65,8 @@ class Asset(AssetBusinessLogicMixin, ExtraDataModelMixin, models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            viewname='converter:asset_detail', kwargs={
-                'asset_id': self.pk
-            }
+            kwargs={'asset_id': self.pk},
+            viewname='converter:asset_detail'
         )
 
     @method_event(
@@ -87,16 +86,16 @@ class Asset(AssetBusinessLogicMixin, ExtraDataModelMixin, models.Model):
 
 class StoredLayer(models.Model):
     name = models.CharField(
-        max_length=64, unique=True, verbose_name=_('Name')
+        max_length=64, unique=True, verbose_name=_(message='Name')
     )
     order = models.PositiveIntegerField(
-        db_index=True, unique=True, verbose_name=_('Order')
+        db_index=True, unique=True, verbose_name=_(message='Order')
     )
 
     class Meta:
         ordering = ('order',)
-        verbose_name = _('Stored layer')
-        verbose_name_plural = _('Stored layers')
+        verbose_name = _(message='Stored layer')
+        verbose_name_plural = _(message='Stored layers')
 
     def __str__(self):
         return self.name
@@ -108,20 +107,20 @@ class StoredLayer(models.Model):
 class ObjectLayer(ObjectLayerBusinessLogicMixin, models.Model):
     content_type = models.ForeignKey(
         on_delete=models.CASCADE, to=ContentType,
-        verbose_name=_('Content type')
+        verbose_name=_(message='Content type')
     )
     object_id = models.PositiveIntegerField(
-        verbose_name=_('Object ID')
+        verbose_name=_(message='Object ID')
     )
     content_object = GenericForeignKey(
         ct_field='content_type', fk_field='object_id'
     )
     enabled = models.BooleanField(
-        default=True, verbose_name=_('Enabled')
+        default=True, verbose_name=_(message='Enabled')
     )
     stored_layer = models.ForeignKey(
         on_delete=models.CASCADE, related_name='object_layers',
-        to=StoredLayer, verbose_name=_('Stored layer')
+        to=StoredLayer, verbose_name=_(message='Stored layer')
     )
 
     objects = ObjectLayerManager()
@@ -129,8 +128,8 @@ class ObjectLayer(ObjectLayerBusinessLogicMixin, models.Model):
     class Meta:
         ordering = ('stored_layer__order',)
         unique_together = ('content_type', 'object_id', 'stored_layer')
-        verbose_name = _('Object layer')
-        verbose_name_plural = _('Object layers')
+        verbose_name = _(message='Object layer')
+        verbose_name_plural = _(message='Object layers')
 
 
 class LayerTransformation(
@@ -149,25 +148,27 @@ class LayerTransformation(
     """
     object_layer = models.ForeignKey(
         on_delete=models.CASCADE, related_name='transformations',
-        to=ObjectLayer, verbose_name=_('Object layer')
+        to=ObjectLayer, verbose_name=_(message='Object layer')
     )
     order = models.PositiveIntegerField(
         blank=True, db_index=True, default=0, help_text=_(
-            'Order in which the transformations will be executed. If left '
-            'unchanged, an automatic order value will be assigned.'
-        ), verbose_name=_('Order')
+            message='Order in which the transformations will be executed. If '
+            'left unchanged, an automatic order value will be assigned.'
+        ), verbose_name=_(message='Order')
     )
     name = models.CharField(
-        max_length=128, verbose_name=_('Name')
+        max_length=128, verbose_name=_(message='Name')
     )
     arguments = models.TextField(
         blank=True, help_text=_(
-            'Enter the arguments for the transformation as a YAML '
+            message='Enter the arguments for the transformation as a YAML '
             'dictionary. ie: {"degrees": 180}'
-        ), validators=[YAMLValidator()], verbose_name=_('Arguments')
+        ), validators=[
+            YAMLValidator()
+        ], verbose_name=_(message='Arguments')
     )
     enabled = models.BooleanField(
-        default=True, verbose_name=_('Enabled')
+        default=True, verbose_name=_(message='Enabled')
     )
 
     objects = LayerTransformationManager()
@@ -175,8 +176,8 @@ class LayerTransformation(
     class Meta:
         ordering = ('object_layer__stored_layer__order', 'order',)
         unique_together = ('object_layer', 'order')
-        verbose_name = _('Layer transformation')
-        verbose_name_plural = _('Layer transformations')
+        verbose_name = _(message='Layer transformation')
+        verbose_name_plural = _(message='Layer transformations')
 
     def __str__(self):
         try:
@@ -184,7 +185,7 @@ class LayerTransformation(
                 BaseTransformation.get(name=self.name)
             )
         except KeyError:
-            return ugettext('Unknown transformation class')
+            return gettext(message='Unknown transformation class')
 
     def save(self, *args, **kwargs):
         if not self.order:

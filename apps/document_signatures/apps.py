@@ -2,15 +2,15 @@ import logging
 
 from django.apps import apps
 from django.db.models.signals import post_save, post_delete
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
     menu_list_facet, menu_object, menu_secondary, menu_tools
 )
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 
 from .events import (
     event_detached_signature_created, event_detached_signature_deleted,
@@ -19,9 +19,7 @@ from .events import (
 from .handlers import (
     handler_unverify_key_signatures, handler_verify_key_signatures
 )
-from .hooks import (
-    hook_create_embedded_signature, hook_decrypt_document_file
-)
+from .hooks import hook_create_embedded_signature, hook_decrypt_document_file
 from .links import (
     link_document_file_all_signature_refresh,
     link_document_file_all_signature_verify,
@@ -31,7 +29,7 @@ from .links import (
     link_document_file_signature_detail,
     link_document_file_signature_detached_download,
     link_document_file_signature_list,
-    link_document_file_signature_detached_upload,
+    link_document_file_signature_detached_upload
 )
 from .permissions import (
     permission_document_file_sign_detached,
@@ -39,7 +37,7 @@ from .permissions import (
     permission_document_file_signature_delete,
     permission_document_file_signature_download,
     permission_document_file_signature_upload,
-    permission_document_file_signature_view,
+    permission_document_file_signature_view
 )
 
 logger = logging.getLogger(name=__name__)
@@ -51,7 +49,7 @@ class DocumentSignaturesApp(MayanAppConfig):
     has_rest_api = True
     has_tests = True
     name = 'mayan.apps.document_signatures'
-    verbose_name = _('Document signatures')
+    verbose_name = _(message='Document signatures')
 
     def ready(self):
         super().ready()
@@ -109,21 +107,21 @@ class DocumentSignaturesApp(MayanAppConfig):
         )
 
         SourceColumn(
-            attribute='date_time', label=_('Date and time'),
+            attribute='date_time', label=_(message='Date and time'),
             source=SignatureBaseModel
         )
         SourceColumn(
-            attribute='get_key_id', label=_('Key ID'),
+            attribute='get_key_id', label=_(message='Key ID'),
             source=SignatureBaseModel
         )
         SourceColumn(
-            func=lambda context: context['object'].signature_id or _('None'),
-            label=_('Signature ID'), source=SignatureBaseModel
+            func=lambda context: context['object'].signature_id or _(message='None'),
+            label=_(message='Signature ID'), source=SignatureBaseModel
         )
         SourceColumn(
             func=lambda context: SignatureBaseModel.objects.get_subclass(
                 pk=context['object'].pk
-            ).get_signature_type_display(), label=_('Type'),
+            ).get_signature_type_display(), label=_(message='Type'),
             source=SignatureBaseModel
         )
 
@@ -136,9 +134,13 @@ class DocumentSignaturesApp(MayanAppConfig):
 
         # Signatures
 
-        menu_object.bind_links(
+        menu_list_facet.bind_links(
             links=(
                 link_document_file_signature_detail,
+            ), sources=(SignatureBaseModel,)
+        )
+        menu_object.bind_links(
+            links=(
                 link_document_file_signature_detached_download,
                 link_document_file_signature_detached_delete,
             ), sources=(SignatureBaseModel,)

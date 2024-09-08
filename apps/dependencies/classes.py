@@ -1,25 +1,25 @@
-import json
 from io import BytesIO
+import json
 import logging
 from packaging import version
+from pathlib import Path
 import pkg_resources
 import shutil
 import sys
 
 from furl import furl
 import requests
-from semver import max_satisfying
+from nodesemver import max_satisfying
 
 from django.apps import apps
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.termcolors import colorize
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext, gettext_lazy as _
 
 from mayan.apps.common.class_mixins import AppsModuleLoaderMixin
 from mayan.apps.common.exceptions import ResolverPipelineError
 from mayan.apps.common.utils import ResolverPipelineObjectAttribute
-from mayan.apps.storage.compat import Path
 from mayan.apps.storage.compressed_files import TarArchive
 from mayan.apps.storage.utils import (
     TemporaryDirectory, mkdtemp, patch_files as storage_patch_files
@@ -33,7 +33,7 @@ logger = logging.getLogger(name=__name__)
 
 
 class Provider:
-    """Base provider class"""
+    """Base provider class."""
 
 
 class PyPIRespository(Provider):
@@ -49,7 +49,7 @@ class NPMRegistryRespository(Provider):
 
 
 class OperatingSystemProvider(Provider):
-    """Placeholder for the OS provider"""
+    """Placeholder for the OS provider."""
 
 
 class DependencyGroup:
@@ -215,9 +215,10 @@ class Dependency(AppsModuleLoaderMixin):
 
             print(
                 template.format(
-                    ugettext('Name'), ugettext('Type'), ugettext('Version'),
-                    ugettext('App'), ugettext('Environments'),
-                    ugettext('Other data'), ugettext('Check')
+                    gettext(message='Name'), gettext(message='Type'),
+                    gettext(message='Version'), gettext(message='App'),
+                    gettext(message='Environments'),
+                    gettext(message='Other data'), gettext(message='Check')
                 )
             )
             for result in cls._check_all():
@@ -227,18 +228,30 @@ class Dependency(AppsModuleLoaderMixin):
                     template.format(
                         dependency.name,
                         str(dependency.class_name_verbose_name),
-                        str(dependency.get_version_string()),
-                        str(dependency.app_label_verbose_name()),
-                        str(dependency.get_environments_verbose_name()),
-                        str(dependency.get_other_data()),
-                        str(result['check'])
+                        str(
+                            dependency.get_version_string()
+                        ),
+                        str(
+                            dependency.app_label_verbose_name()
+                        ),
+                        str(
+                            dependency.get_environments_verbose_name()
+                        ),
+                        str(
+                            dependency.get_other_data()
+                        ),
+                        str(
+                            result['check']
+                        )
                     )
                 )
         else:
             for result in cls._check_all():
                 dependency = result['dependency']
                 print('-' * 40)
-                print('* {}'.format(dependency.name))
+                print(
+                    '* {}'.format(dependency.name)
+                )
                 print(
                     'Class: {class_name} | Version: {version} '
                     '| App: {app_label} | Environments: {environments} '
@@ -263,7 +276,9 @@ class Dependency(AppsModuleLoaderMixin):
         dependencies = cls._registry.values()
         if subclass_only:
             dependencies = [
-                dependency for dependency in dependencies if isinstance(dependency, cls)
+                dependency for dependency in dependencies if isinstance(
+                    dependency, cls
+                )
             ]
 
         return Dependency.return_sorted(dependencies=dependencies)
@@ -295,14 +310,14 @@ class Dependency(AppsModuleLoaderMixin):
 
     def __init__(
         self, name, environment=environment_production, app_label=None,
-        copyright_text=None, environments=None, help_text=None, label=None,
+        environments=None, help_text=None, label=None, legal_text=None,
         module=None, replace_list=None, version_string=None
     ):
         self._app_label = app_label
-        self.copyright_text = copyright_text
         self.environments = environments or (environment,)
         self.help_text = help_text
         self.label = label
+        self.legal_text = legal_text
         self.module = module
         self.name = name
         self.package_metadata = None
@@ -313,12 +328,12 @@ class Dependency(AppsModuleLoaderMixin):
         if not app_label:
             if not module:
                 raise DependenciesException(
-                    _('Need to specify at least one: app_label or module.')
+                    _(message='Need to specify at least one: app_label or module.')
                 )
 
         if self.get_pk() in self.__class__._registry:
             raise DependenciesException(
-                _('Dependency "%s" already registered.') % self.name
+                _(message='Dependency "%s" already registered.') % self.name
             )
 
         self.__class__._registry[
@@ -338,41 +353,63 @@ class Dependency(AppsModuleLoaderMixin):
 
     def download(self):
         """
-        Download the dependency from a repository
+        Download the dependency from a repository.
         """
         raise NotImplementedError
 
-    def get_copyright(self):
-        return self.copyright_text or ''
+    def get_copyright_text(self):
+        return ''
+
+    def get_legal_text(self):
+        if self.legal_text:
+            return self.legal_text
+        else:
+            text_legal_list = []
+
+            text_copyright = self.get_copyright_text()
+
+            if text_copyright:
+                text_legal_list.append(text_copyright)
+                text_legal_list.append('')
+
+            text_license = self.get_license_text()
+
+            if text_license:
+                text_legal_list.append(text_license)
+
+            return '\n'.join(text_legal_list)
+
+    def get_license_text(self):
+        return ''
 
     def install(self, force=False):
         print(
-            _('Installing package: %s... ') % self.get_label_full(), end=''
+            _(message='Installing package: %s... ') % self.get_label_full(), end=''
         )
         sys.stdout.flush()
 
         if not force:
             if self.check():
                 print(
-                    _('Already installed.')
+                    _(message='Already installed.')
                 )
             else:
                 self._install()
                 print(
-                    _('Complete.')
+                    _(message='Complete.')
                 )
                 sys.stdout.flush()
         else:
             if self.replace_list:
                 self.patch_files()
                 print(
-                    _('Complete.')
+                    _(message='Complete.')
                 )
                 sys.stdout.flush()
 
             self.patch_files()
             print(
-                _('Complete.')
+                _(message='Complete.')
             )
             sys.stdout.flush()
 
@@ -384,7 +421,7 @@ class Dependency(AppsModuleLoaderMixin):
 
     def check(self):
         """
-        Returns the version found or an exception
+        Returns the version found or an exception.
         """
         if self._check():
             return True
@@ -399,9 +436,9 @@ class Dependency(AppsModuleLoaderMixin):
 
     def check_string_verbose_name(self):
         if self._check():
-            return _('Installed and correct version')
+            return _(message='Installed and correct version')
         else:
-            return _('Missing or incorrect version')
+            return _(message='Missing or incorrect version')
 
     def _check(self):
         raise NotImplementedError
@@ -438,7 +475,7 @@ class Dependency(AppsModuleLoaderMixin):
         )
 
     def get_other_data(self):
-        return _('None')
+        return _(message='None')
 
     def get_pk(self):
         return self.name
@@ -447,10 +484,10 @@ class Dependency(AppsModuleLoaderMixin):
         raise NotImplementedError
 
     def get_version_string(self):
-        return self.version_string or _('Not specified')
+        return self.version_string or _(message='Not specified')
 
     def patch_files(self, path=None, replace_list=None):
-        print(_('Patching files... '), end='')
+        print(_(message='Patching files... '), end='')
 
         try:
             sys.stdout.flush()
@@ -467,20 +504,20 @@ class Dependency(AppsModuleLoaderMixin):
 
     def verify(self):
         """
-        Verify the integrity of the dependency
+        Verify the integrity of the dependency.
         """
         raise NotImplementedError
 
 
-# Depedency subclasses
+# Dependency subclasses.
 
 
 class BinaryDependency(Dependency):
     class_name = 'binary'
     class_name_help_text = _(
-        'Executables that are called directly by the code.'
+        message='Executables that are called directly by the code.'
     )
-    class_name_verbose_name = _('Binary')
+    class_name_verbose_name = _(message='Binary')
     provider_class = OperatingSystemProvider
 
     def __init__(self, *args, **kwargs):
@@ -497,10 +534,10 @@ class BinaryDependency(Dependency):
 class JavaScriptDependency(Dependency):
     class_name = 'javascript'
     class_name_help_text = _(
-        'JavaScript libraries downloaded the from NPM registry and used for '
+        message='JavaScript libraries downloaded the from NPM registry and used for '
         'front-end functionality.'
     )
-    class_name_verbose_name = _('JavaScript')
+    class_name_verbose_name = _(message='JavaScript')
     provider_class = NPMRegistryRespository
 
     def __init__(self, *args, **kwargs):
@@ -532,17 +569,17 @@ class JavaScriptDependency(Dependency):
     def _install(self, include_dependencies=False):
         self.get_metadata()
         print(
-            _('Downloading... '), end=''
+            _(message='Downloading... '), end=''
         )
         sys.stdout.flush()
         self.download()
         print(
-            _('Verifying... '), end=''
+            _(message='Verifying... '), end=''
         )
         sys.stdout.flush()
         self.verify()
         print(
-            _('Extracting... '), end=''
+            _(message='Extracting... '), end=''
         )
         sys.stdout.flush()
         self.extract()
@@ -565,19 +602,22 @@ class JavaScriptDependency(Dependency):
                 for member in archive.members():
                     member_path = (path_temporary / member).resolve()
 
-                    if member_path.parent.is_relative_to(path_temporary):
-                        with archive.open_member(filename=str(member)) as member_archive_file_object:
+                    try:
+                        member_path.parent.relative_to(path_temporary)
+                    except ValueError:
+                        raise DependenciesException(
+                            'Suspicious path traversal: {}. Dependency '
+                            'might be compromised'.format(member)
+                        )
+                    else:
+                        member_filename = str(member)
+                        with archive.open_member(filename=member_filename) as member_archive_file_object:
                             member_path.parent.mkdir(exist_ok=True, parents=True)
                             with member_path.open(mode='wb+') as member_storage_file_object:
                                 shutil.copyfileobj(
                                     fsrc=member_archive_file_object,
                                     fdst=member_storage_file_object
                                 )
-                    else:
-                        raise DependenciesException(
-                            'Suspicious path traversal: {}. Dependency '
-                            'might be compromised'.format(member)
-                        )
 
             self.patch_files(
                 path=temporary_directory, replace_list=replace_list
@@ -585,19 +625,19 @@ class JavaScriptDependency(Dependency):
 
             path_install = self.get_install_path()
 
-            # Clear the installation path of previous content
+            # Clear the installation path of previous content.
             shutil.rmtree(
                 path=str(path_install), ignore_errors=True
             )
 
-            # Scoped packages are nested under a parent directory
-            # create it to avoid rename errors.
+            # Scoped packages are nested under a parent directory create it
+            # to avoid rename errors.
             path_install.mkdir(parents=True)
 
-            # Copy the content under the dependency's extracted content folder
-            # 'package' to the final location.
-            # We do a copy and delete instead of move because os.rename doesn't
-            # support renames across filesystems.
+            # Copy the content under the dependency's extracted content
+            # folder 'package' to the final location.
+            # We do a copy and delete instead of move because os.rename
+            # doesn't support renames across filesystems.
             path_uncompressed_package = Path(temporary_directory, 'package')
             shutil.rmtree(
                 path=str(path_install)
@@ -607,7 +647,7 @@ class JavaScriptDependency(Dependency):
                 dst=str(path_install)
             )
 
-            # Clean up temporary directory used for download
+            # Clean up temporary directory used for download.
             shutil.rmtree(path=self.path_cache, ignore_errors=True)
 
     def download(self):
@@ -626,36 +666,40 @@ class JavaScriptDependency(Dependency):
             versions=versions, range_=version_string, loose=True
         )
 
-    def get_copyright(self):
+    def get_copyright_text(self):
+        package_info = self._read_package_file()
+
+        author = package_info.get(
+            'author', {}
+        )
+
+        try:
+            author = author.get('name')
+        except AttributeError:
+            """It is a single top level entry."""
+
+        author = author or ''
+
+        if author:
+            author = 'Copyright: {}'.format(author)
+
+        return author
+
+    def get_license_text(self):
         path_install_path = self.get_install_path()
 
         for entry in path_install_path.glob(pattern='LICENSE*'):
-            with entry.open(mode='rb') as file_object:
-                return str(
-                    file_object.read()
-                )
-
-        copyright_text = []
+            with entry.open(mode='r') as file_object:
+                return file_object.read()
 
         try:
             package_info = self._read_package_file()
         except FileNotFoundError:
-            return super().get_copyright()
+            return ''
         else:
-            copyright_text.append(
-                package_info.get('license') or package_info.get(
-                    'licenses'
-                )[0]['type']
-            )
-            author = package_info.get('author', {})
-
-            try:
-                author = author.get('name')
-            except AttributeError:
-                pass
-
-            copyright_text.append(author or '')
-            return '\n'.join(copyright_text)
+            return package_info.get('license') or package_info.get(
+                'licenses'
+            )[0]['type']
 
     def get_help_text(self):
         description = None
@@ -748,13 +792,18 @@ class PythonVersion:
 class PythonDependency(Dependency):
     class_name = 'python'
     class_name_help_text = _(
-        'Python packages downloaded from PyPI.'
+        message='Python packages downloaded from PyPI.'
     )
-    class_name_verbose_name = _('Python')
+    class_name_verbose_name = _(message='Python')
     provider_class = PyPIRespository
 
     def __init__(self, *args, **kwargs):
-        self.copyright_attribute = kwargs.pop('copyright_attribute', None)
+        self.attribute_copyright = kwargs.pop(
+            'attribute_copyright', '__copyright__'
+        )
+        self.attribute_license = kwargs.pop(
+            'attribute_license', '__license__'
+        )
         super().__init__(*args, **kwargs)
 
     def _check(self):
@@ -767,11 +816,11 @@ class PythonDependency(Dependency):
         except pkg_resources.VersionConflict:
             return False
 
-    def get_copyright(self):
-        if self.copyright_attribute:
-            return import_string(dotted_path=self.copyright_attribute)
-        else:
-            return super().get_copyright()
+    def get_copyright_text(self):
+        try:
+            return import_string(dotted_path=self.attribute_copyright)
+        except ImportError:
+            return ''
 
     def get_latest_version(self):
         url = 'https://pypi.python.org/pypi/{}/json'.format(self.name)
@@ -782,6 +831,12 @@ class PythonDependency(Dependency):
         versions.sort(key=PythonVersion)
         return versions[-1]
 
+    def get_license_text(self):
+        try:
+            return import_string(dotted_path=self.attribute_license)
+        except ImportError:
+            return ''
+
     def is_latest_version(self):
         return self.version_string == '=={}'.format(
             self.get_latest_version()
@@ -791,9 +846,9 @@ class PythonDependency(Dependency):
 class GoogleFontDependency(Dependency):
     class_name = 'google_font'
     class_name_help_text = _(
-        'Fonts downloaded from fonts.googleapis.com.'
+        message='Fonts downloaded from fonts.googleapis.com.'
     )
-    class_name_verbose_name = _('Google font')
+    class_name_verbose_name = _(message='Google font')
     provider_class = GoogleFontsProvider
     user_agents = {
         'woff2': 'Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0',
@@ -811,12 +866,12 @@ class GoogleFontDependency(Dependency):
 
     def _install(self):
         print(
-            _('Downloading... '), end=''
+            _(message='Downloading... '), end=''
         )
         sys.stdout.flush()
         self.download()
         print(
-            _('Extracting... '), end=''
+            _(message='Extracting... '), end=''
         )
         sys.stdout.flush()
         self.extract()
@@ -826,7 +881,7 @@ class GoogleFontDependency(Dependency):
             mkdtemp()
         )
         # Use .css to keep the same ContentType, otherwise the webserver
-        # will use the generic octet and the browser will ignore the import
+        # will use the generic octet and the browser will ignore the import.
         # https://www.w3.org/TR/2013/CR-css-cascade-3-20131003/#content-type
         self.path_import_file = self.path_cache / 'import.css'
 
@@ -867,7 +922,7 @@ class GoogleFontDependency(Dependency):
     def extract(self, replace_list=None):
         path_install = self.get_install_path()
 
-        # Clear the installation path of previous content
+        # Clear the installation path of previous content.
         shutil.rmtree(
             path=str(path_install), ignore_errors=True
         )
@@ -889,27 +944,27 @@ class GoogleFontDependency(Dependency):
 
 
 DependencyGroup(
-    attribute_name='app_label', label=_('Declared in app'), help_text=_(
-        'Show dependencies by the app that declared them.'
+    attribute_name='app_label', label=_(message='Declared in app'), help_text=_(
+        message='Show dependencies by the app that declared them.'
     ), name='app'
 )
 DependencyGroup(
-    attribute_name='class_name', label=_('Class'), help_text=_(
-        'Show the different classes of dependencies. Classes are usually '
+    attribute_name='class_name', label=_(message='Class'), help_text=_(
+        message='Show the different classes of dependencies. Classes are usually '
         'divided by language or the file types of the dependency.'
     ), name='class'
 )
 DependencyGroup(
-    attribute_name='check_string', label=_('State'), help_text=_(
-        'Show the different states of the dependencies. True means that the '
+    attribute_name='check_string', label=_(message='State'), help_text=_(
+        message='Show the different states of the dependencies. True means that the '
         'dependencies is installed and is of a correct version. False means '
         'the dependencies is missing or an incorrect version is present.'
     ), name='state'
 )
 DependencyGroup(
     allow_multiple=True, attribute_name='get_environments',
-    label=_('Environments'), help_text=_(
-        'Dependencies required for an environment might not be required for '
+    label=_(message='Environments'), help_text=_(
+        message='Dependencies required for an environment might not be required for '
         'another. Example environments: Production, Development.'
     ), name='environment'
 )

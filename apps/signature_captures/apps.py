@@ -1,18 +1,18 @@
 from django.apps import apps
 from django.db.models.signals import post_migrate
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
 from mayan.apps.acls.permissions import (
     permission_acl_edit, permission_acl_view
 )
-from mayan.apps.common.apps import MayanAppConfig
+from mayan.apps.app_manager.apps import MayanAppConfig
 from mayan.apps.common.menus import (
     menu_list_facet, menu_object, menu_secondary
 )
 from mayan.apps.databases.classes import ModelFieldRelated
 from mayan.apps.events.classes import EventModelRegistry, ModelEventType
-from mayan.apps.navigation.classes import SourceColumn
+from mayan.apps.navigation.source_columns import SourceColumn
 from mayan.apps.rest_api.fields import DynamicSerializerField
 
 from .events import (
@@ -38,7 +38,7 @@ class SignatureCapturesApp(MayanAppConfig):
     has_static_media = True
     has_tests = True
     name = 'mayan.apps.signature_captures'
-    verbose_name = _('Signature captures')
+    verbose_name = _(message='Signature captures')
 
     def ready(self):
         super().ready()

@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.dependencies.classes import BinaryDependency, PythonDependency
 
@@ -21,12 +21,12 @@ BinaryDependency(
     ), module=__name__, name='pdftoppm', path=pdftoppm_path
 )
 PythonDependency(
-    copyright_attribute='PIL.__doc__', module=__name__, name='Pillow',
-    version_string='==9.4.0'
+    attribute_copyright='PIL.__doc__', module=__name__, name='Pillow',
+    version_string='==10.4.0'
 )
 PythonDependency(
-    module=__name__, name='PyPDF2', version_string='==1.28.4'
+    module=__name__, name='pypdf', version_string='==4.2.0'
 )
 PythonDependency(
-    module=__name__, name='qrcode', version_string='==7.3.1'
+    module=__name__, name='qrcode', version_string='==7.4.2'
 )

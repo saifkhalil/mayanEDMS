@@ -1,6 +1,6 @@
-from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 from mayan.apps.documents.permissions import permission_document_view
 from mayan.apps.documents.search import search_model_document
+from mayan.apps.documents.tests.base import GenericDocumentViewTestCase
 from mayan.apps.dynamic_search.tests.mixins.base import SearchTestMixin
 
 from ..permissions import permission_signature_capture_view
@@ -12,20 +12,15 @@ from .mixins import SignatureCaptureTestMixin
 class DocumentSignatureCaptureSearchTestCase(
     SignatureCaptureTestMixin, SearchTestMixin, GenericDocumentViewTestCase
 ):
+    _test_search_model = search_model_document
     auto_create_test_document_stub = True
-    auto_upload_test_document = False
     auto_create_test_signature_capture = True
-
-    def _do_test_search(self, query):
-        return self._test_search_backend.search(
-            search_model=search_model_document, query=query,
-            user=self._test_case_user
-        )
+    auto_upload_test_document = False
 
     def test_search_by_text_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__text': self._test_signature_capture.text
             }
@@ -43,7 +38,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__text': self._test_signature_capture.text
             }
@@ -64,7 +59,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__text': self._test_signature_capture.text
             }
@@ -78,7 +73,7 @@ class DocumentSignatureCaptureSearchTestCase(
     def test_search_by_user_first_name_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__first_name': self._test_signature_capture.user.first_name
             }
@@ -96,7 +91,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__first_name': self._test_signature_capture.user.first_name
             }
@@ -117,7 +112,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__first_name': self._test_signature_capture.user.first_name
             }
@@ -131,7 +126,7 @@ class DocumentSignatureCaptureSearchTestCase(
     def test_search_by_user_last_name_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__last_name': self._test_signature_capture.user.last_name
             }
@@ -149,7 +144,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__last_name': self._test_signature_capture.user.last_name
             }
@@ -170,7 +165,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__last_name': self._test_signature_capture.user.last_name
             }
@@ -184,7 +179,7 @@ class DocumentSignatureCaptureSearchTestCase(
     def test_search_by_user_username_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__username': self._test_signature_capture.user.username
             }
@@ -202,7 +197,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__username': self._test_signature_capture.user.username
             }
@@ -223,7 +218,7 @@ class DocumentSignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'signature_captures__user__username': self._test_signature_capture.user.username
             }
@@ -238,20 +233,15 @@ class DocumentSignatureCaptureSearchTestCase(
 class SignatureCaptureSearchTestCase(
     SignatureCaptureTestMixin, SearchTestMixin, GenericDocumentViewTestCase
 ):
+    _test_search_model = search_model_signature_capture
     auto_create_test_document_stub = True
     auto_upload_test_document = False
     auto_create_test_signature_capture = True
 
-    def _do_test_search(self, query):
-        return self._test_search_backend.search(
-            search_model=search_model_signature_capture, query=query,
-            user=self._test_case_user
-        )
-
     def test_search_by_document_label_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'document__label': self._test_signature_capture.document.label
             }
@@ -269,7 +259,7 @@ class SignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'document__label': self._test_signature_capture.document.label
             }
@@ -283,7 +273,7 @@ class SignatureCaptureSearchTestCase(
     def test_search_by_document_type_label_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'document__document_type__label': self._test_signature_capture.document.document_type.label
             }
@@ -301,7 +291,7 @@ class SignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={
                 'document__document_type__label': self._test_signature_capture.document.document_type.label
             }
@@ -315,7 +305,7 @@ class SignatureCaptureSearchTestCase(
     def test_search_by_text_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'text': self._test_signature_capture.text}
         )
         self.assertTrue(self._test_signature_capture not in queryset)
@@ -331,7 +321,7 @@ class SignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'text': self._test_signature_capture.text}
         )
 
@@ -343,7 +333,7 @@ class SignatureCaptureSearchTestCase(
     def test_search_by_user_username_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'user__username': self._test_case_user.username}
         )
 
@@ -360,7 +350,7 @@ class SignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'user__username': self._test_case_user.username}
         )
 
@@ -372,7 +362,7 @@ class SignatureCaptureSearchTestCase(
     def test_search_by_user_first_name_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'user__first_name': self._test_case_user.first_name}
         )
 
@@ -389,7 +379,7 @@ class SignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'user__first_name': self._test_case_user.first_name}
         )
 
@@ -401,7 +391,7 @@ class SignatureCaptureSearchTestCase(
     def test_search_by_user_last_name_no_permission(self):
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'user__last_name': self._test_case_user.last_name}
         )
 
@@ -418,7 +408,7 @@ class SignatureCaptureSearchTestCase(
 
         self._clear_events()
 
-        queryset = self._do_test_search(
+        saved_resultset, queryset = self._do_test_search(
             query={'user__last_name': self._test_case_user.last_name}
         )
 
