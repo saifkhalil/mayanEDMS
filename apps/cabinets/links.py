@@ -90,6 +90,6 @@ link_cabinet_view = Link(
 
 link_cabinet_users = Link(
     args='object.pk', icon=icon_group_list,
-    permissions=(permission_cabinet_edit,), text=_('Assigned Users'),
+    permission=(permission_cabinet_edit,), text=_('Assigned Users'),
     view='cabinets:cabinet_user_add'
 )
