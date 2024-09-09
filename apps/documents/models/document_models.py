@@ -160,7 +160,7 @@ class Document(
         new_document = not self.pk
 
         self.description = self.description or ''
-		self.create_by = user
+        self.create_by = user
         try:
 		
             mycabinet = str(user.user_cabinets.first().label)

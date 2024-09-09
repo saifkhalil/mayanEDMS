@@ -171,7 +171,7 @@ class SearchResultViewMixin(SearchQueryViewMixin):
 
         if query_clean and not query_is_empty:
             try:
-				cabinets = Cabinet.objects.filter(users=self.request.user)
+                cabinets = Cabinet.objects.filter(users=self.request.user)
                 search_backend = SearchBackend.get_instance()
                 saved_resultset, queryset = search_backend.search(
                     search_model=self.search_model,

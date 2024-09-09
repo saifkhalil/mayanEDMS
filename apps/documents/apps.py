@@ -334,10 +334,7 @@ class DocumentsApp(MayanAppConfig):
         )
 
         # DocumentFile
-        SourceColumn(
-            func=lambda context: context['object'].from_cabinet,
-            label=_('From'), include_label=True, order=-10, source=Document
-        )
+
         SourceColumn(
             attribute='datetime_created', include_label=True,
             is_sortable=True, name='datetime_created',
@@ -988,7 +985,10 @@ class DocumentsApp(MayanAppConfig):
         model_query_fields_document.add_select_related_field(
             field_name='document_type'
         )
-
+        SourceColumn(
+            func=lambda context: context['object'].from_cabinet,
+            label=_('From'), include_label=True, order=-10, source=Document
+        )
         SourceColumn(
             attribute='datetime_created', include_label=True,
             is_sortable=True, name='datetime_created', source=Document

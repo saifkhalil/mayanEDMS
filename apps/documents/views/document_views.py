@@ -76,14 +76,14 @@ class DocumentListView(SingleObjectListView):
         }
 
     def get_source_queryset(self):
-		cabinets = Cabinet.objects.filter(users=self.request.user)
+        cabinets = Cabinet.objects.filter(users=self.request.user)
         queryset = ModelQueryFields.get(model=Document).get_queryset()
         queryset = self.get_document_queryset().filter(pk__in=queryset)
         if self.request.user.is_superuser:
             queryset = queryset
         else:
             queryset = queryset.filter(cabinets__in=cabinets)
-        return queryset
+            return queryset
         return self.get_document_queryset().filter(pk__in=queryset)
 
 class MyDocumentListView(SingleObjectListView):

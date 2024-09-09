@@ -23,7 +23,7 @@ def get_cabinet(user):
     if cabinet:
         return cabinet
     else:
-        return _((message='Unknown Cabinet')
+        return _(message='Unknown Cabinet')
 
 
 def get_language_choices():

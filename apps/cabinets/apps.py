@@ -27,7 +27,7 @@ from .links import (
     link_cabinet_edit, link_cabinet_list, link_cabinet_view,
     link_custom_acl_list, link_document_cabinet_add,
     link_document_cabinet_list, link_document_cabinet_remove,
-    link_document_multiple_cabinet_add, link_multiple_document_cabinet_remove
+    link_document_multiple_cabinet_add, link_multiple_document_cabinet_remove,
 	link_cabinet_users
 )
 from .menus import menu_cabinets
