@@ -6,7 +6,7 @@ from django.template import RequestContext
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import RedirectView
-
+from mayan.apps.cabinets.models import Cabinet
 from mayan.apps.views.generics import (
     ConfirmView, FormView, SingleObjectListView
 )
@@ -188,10 +188,12 @@ class SearchResultsView(
 
     def get_source_queryset(self):
         try:
+            cabinets = Cabinet.objects.filter(users=self.request.user)
             return self.get_search_queryset()
         except DynamicSearchException as exception:
             if settings.DEBUG or settings.TESTING:
                 raise
 
             messages.error(message=exception, request=self.request)
+            cabinets = Cabinet.objects.filter(users=self.request.user)
             return self.search_model.get_queryset().none()

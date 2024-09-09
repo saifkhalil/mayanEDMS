@@ -18,6 +18,20 @@ permission_group_edit = namespace.add_permission(
 permission_group_view = namespace.add_permission(
     label=_('View existing groups'), name='group_view'
 )
+
+permission_cabinet_create = namespace.add_permission(
+    label=_('Create new cabinets'), name='cabinet_create'
+)
+permission_cabinet_delete = namespace.add_permission(
+    label=_('Delete existing cabinets'), name='cabinet_delete'
+)
+permission_cabinet_edit = namespace.add_permission(
+    label=_('Edit existing cabinets'), name='cabinet_edit'
+)
+permission_cabinet_view = namespace.add_permission(
+    label=_('View existing cabinets'), name='cabinet_view'
+)
+
 permission_user_create = namespace.add_permission(
     label=_('Create new users'), name='user_create'
 )

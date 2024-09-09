@@ -9,7 +9,7 @@ from .events import (
     event_group_created, event_group_edited, event_user_created,
     event_user_edited
 )
-from .permissions import permission_group_view, permission_user_view
+from .permissions import permission_group_view, permission_user_view, permission_cabinet_view
 from .querysets import get_user_queryset
 
 
@@ -137,6 +137,31 @@ def method_user_groups_remove(self, queryset, user=None):
             action_object=model_instance, actor=user, target=self
         )
 
+
+def method_user_get_cabinets(self, user, permission=permission_cabinet_view):
+    AccessControlList = apps.get_model(
+        app_label='acls', model_name='AccessControlList'
+    )
+
+    return AccessControlList.objects.restrict_queryset(
+        permission=permission, queryset=self.cabients.all(), user=user
+    )
+
+
+def method_user_cabinets_add(self, queryset, user=None):
+    for model_instance in queryset:
+        self.cabinets.add(model_instance)
+        event_user_edited.commit(
+            action_object=model_instance, actor=user, target=self
+        )
+
+
+def method_user_cabinets_remove(self, queryset, user=None):
+    for model_instance in queryset:
+        self.cabinets.remove(model_instance)
+        event_user_edited.commit(
+            action_object=model_instance, actor=user, target=self
+        )
 
 def get_method_user_save():
     user_save_original = get_user_model().save

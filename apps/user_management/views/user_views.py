@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from mayan.apps.cabinets.models import Cabinet
 from django.http import HttpResponseRedirect
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
@@ -14,13 +15,15 @@ from mayan.apps.views.view_mixins import ExternalObjectViewMixin
 from ..icons import (
     icon_current_user_detail, icon_user_create, icon_user_edit,
     icon_user_group_list, icon_user_list, icon_user_single_delete,
-    icon_user_set_options, icon_user_setup
+    icon_user_set_options, icon_user_setup,icon_user_cabinet_list
 )
 from ..links import link_user_create
 from ..literals import FIELDS_ALL, FIELDSETS_ALL, FIELDSETS_USER
 from ..permissions import (
     permission_group_edit, permission_user_create, permission_user_delete,
-    permission_user_edit, permission_user_view
+    permission_user_edit, permission_user_view,
+    permission_cabinet_create, permission_cabinet_delete, permission_cabinet_edit,
+    permission_cabinet_view
 )
 from ..querysets import get_user_queryset
 
@@ -149,6 +152,37 @@ class UserGroupAddRemoveView(AddRemoveView):
     def get_main_object_source_queryset(self):
         return get_user_queryset(user=self.request.user)
 
+
+
+class UserCabinetAddRemoveView(AddRemoveView):
+    list_available_title = _('Available cabinets')
+    # Translators: "User cabinets" here refer to the list of cabinets of a
+    # specific user. The user's cabinet membership.
+    list_added_title = _('User cabinets')
+    main_object_method_add_name = 'cabinets_add'
+    main_object_method_remove_name = 'cabinets_remove'
+    main_object_permission = permission_user_edit
+    main_object_pk_url_kwarg = 'user_id'
+    secondary_object_model = Cabinet
+    secondary_object_permission = permission_cabinet_edit
+    view_icon = icon_user_cabinet_list
+
+    def get_actions_extra_kwargs(self):
+        return {'user': self.request.user}
+
+    def get_extra_context(self):
+        return {
+            'object': self.main_object,
+            'title': _('Cabinets of user: %s') % self.main_object
+        }
+
+    def get_list_added_queryset(self):
+        return self.main_object.get_cabinets(
+            permission=permission_cabinet_edit, user=self.request.user
+        )
+
+    def get_main_object_source_queryset(self):
+        return get_user_queryset(user=self.request.user)
 
 class UserListView(SingleObjectListView):
     object_permission = permission_user_view

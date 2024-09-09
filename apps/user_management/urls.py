@@ -11,7 +11,8 @@ from .views.group_views import (
 )
 from .views.user_views import (
     UserCreateView, UserDeleteView, UserDetailView,
-    UserEditView, UserGroupAddRemoveView, UserListView, UserOptionsEditView
+    UserEditView, UserGroupAddRemoveView, UserListView, UserOptionsEditView,
+    UserCabinetAddRemoveView
 )
 
 urlpatterns_groups = [
@@ -71,6 +72,10 @@ urlpatterns_users = [
     url(
         regex=r'^users/(?P<user_id>\d+)/groups/$', name='user_groups',
         view=UserGroupAddRemoveView.as_view()
+    ),
+    url(
+        regex=r'^users/(?P<user_id>\d+)/cabients/$', name='user_cabients',
+        view=UserCabinetAddRemoveView.as_view()
     ),
     url(
         regex=r'^users/(?P<user_id>\d+)/options/$', name='user_options',

@@ -3,6 +3,7 @@ from mayan.apps.appearance.classes import Icon
 # App
 
 icon_group = Icon(driver_name='fontawesome', symbol='users')
+icon_cabient = Icon(driver_name='fontawesome', symbol='users')
 icon_user_setup = Icon(driver_name='fontawesome', symbol='user')
 
 # Current user
@@ -22,7 +23,6 @@ icon_group_multiple_delete = Icon(driver_name='fontawesome', symbol='times')
 icon_group_setup = Icon(driver_name='fontawesome', symbol='users')
 icon_group_single_delete = Icon(driver_name='fontawesome', symbol='times')
 icon_group_user_list = Icon(driver_name='fontawesome', symbol='user')
-
 # User
 
 icon_user_create = Icon(
@@ -31,6 +31,7 @@ icon_user_create = Icon(
 )
 icon_user_edit = Icon(driver_name='fontawesome', symbol='pencil-alt')
 icon_user_group_list = icon_group
+icon_user_cabinet_list = icon_cabient
 icon_user_list = Icon(driver_name='fontawesome', symbol='user')
 icon_user_multiple_delete = Icon(driver_name='fontawesome', symbol='times')
 icon_user_multiple_set_password = Icon(

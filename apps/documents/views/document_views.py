@@ -53,6 +53,8 @@ class DocumentListView(SingleObjectListView):
             return super().get_context_data(**kwargs)
 
     def get_document_queryset(self):
+    #    cabinets = Cabinet.objects.filter(users=self.request.user)
+    #    return Document.valid.all().filter(cabinets__in=cabinets)
        if self.request.user.is_superuser:
            return Document.valid.all()
        else:
