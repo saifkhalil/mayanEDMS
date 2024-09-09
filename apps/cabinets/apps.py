@@ -230,7 +230,7 @@ class CabinetsApp(MayanAppConfig):
         menu_object.bind_links(
             exclude=(DocumentCabinet,),
             links=(
-                link_cabinet_delete, link_cabinet_edit,link_cabinet_users
+                link_cabinet_delete, link_cabinet_edit,link_cabinet_users,
                 link_cabinet_child_add
             ), sources=(Cabinet,)
         )
