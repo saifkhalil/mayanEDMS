@@ -406,6 +406,7 @@ urlpatterns_documents = [
     ),
 	re_path(
         route=r'^mydocuments/$', name='my_document_list',
+		name='my_documents_list',
         view=MyDocumentListView.as_view()
     ),
     re_path(

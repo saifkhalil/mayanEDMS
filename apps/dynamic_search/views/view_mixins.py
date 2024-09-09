@@ -178,11 +178,6 @@ class SearchResultViewMixin(SearchQueryViewMixin):
                     store_resultset=store_resultset, query=query_clean,
                     user=self.request.user
                 )
-#				my_search_model=self.search_model.full_name
-#				if my_serarch_model == 'documents.documentfilepagesearchresult':
-#                    queryset = queryset.filter(document_file__document__cabinets__in=cabinets)
-#                else:    
-#                    queryset = queryset.filter(cabinets__in=cabinets)
             except DynamicSearchException as exception:
                 if settings.DEBUG or settings.TESTING:
                     raise

@@ -87,9 +87,8 @@ link_cabinet_view = Link(
     permission=permission_cabinet_view, text=_(message='Details'),
     view='cabinets:cabinet_view'
 )
-
 link_cabinet_users = Link(
-    args='object.pk', icon=icon_group_list,
-    permission=(permission_cabinet_edit,), text=_('Assigned Users'),
-    view='cabinets:cabinet_user_add'
+   args='object.pk', icon=icon_group_list,
+   permissions=(permission_cabinet_edit,), text=_('Assigned Users'),
+   view='cabinets:cabinet_user_add'
 )

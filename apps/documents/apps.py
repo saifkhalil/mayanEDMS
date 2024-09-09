@@ -171,6 +171,7 @@ from .literals import (
     IMAGE_ERROR_DOCUMENT_VERSION_PAGE_TRANSFORMATION_ERROR
 )
 from .menus import menu_documents
+from .models.document_models import RecentlyCreatedDocument
 
 # Documents
 
@@ -987,7 +988,7 @@ class DocumentsApp(MayanAppConfig):
         )
         SourceColumn(
             func=lambda context: context['object'].from_cabinet,
-            label=_('From'), include_label=True, order=-10, source=Document
+            label=_(message='From'), include_label=True, order=-10, source=Document
         )
         SourceColumn(
             attribute='datetime_created', include_label=True,

@@ -83,7 +83,7 @@ class DocumentListView(SingleObjectListView):
             queryset = queryset
         else:
             queryset = queryset.filter(cabinets__in=cabinets)
-            return queryset
+        return queryset
         return self.get_document_queryset().filter(pk__in=queryset)
 
 class MyDocumentListView(SingleObjectListView):

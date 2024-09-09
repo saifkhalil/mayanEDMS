@@ -128,13 +128,8 @@ class TagDocumentListView(ExternalObjectViewMixin, DocumentListView):
                 user=self.request.user
             ).values('pk')
         )
-		if self.request.user.is_superuser:
-           return Document.valid.filter(
-            pk__in=self.get_tag().get_documents(
-                permission=permission_document_view,
-                user=self.request.user
-            ).values('pk')
-        )
+        if self.request.user.is_superuser:
+            return Document.valid.filter(pk__in=self.get_tag().get_documents(permission=permission_document_view,user=self.request.user).values('pk'))
         else:
            cabinets = Cabinet.objects.filter(users=self.request.user)
            return Document.valid.filter(
