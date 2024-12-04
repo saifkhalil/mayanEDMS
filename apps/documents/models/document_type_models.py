@@ -26,6 +26,12 @@ from .document_type_model_mixins import DocumentTypeBusinessLogicMixin
 __all__ = ('DocumentType', 'DocumentTypeFilename')
 
 
+doc_flow = (
+    ("None", _("None")),
+    ("Incomming", _("Incomming")),
+    ("Outgoing", _("Outgoing")),
+)
+
 class DocumentType(
     DocumentTypeBusinessLogicMixin, ExtraDataModelMixin, models.Model
 ):
@@ -72,6 +78,8 @@ class DocumentType(
             'Filename generator backend arguments'
         )
     )
+
+    doc_flow = models.CharField(choices=doc_flow,verbose_name=_('Document Flow'), max_length=20)
 
     objects = DocumentTypeManager()
 

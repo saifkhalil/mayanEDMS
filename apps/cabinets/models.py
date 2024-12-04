@@ -40,6 +40,9 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
 
     users = models.ManyToManyField(related_name='user_cabinets',to=settings.AUTH_USER_MODEL, verbose_name=_('Users'))
 
+    incomming = models.IntegerField(default=1, verbose_name=_('Incomming Number'))    
+    outgoing = models.IntegerField(default=1, verbose_name=_('Outgoing Number'))  
+
     class MPTTMeta:
         order_insertion_by = ('label',)
 

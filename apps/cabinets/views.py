@@ -44,7 +44,7 @@ logger = logging.getLogger(name=__name__)
 
 
 class CabinetCreateView(SingleObjectCreateView):
-    fields = ('label',)
+    fields = ('label', 'incomming', 'outgoing' )
     model = Cabinet
     post_action_redirect = reverse_lazy(viewname='cabinets:cabinet_list')
     view_icon = icon_cabinet_create
@@ -60,7 +60,7 @@ class CabinetCreateView(SingleObjectCreateView):
 
 
 class CabinetChildAddView(ExternalObjectViewMixin, SingleObjectCreateView):
-    fields = ('label',)
+    fields = ('label', 'incomming', 'outgoing' )
     external_object_class = Cabinet
     external_object_permission = permission_cabinet_create
     external_object_pk_url_kwarg = 'cabinet_id'
@@ -155,7 +155,7 @@ class CabinetDetailView(ExternalObjectViewMixin, DocumentListView):
 
 
 class CabinetEditView(SingleObjectEditView):
-    fields = ('label',)
+    fields = ('label', 'incomming', 'outgoing' )
     model = Cabinet
     object_permission = permission_cabinet_edit
     post_action_redirect = reverse_lazy(viewname='cabinets:cabinet_list')

@@ -84,7 +84,7 @@ class DocumentTypeListView(SingleObjectListView):
 
 
 class DocumentTypeCreateView(SingleObjectCreateView):
-    fields = ('label',)
+    fields = ('label','doc_flow')
     model = DocumentType
     post_action_redirect = reverse_lazy(
         viewname='documents:document_type_list'
@@ -121,7 +121,7 @@ class DocumentTypeDeleteView(SingleObjectDeleteView):
 
 
 class DocumentTypeEditView(SingleObjectEditView):
-    fields = ('label',)
+    fields = ('label','doc_flow')
     model = DocumentType
     object_permission = permission_document_type_edit
     pk_url_kwarg = 'document_type_id'

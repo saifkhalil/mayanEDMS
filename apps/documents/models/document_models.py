@@ -99,6 +99,8 @@ class Document(
         verbose_name=_('Created By')
     )
     from_cabinet = models.CharField(blank=True, default='', help_text=_('From Cabinet.'), max_length=200, verbose_name=_('Cabinet'))
+    number = models.IntegerField(default=0,verbose_name=_('Document Number'),help_text=_("Document Number"))
+
 
     objects = DocumentManager()
     trash = TrashCanManager()
@@ -169,8 +171,20 @@ class Document(
         )
         self.create_by = user
         try:
-            mycabinet = str(user.user_cabinets.first().label)
-            self.from_cabinet = mycabinet
+            mycabinet = user.user_cabinets.first()
+            mycabinet_label = str(mycabinet.label)
+            doc_type_flow = self.document_type.doc_flow
+            if doc_type_flow == 'Incomming':
+                number = mycabinet.incomming
+                self.number = number
+                mycabinet.incomming = number+1
+                mycabinet.save()
+            if doc_type_flow == 'Outgoing':
+                number = mycabinet.outgoing
+                self.number = number
+                mycabinet.outgoing = number+1
+                mycabinet.save()
+            self.from_cabinet = mycabinet_label
         except:
             self.from_cabinet = ''
         super().save(*args, **kwargs)

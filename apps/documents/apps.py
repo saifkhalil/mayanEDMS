@@ -570,6 +570,10 @@ class DocumentsApp(MayanAppConfig):
             func=lambda context: context['object'].from_cabinet,
             label=_('From'), include_label=True, order=-10, source=Document
         )
+        SourceColumn(
+            func=lambda context: context['object'].number,
+            label=_('Number'), include_label=True, order=-10, source=Document
+        )
 
         # FavoriteDocumentProxy
 
