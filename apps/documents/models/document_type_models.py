@@ -79,7 +79,7 @@ class DocumentType(
         )
     )
 
-    doc_flow = models.CharField(choices=doc_flow,verbose_name=_('Document Flow'), max_length=20)
+    doc_flow = models.CharField(choices=doc_flow,verbose_name=_('Document Flow'), max_length=20,default="None")
 
     objects = DocumentTypeManager()
 
