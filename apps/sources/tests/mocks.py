@@ -1,4 +1,4 @@
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes, force_str
 
 from .literals import TEST_EMAIL_BASE64_FILENAME, TEST_STAGING_PREVIEW_WIDTH
 
@@ -92,7 +92,7 @@ class MockIMAPServer:
                 flag_modified.append(message)
 
             message_number = message.get_number()
-            message_numbers.append(force_text(s=message_number))
+            message_numbers.append(force_str(s=message_number))
             uid = message.uid
             uids.append(uid)
             body = TEST_EMAIL_BASE64_FILENAME
@@ -123,7 +123,7 @@ class MockIMAPServer:
         for message in self.mailbox_selected.get_messages():
             if '\\Deleted' in message.flags:
                 result.append(
-                    force_text(s=message.get_number())
+                    force_str(s=message.get_number())
                 )
                 message.delete()
 
@@ -165,7 +165,7 @@ class MockIMAPServer:
 
         message_sequences = []
         for message in results:
-            message_sequences.append(force_text(s=message.get_number()))
+            message_sequences.append(force_str(s=message.get_number()))
 
         return ('OK', ' '.join(message_sequences))
 

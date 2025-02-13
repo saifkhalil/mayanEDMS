@@ -4,7 +4,7 @@ from shutil import copyfileobj
 import subprocess
 
 from django.apps import apps
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.converter.classes import ConverterBase
@@ -175,11 +175,11 @@ class PopplerParser(Parser):
                 return ''
 
             if output[-3:] == b'\x0a\x0a\x0c':
-                return force_text(
+                return force_str(
                     s=output[:-3]
                 )
 
-            return force_text(s=output)
+            return force_str(s=output)
 
 
 class OfficePopplerParser(PopplerParser):

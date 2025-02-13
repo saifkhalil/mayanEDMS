@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.models.document_file_page_models import DocumentFilePage
@@ -32,7 +32,7 @@ class DocumentFilePageContent(models.Model):
         verbose_name_plural = _('Document file page contents')
 
     def __str__(self):
-        return force_text(s=self.document_file_page)
+        return force_str(s=self.document_file_page)
 
 
 class DocumentTypeSettings(models.Model):

@@ -3,7 +3,7 @@ import logging
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.functional import classproperty
 from django.utils.translation import gettext_lazy as _
 
@@ -177,7 +177,7 @@ class ModelAttribute:
                 self.name if show_name else self.label, self.description
             )
         else:
-            return force_text(s=self.name if show_name else self.label)
+            return force_str(s=self.name if show_name else self.label)
 
 
 class ModelBaseBackend(BaseBackend):

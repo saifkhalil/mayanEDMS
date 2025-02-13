@@ -9,7 +9,7 @@ import sys
 import yaml
 
 from django.conf import settings
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes, force_str
 from django.utils.functional import Promise
 from django.utils.translation import gettext_lazy as _
 
@@ -90,7 +90,7 @@ class SettingNamespace(AppsModuleLoaderMixin):
         self._settings = []
 
     def __str__(self):
-        return force_text(s=self.label)
+        return force_str(s=self.label)
 
     def add_setting(self, **kwargs):
         return Setting(namespace=self, **kwargs)
@@ -206,7 +206,7 @@ class Setting:
         )
         # safe_dump returns bytestrings
         # Disregard the last 3 dots that mark the end of the YAML document
-        if force_text(s=result).endswith('...\n'):
+        if force_str(s=result).endswith('...\n'):
             result = result[:-4]
 
         return result
@@ -263,7 +263,7 @@ class Setting:
 
     @classmethod
     def get_hash(cls):
-        return force_text(
+        return force_str(
             s=hashlib.sha256(
                 string=force_bytes(
                     s=cls.dump_data()
@@ -341,7 +341,7 @@ class Setting:
         self.__class__._registry[global_name] = self
 
     def __str__(self):
-        return force_text(s=self.global_name)
+        return force_str(s=self.global_name)
 
     def cache_value(self, global_name=None, default_override=None):
         global_name = global_name or self.global_name

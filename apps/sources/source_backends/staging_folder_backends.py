@@ -14,7 +14,7 @@ from django.contrib import messages
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.http import Http404, StreamingHttpResponse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django.views.generic.list import MultipleObjectMixin
@@ -88,7 +88,7 @@ class StagingFolderFile:
             )
 
     def __str__(self):
-        return force_text(s=self.filename)
+        return force_str(s=self.filename)
 
     def as_file(self):
         return File(

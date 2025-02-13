@@ -2,7 +2,7 @@ import logging
 
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.permissions.models import Role
@@ -193,7 +193,7 @@ class ACLPermissionAddRemoveView(AddRemoveView):
             namespaces_dictionary[
                 permission.volatile_permission.namespace.label
             ].append(
-                (permission.pk, force_text(s=permission))
+                (permission.pk, force_str(s=permission))
             )
 
         # Sort permissions by their translatable namespace label

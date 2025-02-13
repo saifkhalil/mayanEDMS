@@ -1,5 +1,5 @@
 from django import forms
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _, ugettext
@@ -32,7 +32,7 @@ class DocumentFileContentForm(forms.Form):
             else:
                 content.append(
                     conditional_escape(
-                        text=force_text(s=page_content)
+                        text=force_str(s=page_content)
                     )
                 )
                 content.append(
@@ -81,7 +81,7 @@ class DocumentFilePageContentForm(forms.Form):
             pass
         else:
             content = conditional_escape(
-                text=force_text(s=page_content)
+                text=force_str(s=page_content)
             )
 
         self.fields['contents'].initial = mark_safe(s=content)

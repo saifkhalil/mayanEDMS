@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.django_gpg.exceptions import NeedPassphrase, PassphraseError
@@ -230,7 +230,7 @@ class DocumentFileDetachedSignatureDownloadView(SingleObjectDownloadView):
         return self.object.signature_file
 
     def get_download_filename(self):
-        return force_text(s=self.object)
+        return force_str(s=self.object)
 
     def get_source_queryset(self):
         document_file_queryset = DocumentFile.valid.all()

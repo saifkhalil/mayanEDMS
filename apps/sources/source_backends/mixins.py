@@ -3,7 +3,7 @@ import logging
 
 from django import forms
 from django.apps import apps
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import ugettext, gettext_lazy as _
 
 from mayan.apps.documents.models.document_file_models import DocumentFile
@@ -231,7 +231,7 @@ class SourceBackendInteractiveMixin:
 
     def get_document_label(self):
         return self.process_kwargs['forms']['document_form'].get_final_label(
-            filename=force_text(self.shared_uploaded_file)
+            filename=force_str(self.shared_uploaded_file)
         )
 
     def get_document_language(self):

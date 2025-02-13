@@ -3,7 +3,7 @@ import bleach
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.events.classes import EventManagerSave
@@ -32,7 +32,7 @@ class Theme(models.Model):
         verbose_name_plural = _('Themes')
 
     def __str__(self):
-        return force_text(s=self.label)
+        return force_str(s=self.label)
 
     def get_absolute_url(self):
         return reverse(
@@ -74,7 +74,7 @@ class UserThemeSetting(models.Model):
         verbose_name_plural = _('User theme settings')
 
     def __str__(self):
-        return force_text(s=self.user)
+        return force_str(s=self.user)
 
     @method_event(
         event_manager_class=EventManagerSave,

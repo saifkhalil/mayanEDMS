@@ -7,7 +7,7 @@ from flanker import mime
 
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes, force_str
 from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.serialization import yaml_load
@@ -652,7 +652,7 @@ class SourceBackendPOP3Email(
                 logger.debug('message_size: %s', message_size)
 
                 message_lines = server.retr(which=message_number)[1]
-                message_complete = force_text(
+                message_complete = force_str(
                     s=b'\n'.join(message_lines)
                 )
 

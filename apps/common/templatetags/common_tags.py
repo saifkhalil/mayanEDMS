@@ -1,7 +1,7 @@
 import logging
 
 from django.template import Library
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 import mayan
 
@@ -33,7 +33,7 @@ def common_get_object_verbose_name(obj):
 
 @register.filter
 def common_get_type(value):
-    return force_text(s=type(value))
+    return force_str(s=type(value))
 
 
 @register.filter
