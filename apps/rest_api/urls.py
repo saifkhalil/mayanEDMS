@@ -1,4 +1,4 @@
-from django.urls import re_path import include, url
+from django.urls import re_path
 
 from .api_views import (
     APIRoot, APIVersionRoot, BatchRequestAPIView, BrowseableObtainAuthToken,

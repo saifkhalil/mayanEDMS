@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from django import apps
-from django.urls import re_path import include, url
+from django.urls import re_path
 from django.contrib import admin
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _

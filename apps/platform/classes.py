@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from django.conf import settings
-from django.urls import re_path import include, url
+from django.urls import re_path
 from django.template import loader
 from django.template.base import Template
 from django.template.context import Context
