@@ -41,8 +41,8 @@ from .methods import (
     get_method_group_init, get_method_group_save, get_method_user_init,
     get_method_user_save, method_group_get_absolute_re_path,
     method_group_get_users, method_group_users_add,
-    method_group_users_remove, method_user_get_absolute_api_url,
-    method_user_get_absolute_url, method_user_get_groups,
+    method_group_users_remove, method_user_get_absolute_api_re_path,
+    method_user_get_absolute_re_path, method_user_get_groups,
     method_user_groups_add, method_user_groups_remove
 )
 from .permissions import (
@@ -82,7 +82,7 @@ class UserManagementApp(MayanAppConfig):
             name='__init__', value=get_method_group_init()
         )
         Group.add_to_class(
-            name='get_absolute_url', value=method_group_get_absolute_re_path
+            name='get_absolute_re_path', value=method_group_get_absolute_re_path
         )
         Group.add_to_class(
             name='get_users', value=method_group_get_users
@@ -125,11 +125,11 @@ class UserManagementApp(MayanAppConfig):
             name='__init__', value=get_method_user_init()
         )
         User.add_to_class(
-            name='get_absolute_api_url',
-            value=method_user_get_absolute_api_url
+            name='get_absolute_api_re_path',
+            value=method_user_get_absolute_api_re_path
         )
         User.add_to_class(
-            name='get_absolute_url', value=method_user_get_absolute_url
+            name='get_absolute_re_path', value=method_user_get_absolute_re_path
         )
         User.add_to_class(
             name='get_groups', value=method_user_get_groups
