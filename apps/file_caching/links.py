@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.navigation.classes import Link
 from mayan.apps.navigation.utils import get_content_type_kwargs_factory

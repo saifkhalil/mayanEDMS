@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.document_states.classes import WorkflowAction
 from mayan.apps.documents.models.document_version_page_models import DocumentVersionPage

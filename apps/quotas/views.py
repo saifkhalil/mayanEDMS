@@ -1,7 +1,7 @@
 from django.http import Http404, HttpResponseRedirect
 from django.template import RequestContext
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import (
     FormView, SingleObjectDeleteView, SingleObjectDynamicFormCreateView,

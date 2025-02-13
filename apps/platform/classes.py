@@ -7,7 +7,7 @@ from django.template import loader
 from django.template.base import Template
 from django.template.context import Context
 from django.utils.html import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.menus import menu_tools
 from mayan.apps.common.serialization import yaml_dump, yaml_load

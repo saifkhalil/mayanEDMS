@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.templatetags.static import static
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from stronghold.views import StrongholdPublicMixin

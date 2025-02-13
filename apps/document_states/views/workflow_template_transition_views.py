@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.events.classes import EventType
 from mayan.apps.events.models import StoredEventType

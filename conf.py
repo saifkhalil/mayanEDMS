@@ -2,7 +2,7 @@
 This module should be called settings.py but is named conf.py to avoid a
 clash with the mayan/settings/* module
 """
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.smart_settings.classes import SettingNamespace
 

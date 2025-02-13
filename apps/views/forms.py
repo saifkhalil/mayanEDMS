@@ -13,7 +13,7 @@ from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.forms import Form as DjangoForm, ModelForm as DjangoModelForm
 from django.forms.models import ModelFormMetaclass
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.utils import resolve_attribute
 

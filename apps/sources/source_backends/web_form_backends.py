@@ -1,7 +1,7 @@
 import logging
 
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
 from rest_framework.generics import get_object_or_404 as rest_get_object_or_404

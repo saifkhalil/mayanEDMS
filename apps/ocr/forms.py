@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext_lazy as _, ugettext
 
 from mayan.apps.views.widgets import TextAreaDiv
 

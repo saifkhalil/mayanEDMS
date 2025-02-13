@@ -2,7 +2,7 @@ import logging
 
 from django.apps import apps
 from django.db.utils import OperationalError, ProgrammingError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.classes import PropertyHelper
 from mayan.apps.databases.classes import BaseBackend

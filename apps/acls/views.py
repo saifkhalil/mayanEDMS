@@ -3,7 +3,7 @@ import logging
 from django.template import RequestContext
 from django.urls import reverse
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.permissions.models import Role
 from mayan.apps.views.generics import (

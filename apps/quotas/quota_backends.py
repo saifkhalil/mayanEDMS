@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
 from django.template.defaultfilters import filesizeformat
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from actstream.models import Action
 

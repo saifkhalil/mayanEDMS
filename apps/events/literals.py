@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 DEFAULT_EVENT_LIST_EXPORT_FILENAME = 'events_list.csv'
 

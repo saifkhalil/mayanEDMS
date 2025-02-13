@@ -8,7 +8,7 @@ from flanker import mime
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.utils.encoding import force_bytes, force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.serialization import yaml_load
 from mayan.apps.metadata.models import MetadataType

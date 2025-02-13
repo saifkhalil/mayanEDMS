@@ -3,7 +3,7 @@ import os
 import sys
 
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.smart_settings.literals import COMMAND_NAME_SETTINGS_REVERT
 from mayan.apps.smart_settings.utils import SettingNamespaceSingleton

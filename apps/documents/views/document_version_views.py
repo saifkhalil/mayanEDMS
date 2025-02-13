@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ungettext
 
 from mayan.apps.converter.layers import layer_saved_transformations
 from mayan.apps.converter.permissions import (

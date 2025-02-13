@@ -7,7 +7,7 @@ from django.db.models import F, Sum
 from django.template.defaultfilters import filesizeformat
 from django.utils.functional import cached_property
 from django.utils.text import format_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.events.classes import EventManagerMethodAfter
 from mayan.apps.events.decorators import method_event

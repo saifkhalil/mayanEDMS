@@ -5,7 +5,7 @@ import subprocess
 
 from django.apps import apps
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.converter.classes import ConverterBase
 from mayan.apps.converter.literals import CONVERTER_OFFICE_FILE_MIMETYPES

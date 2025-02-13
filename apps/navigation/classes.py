@@ -14,7 +14,7 @@ from django.template import RequestContext, Variable, VariableDoesNotExist
 from django.template.defaulttags import URLNode
 from django.urls import resolve, reverse
 from django.utils.encoding import force_str
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.settings import setting_home_view
 from mayan.apps.common.utils import get_related_field, resolve_attribute

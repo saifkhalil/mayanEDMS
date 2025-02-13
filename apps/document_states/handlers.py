@@ -1,5 +1,5 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.document_indexing.tasks import task_index_instance_document_add
 from mayan.apps.events.classes import EventType

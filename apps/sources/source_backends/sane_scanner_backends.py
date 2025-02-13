@@ -4,7 +4,7 @@ import sh
 
 from django.core.files import File
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.serialization import yaml_load
 from mayan.apps.storage.models import SharedUploadedFile

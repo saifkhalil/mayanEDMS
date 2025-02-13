@@ -1,7 +1,7 @@
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db import connection, models, transaction
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel

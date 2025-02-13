@@ -1,6 +1,6 @@
 from django.apps import apps
 from django.db.models import Q
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.models import Document
 from mayan.apps.templating.classes import Template

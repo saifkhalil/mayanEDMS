@@ -2,7 +2,7 @@ import logging
 
 import extract_msg
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.storage.literals import MSG_MIME_TYPES
 

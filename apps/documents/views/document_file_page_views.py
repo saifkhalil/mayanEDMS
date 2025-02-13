@@ -4,7 +4,7 @@ from furl import furl
 
 from django.contrib import messages
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ungettext
 from django.views.generic import RedirectView
 
 from mayan.apps.common.settings import setting_home_view

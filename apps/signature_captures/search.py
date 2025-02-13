@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.search import search_model_document
 from mayan.apps.dynamic_search.search_models import SearchModel

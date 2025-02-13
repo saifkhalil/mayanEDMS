@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 FIELDS_ALL = ('username', 'first_name', 'last_name', 'email', 'is_active')
 FIELDS_USER = ('first_name', 'last_name')

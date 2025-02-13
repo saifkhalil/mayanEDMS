@@ -3,7 +3,7 @@ from zipfile import ZipFile
 
 from django.apps import apps
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.locales.utils import to_language
 

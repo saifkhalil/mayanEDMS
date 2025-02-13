@@ -1,6 +1,6 @@
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.user_management.permissions import (
     permission_user_edit, permission_user_view

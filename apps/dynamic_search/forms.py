@@ -1,5 +1,5 @@
 from django import forms
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .literals import MATCH_ALL_FIELD_CHOICES, MATCH_ALL_FIELD_NAME
 

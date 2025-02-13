@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import View
 
 from mayan.apps.common.settings import setting_home_view

@@ -4,7 +4,7 @@ import logging
 from django import forms
 from django.apps import apps
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import ugettext, gettext_lazy as _
 
 from mayan.apps.documents.models.document_file_models import DocumentFile
 from mayan.apps.documents.models.document_type_models import DocumentType

@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ungettext
 from mayan.apps.databases.classes import ModelQueryFields
 from mayan.apps.views.generics import (
     MultipleObjectFormActionView, SingleObjectDetailView,

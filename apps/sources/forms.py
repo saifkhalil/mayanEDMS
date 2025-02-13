@@ -4,7 +4,7 @@ import logging
 from django import forms
 from django.db.models import Model
 from django.db.models.query import QuerySet
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.classes import DocumentFileAction
 from mayan.apps.documents.forms.document_forms import DocumentForm

@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 DEFAULT_EMAIL_IMAP_MAILBOX = 'INBOX'
 DEFAULT_EMAIL_IMAP_SEARCH_CRITERIA = 'NOT DELETED'

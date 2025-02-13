@@ -6,7 +6,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import ungettext, ugettext_lazy as _
+from django.utils.translation import ungettext, gettext_lazy as _
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import ModelFormMixin
 

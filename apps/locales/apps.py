@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.apps import MayanAppConfig
 from mayan.apps.common.menus import menu_list_facet, menu_object

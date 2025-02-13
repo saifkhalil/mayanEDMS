@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ..icons import icon_document_recently_accessed_list
 from ..models.recently_accessed_document_models import RecentlyAccessedDocument

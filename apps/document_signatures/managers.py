@@ -2,7 +2,7 @@ import logging
 
 from django.core.files import File
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.django_gpg.exceptions import DecryptionError
 from mayan.apps.django_gpg.models import Key

@@ -2,7 +2,7 @@ import json
 import logging
 
 from django.utils.module_loading import import_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .classes import NullBackend
 

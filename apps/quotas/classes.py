@@ -3,7 +3,7 @@ import logging
 
 from django.apps import apps
 from django.utils.text import format_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .exceptions import QuotaExceeded
 from .handlers import handler_process_quota_signal

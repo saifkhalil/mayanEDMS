@@ -1,6 +1,6 @@
 import logging
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.models import AccessControlList
 from mayan.apps.document_states.classes import WorkflowAction

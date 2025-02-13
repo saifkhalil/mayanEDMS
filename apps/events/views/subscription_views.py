@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.views.generics import FormView, SingleObjectListView
 from mayan.apps.views.view_mixins import ExternalContentTypeObjectViewMixin

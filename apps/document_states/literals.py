@@ -1,7 +1,7 @@
 import os
 
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 BASE_WORKFLOW_TEMPLATE_STATE_ACTION_HELP_TEXT = _(
     'Can be a static value or a template. '

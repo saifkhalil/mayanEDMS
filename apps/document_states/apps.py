@@ -1,6 +1,6 @@
 from django.apps import apps
 from django.db.models.signals import post_migrate, post_save, pre_delete
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.classes import ModelPermission
 from mayan.apps.common.apps import MayanAppConfig

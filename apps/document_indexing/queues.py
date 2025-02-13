@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.queues import queue_tools
 from mayan.apps.task_manager.classes import CeleryQueue

@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 COMMAND_NAME_SEARCH_INDEX_OBJECTS = 'search_index_objects'
 COMMAND_NAME_SEARCH_REINDEX = 'search_reindex'

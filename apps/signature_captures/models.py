@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.shortcuts import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.validators import validate_internal_name
 from mayan.apps.databases.model_mixins import ExtraDataModelMixin

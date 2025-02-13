@@ -11,7 +11,7 @@ import yaml
 from django.conf import settings
 from django.utils.encoding import force_bytes, force_text
 from django.utils.functional import Promise
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.class_mixins import AppsModuleLoaderMixin
 from mayan.apps.common.serialization import yaml_dump, yaml_load

@@ -3,7 +3,7 @@ import hashlib
 from django.apps import apps
 from django.core import serializers
 from django.db.models import F, Max, Q
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.models import Document
 

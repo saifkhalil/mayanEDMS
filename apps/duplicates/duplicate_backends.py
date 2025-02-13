@@ -1,6 +1,6 @@
 from django.apps import apps
 from django.db.models import F, Max
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .classes import DuplicateBackend
 

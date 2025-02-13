@@ -1,5 +1,5 @@
 from django.apps import apps
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.authentication.link_conditions import condition_user_is_authenticated
 from mayan.apps.navigation.classes import Link

@@ -1,7 +1,7 @@
 from django.apps import apps
 from django.db.models import Count
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import qsstats
 

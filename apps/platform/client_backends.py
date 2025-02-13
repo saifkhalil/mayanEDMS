@@ -6,7 +6,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from django.conf.urls import url
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import mayan
 from mayan.apps.appearance.classes import Icon

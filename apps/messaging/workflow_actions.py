@@ -1,7 +1,7 @@
 import logging
 
 from django.utils.text import format_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.document_states.classes import WorkflowAction
 from mayan.apps.document_states.literals import BASE_WORKFLOW_TEMPLATE_STATE_ACTION_HELP_TEXT

@@ -2,7 +2,7 @@ import logging
 
 import pycountry
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from mayan.apps.cabinets.models import Cabinet
 from .settings import setting_language_codes
 

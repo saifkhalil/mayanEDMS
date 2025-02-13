@@ -2,7 +2,7 @@ import re
 
 from dateutil.parser import parse
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .classes import MetadataParser
 

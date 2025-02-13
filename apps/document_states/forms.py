@@ -5,7 +5,7 @@ from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.forms.formsets import formset_factory
 from django.utils.module_loading import import_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.converter.fields import ImageField
 from mayan.apps.templating.fields import ModelTemplateField

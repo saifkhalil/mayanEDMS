@@ -6,7 +6,7 @@ from django import apps
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.utils.module_loading import import_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.organizations.settings import setting_organization_url_base_path
 from mayan.apps.templating.classes import AJAXTemplate

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.template import RequestContext
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic.base import RedirectView
 
 from mayan.apps.views.generics import (

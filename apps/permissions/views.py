@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group
 from django.template import RequestContext
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.user_management.permissions import permission_group_edit
 from mayan.apps.views.generics import (

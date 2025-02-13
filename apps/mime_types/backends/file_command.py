@@ -2,7 +2,7 @@ from shutil import copyfileobj
 
 import sh
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.dependencies.exceptions import DependenciesException
 from mayan.apps.storage.utils import NamedTemporaryFile

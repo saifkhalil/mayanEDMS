@@ -3,7 +3,7 @@ import logging
 from django.core.files.base import ContentFile
 from django.db import models
 from django.template.defaultfilters import filesizeformat
-from django.utils.translation import ugettext_lazy as _, ugettext
+from django.utils.translation import gettext_lazy as _, ugettext
 
 from mayan.apps.events.classes import EventManagerMethodAfter
 from mayan.apps.events.decorators import method_event

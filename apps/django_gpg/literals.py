@@ -1,6 +1,6 @@
 import platform
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 if platform.system() in ('FreeBSD', 'Darwin'):
     DEFAULT_GPG_PATH = '/usr/local/bin/gpg1'

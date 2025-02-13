@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.databases.model_mixins import ExtraDataModelMixin
 from mayan.apps.documents.models.document_type_models import DocumentType

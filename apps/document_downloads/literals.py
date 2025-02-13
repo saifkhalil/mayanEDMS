@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 DOCUMENT_FILE_DOWNLOAD_MESSAGE_BODY = _(
     'The document files have compressed '

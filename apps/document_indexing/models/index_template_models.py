@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import ugettext, gettext_lazy as _
 
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel

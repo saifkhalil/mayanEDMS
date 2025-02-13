@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 DOCUMENT_VERSION_EXPORT_MESSAGE_BODY = _(
     'Document version "%(document_version)s" has been '

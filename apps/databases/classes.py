@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.encoding import force_text
 from django.utils.functional import classproperty
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.common.class_mixins import AppsModuleLoaderMixin
 from mayan.apps.common.utils import get_class_full_name

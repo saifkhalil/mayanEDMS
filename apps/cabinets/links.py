@@ -1,6 +1,6 @@
 import copy
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.acls.links import link_acl_list
 from mayan.apps.navigation.classes import Link

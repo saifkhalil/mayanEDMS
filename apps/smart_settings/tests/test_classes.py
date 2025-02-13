@@ -3,7 +3,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.storage.utils import fs_cleanup
 from mayan.apps.testing.tests.base import BaseTestCase

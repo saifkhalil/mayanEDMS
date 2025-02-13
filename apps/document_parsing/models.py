@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from mayan.apps.documents.models.document_file_page_models import DocumentFilePage
 from mayan.apps.documents.models.document_type_models import DocumentType

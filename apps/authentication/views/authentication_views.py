@@ -16,7 +16,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, resolve_url
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import classonlymethod, method_decorator
-from django.utils.translation import ungettext, ugettext_lazy as _
+from django.utils.translation import ungettext, gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters

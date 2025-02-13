@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import ugettext_lazy as _, ungettext
+from django.utils.translation import gettext_lazy as _, ungettext
 
 from mayan.apps.documents.forms.document_type_forms import DocumentTypeFilteredSelectForm
 from mayan.apps.documents.models.document_models import Document
