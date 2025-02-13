@@ -39,7 +39,7 @@ from .links import (
 )
 from .methods import (
     get_method_group_init, get_method_group_save, get_method_user_init,
-    get_method_user_save, method_group_get_absolute_url,
+    get_method_user_save, method_group_get_absolute_re_path,
     method_group_get_users, method_group_users_add,
     method_group_users_remove, method_user_get_absolute_api_url,
     method_user_get_absolute_url, method_user_get_groups,
@@ -82,7 +82,7 @@ class UserManagementApp(MayanAppConfig):
             name='__init__', value=get_method_group_init()
         )
         Group.add_to_class(
-            name='get_absolute_url', value=method_group_get_absolute_url
+            name='get_absolute_url', value=method_group_get_absolute_re_path
         )
         Group.add_to_class(
             name='get_users', value=method_group_get_users
