@@ -109,7 +109,7 @@ class DocumentCheckoutTestCase(
         self.assertEqual(events[0].target, self._test_document)
         self.assertEqual(events[0].verb, event_document_auto_checked_in.id)
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self._clear_events()
 
         self._check_out_test_document()

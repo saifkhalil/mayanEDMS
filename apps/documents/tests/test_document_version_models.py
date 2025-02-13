@@ -81,7 +81,7 @@ class DocumentVersionTestCase(
             test_document_version_expected_page_content_objects
         )
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self.assertTrue(
             self._test_document.version_active.get_absolute_re_path()
         )

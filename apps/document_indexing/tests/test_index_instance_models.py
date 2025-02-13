@@ -260,7 +260,7 @@ class IndexInstanceTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
             self._test_document_types[1].label
         )
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         test_index_instance = IndexInstance.objects.first()
         self.assertTrue(
             test_index_instance.get_absolute_re_path()

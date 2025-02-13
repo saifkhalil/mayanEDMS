@@ -47,5 +47,5 @@ class DocumentFileTestCase(DocumentFileTestMixin, GenericDocumentTestCase):
             self._test_document_file.filename, self._test_document.label
         )
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self.assertTrue(self._test_document.file_latest.get_absolute_re_path())

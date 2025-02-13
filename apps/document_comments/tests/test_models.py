@@ -13,7 +13,7 @@ class DocumentCommentModelTestCase(
         self._create_test_user()
         self._create_test_document_stub()
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self._create_test_comment()
 
         self._clear_events()

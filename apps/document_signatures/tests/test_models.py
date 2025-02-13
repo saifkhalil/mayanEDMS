@@ -229,7 +229,7 @@ class DocumentSignaturesTestCase(
             TEST_UNSIGNED_DOCUMENT_COUNT
         )
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self._test_document_path = TEST_SIGNED_DOCUMENT_PATH
         self._upload_test_document()
 

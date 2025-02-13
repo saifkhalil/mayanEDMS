@@ -4,7 +4,7 @@ from .mixins import WebLinkTestMixin
 
 
 class WebLinkViewTestCase(WebLinkTestMixin, BaseTestCase):
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self._create_test_web_link()
 
         self._clear_events()

@@ -52,7 +52,7 @@ class PermissionTestCase(GroupTestMixin, RoleTestMixin, BaseTestCase):
 
 
 class RoleModelTestCase(RoleTestMixin, BaseTestCase):
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self._create_test_role()
 
         self.assertTrue(self._test_role.get_absolute_re_path())

@@ -91,5 +91,5 @@ class DocumentTypeModelFilenameGeneratorTestCase(GenericDocumentTestCase):
 class DocumentTypeModelTestCase(GenericDocumentTestCase):
     auto_upload_test_document = False
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self.assertTrue(self._test_document_type.get_absolute_re_path())

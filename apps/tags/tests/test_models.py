@@ -89,7 +89,7 @@ class TagDocumentTestCase(DocumentTestMixin, TagTestMixin, BaseTestCase):
         self.assertEqual(events[0].target, self._test_document)
         self.assertEqual(events[0].verb, event_tag_removed.id)
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self._create_test_tag()
 
         self._clear_events()

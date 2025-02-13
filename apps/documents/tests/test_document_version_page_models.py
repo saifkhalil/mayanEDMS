@@ -42,7 +42,7 @@ class DocumentVersionPageTestCase(
             list(self._test_document.file_latest.pages.all())
         )
 
-    def test_method_get_absolute_re_path(self):
+    def test_method_get_absolute_url(self):
         self.assertTrue(
             self._test_document.version_active.pages.first().get_absolute_re_path()
         )
