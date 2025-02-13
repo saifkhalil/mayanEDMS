@@ -82,7 +82,7 @@ class DocumentFilePageBusinessLogicMixin:
                 if _acquire_lock:
                     lock.release()
 
-    def get_api_image_url(
+    def get_api_image_re_path(
         self, maximum_layer_order=None, transformation_instance_list=None,
         user=None
     ):
@@ -109,7 +109,7 @@ class DocumentFilePageBusinessLogicMixin:
                 error_name=IMAGE_ERROR_FILE_PAGE_TRANSFORMATION_ERROR
             ) from exception
 
-        final_url = furl()
+        final_url = fre_path()
         final_url.path = reverse(
             viewname='rest_api:documentfilepage-image', kwargs={
                 'document_id': self.document_file.document_id,

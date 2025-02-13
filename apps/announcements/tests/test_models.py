@@ -44,5 +44,5 @@ class AnnouncementModelTestCase(AnnouncementTestMixin, BaseTestCase):
 
         self.assertEqual(queryset.first(), self._test_announcement)
 
-    def test_method_get_absolute_url(self):
-        self.assertTrue(self._test_announcement.get_absolute_url())
+    def test_method_get_absolute_re_path(self):
+        self.assertTrue(self._test_announcement.get_absolute_re_path())

@@ -65,12 +65,12 @@ class WorkflowInstanceModelTestCase(
         self.assertEqual(events[1].target, self._test_document)
         self.assertEqual(events[1].verb, event_document_type_changed.id)
 
-    def test_workflow_instance_method_get_absolute_url(self):
+    def test_workflow_instance_method_get_absolute_re_path(self):
         self._create_test_document_stub()
 
         self._test_workflow_instance = self._test_document.workflows.first()
 
-        self._test_workflow_instance.get_absolute_url()
+        self._test_workflow_instance.get_absolute_re_path()
 
     def test_workflow_template_auto_launch(self):
         self._test_workflow_template.auto_launch = True

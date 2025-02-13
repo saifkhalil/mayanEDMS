@@ -30,7 +30,7 @@ class AJAXTemplate:
         self.template_name = template_name
         self.__class__._registry[name] = self
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             kwargs={'name': self.name}, viewname='rest_api:template-detail'
         )

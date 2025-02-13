@@ -71,13 +71,13 @@ class DocumentVersionExporter:
         )
 
         if user:
-            download_list_url = furl(organization_installation_url).join(
+            download_list_url = fre_path(organization_installation_url).join(
                 reverse(
                     viewname='storage:download_file_list'
                 )
             ).tostr()
 
-            download_url = furl(organization_installation_url).join(
+            download_url = fre_path(organization_installation_url).join(
                 reverse(
                     viewname='storage:download_file_download',
                     kwargs={'download_file_id': download_file.pk}

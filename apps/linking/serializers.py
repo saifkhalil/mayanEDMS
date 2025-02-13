@@ -111,7 +111,7 @@ class ResolvedSmartLinkDocumentSerializer(DocumentSerializer):
         )
         read_only_fields = DocumentSerializer.Meta.fields
 
-    def get_resolved_smart_link_url(self, instance):
+    def get_resolved_smart_link_re_path(self, instance):
         return reverse(
             viewname='rest_api:resolvedsmartlink-detail', kwargs={
                 'document_id': self.context['document'].pk,
@@ -142,7 +142,7 @@ class ResolvedSmartLinkSerializer(serializers.HyperlinkedModelSerializer):
         model = ResolvedSmartLink
         read_only_fields = fields
 
-    def get_documents_url(self, instance):
+    def get_documents_re_path(self, instance):
         return reverse(
             viewname='rest_api:resolvedsmartlinkdocument-list',
             kwargs={
@@ -157,7 +157,7 @@ class ResolvedSmartLinkSerializer(serializers.HyperlinkedModelSerializer):
             document=self.context['document']
         )
 
-    def get_smart_link_url(self, instance):
+    def get_smart_link_re_path(self, instance):
         return reverse(
             viewname='rest_api:smartlink-detail',
             kwargs={
@@ -165,7 +165,7 @@ class ResolvedSmartLinkSerializer(serializers.HyperlinkedModelSerializer):
             }, request=self.context['request'], format=self.context['format']
         )
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         return reverse(
             viewname='rest_api:resolvedsmartlink-detail',
             kwargs={

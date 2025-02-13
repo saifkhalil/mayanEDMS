@@ -77,7 +77,7 @@ class Key(ExtraDataModelMixin, KeyBusinessLogicMixin, models.Model):
                 message=_('Key already exists.')
             )
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='django_gpg:key_detail', kwargs={'key_id': self.pk}
         )

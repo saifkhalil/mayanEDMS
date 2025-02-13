@@ -44,7 +44,7 @@ class DocumentVersionExportView(MultipleObjectConfirmActionView):
         task_document_version_export.apply_async(
             kwargs={
                 'document_version_id': instance.pk,
-                'organization_installation_url': get_organization_installation_url(
+                'organization_installation_url': get_organization_installation_re_path(
                     request=self.request
                 ),
                 'user_id': self.request.user.pk

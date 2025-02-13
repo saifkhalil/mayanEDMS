@@ -127,7 +127,7 @@ class DocumentFilePageNavigationBase(ExternalObjectViewMixin, RedirectView):
     external_object_pk_url_kwarg = 'document_file_page_id'
     external_object_queryset = DocumentFilePage.valid.all()
 
-    def get_redirect_url(self, *args, **kwargs):
+    def get_redirect_re_path(self, *args, **kwargs):
         """
         Attempt to jump to the same kind of view but resolved to a new
         object of the same kind.
@@ -136,11 +136,11 @@ class DocumentFilePageNavigationBase(ExternalObjectViewMixin, RedirectView):
 
         if not previous_url:
             try:
-                previous_url = self.external_object.get_absolute_url()
+                previous_url = self.external_object.get_absolute_re_path()
             except AttributeError:
                 previous_url = reverse(viewname=setting_home_view.value)
 
-        parsed_url = furl(url=previous_url)
+        parsed_url = fre_path(url=previous_url)
 
         # Obtain the view name to be able to resolve it back with new keyword
         # arguments.
@@ -275,13 +275,13 @@ class DocumentFilePageInteractiveTransformation(
     def get_object(self):
         return self.external_object
 
-    def get_redirect_url(self, *args, **kwargs):
+    def get_redirect_re_path(self, *args, **kwargs):
         query_dict = {
             'rotation': self.request.GET.get('rotation', DEFAULT_ROTATION),
             'zoom': self.request.GET.get('zoom', DEFAULT_ZOOM_LEVEL)
         }
 
-        url = furl(
+        url = fre_path(
             args=query_dict, path=reverse(
                 viewname='documents:document_file_page_view', kwargs={
                     'document_file_page_id': self.external_object.pk

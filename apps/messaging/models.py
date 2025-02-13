@@ -55,7 +55,7 @@ class Message(ExtraDataModelMixin, MessageBusinessLogicMixin, models.Model):
     def __str__(self):
         return self.get_label()
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='messaging:message_detail', kwargs={
                 'message_id': self.pk

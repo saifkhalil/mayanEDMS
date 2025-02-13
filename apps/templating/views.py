@@ -28,7 +28,7 @@ class DocumentTemplateSandboxView(ExternalObjectViewMixin, FormView):
             viewname='templating:document_template_sandbox',
             kwargs={'document_id': self.external_object.pk}
         )
-        url = URL(
+        url = re_path(
             path=path, query={
                 'template': form.cleaned_data['template']
             }

@@ -34,7 +34,7 @@ logger = logging.getLogger(name=__name__)
 class SearchAgainView(SearchQueryViewMixin, RedirectView):
     query_string = True
 
-    def get_redirect_url(self, *args, **kwargs):
+    def get_redirect_re_path(self, *args, **kwargs):
         query_dict = self.get_search_query()
 
         search_term_any_field = query_dict.get(
@@ -46,7 +46,7 @@ class SearchAgainView(SearchQueryViewMixin, RedirectView):
         else:
             self.pattern_name = 'search:search_advanced'
 
-        return super().get_redirect_url(*args, **kwargs)
+        return super().get_redirect_re_path(*args, **kwargs)
 
 
 class SearchBackendReindexView(ConfirmView):

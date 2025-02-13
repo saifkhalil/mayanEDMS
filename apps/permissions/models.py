@@ -44,7 +44,7 @@ class Role(ExtraDataModelMixin, RoleBusinessLogicMixin, models.Model):
     def __str__(self):
         return self.label
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(viewname='permissions:role_list')
 
     def natural_key(self):
@@ -86,7 +86,7 @@ class StoredPermission(StoredPermissionBusinessLogicMixin, models.Model):
     def __str__(self):
         return str(self.label)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='permissions:stored_permission_detail', kwargs={
                 'stored_permission_id': self.pk

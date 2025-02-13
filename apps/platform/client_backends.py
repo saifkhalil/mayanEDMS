@@ -5,7 +5,7 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
-from django.conf.urls import url
+from django.urls import re_path import url
 from django.utils.translation import gettext_lazy as _
 
 import mayan
@@ -41,7 +41,7 @@ class ClientBackendSentry(ClientBackend):
             1 / 0
 
         return [
-            url(
+            re_path(
                 regex=r'^debug/$', name='sentry_debug',
                 view=view_trigger_error
             )

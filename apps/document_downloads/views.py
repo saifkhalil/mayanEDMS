@@ -105,7 +105,7 @@ class DocumentDownloadView(
         task_document_file_compress.apply_async(
             kwargs={
                 'id_list': list(queryset.values_list('pk', flat=True)),
-                'organization_installation_url': get_organization_installation_url(
+                'organization_installation_url': get_organization_installation_re_path(
                     request=self.request
                 ),
                 'user_id': self.request.user.pk

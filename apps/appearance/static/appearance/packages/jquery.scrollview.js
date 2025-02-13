@@ -34,10 +34,10 @@
                     this.grabbing = "move";
                 } else if (!(mac && gecko) && config) {
                     if (config.grab) {
-                       this.grab = "url(\"" + config.grab + "\"),default";
+                       this.grab = "re_path(\"" + config.grab + "\"),default";
                     }
                     if (config.grabbing) {
-                       this.grabbing = "url(" + config.grabbing + "),move";
+                       this.grabbing = "re_path(" + config.grabbing + "),move";
                     }
                 } else if (gecko) {
                     this.grab = "-moz-grab";

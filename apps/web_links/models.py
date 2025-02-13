@@ -45,7 +45,7 @@ class WebLink(ExtraDataModelMixin, WebLinkBusinessLogicMixin, models.Model):
     def __str__(self):
         return self.label
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='web_links:web_link_edit', kwargs={
                 'web_link_id': self.pk

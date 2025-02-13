@@ -234,13 +234,13 @@ class DocumentFileBusinessLogicMixin:
 
         return self.file.storage.exists(name=name)
 
-    def get_api_image_url(
+    def get_api_image_re_path(
         self, maximum_layer_order=None, transformation_instance_list=None,
         user=None
     ):
         first_page = self.pages.first()
         if first_page:
-            return first_page.get_api_image_url(
+            return first_page.get_api_image_re_path(
                 maximum_layer_order=maximum_layer_order,
                 transformation_instance_list=transformation_instance_list,
                 user=user

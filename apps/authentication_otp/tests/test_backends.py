@@ -23,7 +23,7 @@ class AuthenticationOTPBackendTestCase(
 ):
     authenticated_url = reverse(viewname='common:home')
     authentication_url = urlunquote_plus(
-        furl(
+        fre_path(
             path=reverse(settings.LOGIN_URL), args={
                 'next': authenticated_url
             }

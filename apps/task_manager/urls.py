@@ -1,9 +1,9 @@
-from django.conf.urls import url
+from django.urls import re_path import url
 
 from .views import QueueListView
 
 urlpatterns = [
-    url(
+    re_path(
         regex=r'^queues/$', view=QueueListView.as_view(),
         name='queue_list'
     )

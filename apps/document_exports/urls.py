@@ -1,10 +1,10 @@
-from django.conf.urls import url
+from django.urls import re_path import url
 
 from .api_views import APIDocumentVersionExportView
 from .views import DocumentVersionExportView
 
 urlpatterns = [
-    url(
+    re_path(
         regex=r'^documents/versions/(?P<document_version_id>\d+)/export/$',
         name='document_version_export',
         view=DocumentVersionExportView.as_view()
@@ -12,7 +12,7 @@ urlpatterns = [
 ]
 
 api_urls = [
-    url(
+    re_path(
         regex=r'^documents/(?P<document_id>[0-9]+)/versions/(?P<document_version_id>[0-9]+)/export/$',
         view=APIDocumentVersionExportView.as_view(),
         name='documentversion-export'

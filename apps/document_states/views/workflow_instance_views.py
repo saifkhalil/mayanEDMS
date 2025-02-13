@@ -120,7 +120,7 @@ class WorkflowInstanceTransitionExecuteView(ExternalObjectViewMixin, FormView):
                 'Document "%s" transitioned successfully'
             ) % self.external_object.document, request=self.request
         )
-        return HttpResponseRedirect(redirect_to=self.get_success_url())
+        return HttpResponseRedirect(redirect_to=self.get_success_re_path())
 
     def get_external_object_queryset_filtered(self):
         queryset = super().get_external_object_queryset_filtered()
@@ -187,8 +187,8 @@ class WorkflowInstanceTransitionExecuteView(ExternalObjectViewMixin, FormView):
 
         return {'schema': schema}
 
-    def get_success_url(self):
-        return self.external_object.get_absolute_url()
+    def get_success_re_path(self):
+        return self.external_object.get_absolute_re_path()
 
     def get_workflow_template_transition(self):
         return get_object_or_404(

@@ -60,7 +60,7 @@ class IndexTemplate(
     def __str__(self):
         return self.label
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='indexing:index_template_view', kwargs={
                 'index_template_id': self.pk

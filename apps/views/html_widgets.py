@@ -29,7 +29,7 @@ class ObjectLinkWidget(SourceColumnWidget):
             label = str(self.value)
             object_type = '{}: '.format(self.value._meta.verbose_name)
             try:
-                url = self.value.get_absolute_url()
+                url = self.value.get_absolute_re_path()
             except AttributeError:
                 url = None
 

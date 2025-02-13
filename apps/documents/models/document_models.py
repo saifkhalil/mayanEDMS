@@ -139,7 +139,7 @@ class Document(
                 actor=user, target=self.document_type
             )
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='documents:document_preview', kwargs={
                 'document_id': self.pk

@@ -91,7 +91,7 @@ class Cabinet(CabinetBusinessLogicMixin, ExtraDataModelMixin, MPTTModel):
 
         return result
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='cabinets:cabinet_view', kwargs={
                 'cabinet_id': self.pk

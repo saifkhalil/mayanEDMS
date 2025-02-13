@@ -45,7 +45,7 @@ class Announcement(ExtraDataModelMixin, models.Model):
     def __str__(self):
         return self.label
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(viewname='announcements:announcement_list')
 
     @method_event(

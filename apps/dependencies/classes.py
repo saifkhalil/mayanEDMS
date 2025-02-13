@@ -443,7 +443,7 @@ class Dependency(AppsModuleLoaderMixin):
     def get_pk(self):
         return self.name
 
-    def get_url(self):
+    def get_re_path(self):
         raise NotImplementedError
 
     def get_version_string(self):
@@ -677,7 +677,7 @@ class JavaScriptDependency(Dependency):
 
     def get_metadata(self):
         response = requests.get(
-            url=self.get_url()
+            url=self.get_re_path()
         )
         self.package_metadata = response.json()
         self.versions = self.package_metadata['versions'].keys()
@@ -698,12 +698,12 @@ class JavaScriptDependency(Dependency):
         )
 
     def get_tar_filename(self):
-        return furl(
+        return fre_path(
             self.version_metadata['dist']['tarball']
         ).path.segments[-1]
 
-    def get_url(self):
-        url = furl(self.repository.url)
+    def get_re_path(self):
+        url = fre_path(self.repository.url)
         url.path.segments += [self.name]
         return url.tostr()
 
@@ -845,7 +845,7 @@ class GoogleFontDependency(Dependency):
                 for line in import_file.split('\n'):
                     if 'url' in line:
                         font_url = line.split(' ')[-2][4:-1]
-                        url = furl(font_url)
+                        url = fre_path(font_url)
                         font_filename = url.path.segments[-1]
                         path_font_filename = self.path_cache / font_filename
                         with path_font_filename.open(mode='wb') as font_file_object:

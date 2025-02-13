@@ -166,7 +166,7 @@ class DocumentFile(
 
         return result
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='documents:document_file_preview', kwargs={
                 'document_file_id': self.pk

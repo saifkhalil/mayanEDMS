@@ -36,7 +36,7 @@ class BasePlainViewTestCase(
 
     def test_login_view_url_fragment_xss(self):
         # Should redirect and not display an alert
-        self._open_url(
+        self._open_re_path(
             fragment='#javascript:alert("XSS")', viewname=settings.LOGIN_URL
         )
 
@@ -44,7 +44,7 @@ class BasePlainViewTestCase(
             self.webdriver.switch_to_alert()
 
     def test_login_view_url_redirect(self):
-        self._open_url(
+        self._open_re_path(
             fragment='#javascript:alert("XSS")', viewname=settings.LOGIN_URL
         )
 

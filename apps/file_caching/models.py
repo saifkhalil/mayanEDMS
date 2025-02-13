@@ -35,7 +35,7 @@ class Cache(CacheBusinessLogicMixin, ValueChangeModelMixin, models.Model):
     def __str__(self):
         return str(self.label)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='file_caching:cache_detail', kwargs={
                 'cache_id': self.pk
@@ -87,7 +87,7 @@ class CachePartition(CachePartitionBusinessLogicMixin, models.Model):
         self.purge(user=self)
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='file_caching:cache_partition_detail', kwargs={
                 'cache_partition_id': self.pk

@@ -119,7 +119,7 @@ class MultiFactorAuthenticationView(
                 return self.done()
             else:
                 return HttpResponseRedirect(
-                    redirect_to=resolve_url(
+                    redirect_to=resolve_re_path(
                         to=settings.LOGIN_URL
                     )
                 )
@@ -141,7 +141,7 @@ class MultiFactorAuthenticationView(
         django_auth_login(request=self.request, user=user)
 
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )
 
     def get_context_data(self, form, **kwargs):
@@ -210,13 +210,13 @@ class MayanLoginView(StrongholdPublicMixin, LoginView):
                 SESSION_MULTI_FACTOR_USER_ID_KEY
             ] = form.get_user().pk
 
-            url = URL(
+            url = re_path(
                 path=reverse(
                     viewname='authentication:multi_factor_authentication_view'
                 )
             )
 
-            next_url = self.get_redirect_url()
+            next_url = self.get_redirect_re_path()
             if next_url:
                 url.args[self.redirect_field_name] = next_url
 
@@ -236,7 +236,7 @@ class MayanPasswordChangeDoneView(PasswordChangeDoneView):
             request=self.request
         )
         return redirect(
-            to=self.request.user.get_absolute_url()
+            to=self.request.user.get_absolute_re_path()
         )
 
 

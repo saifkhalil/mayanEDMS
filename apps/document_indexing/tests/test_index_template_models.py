@@ -6,13 +6,13 @@ from .mixins import IndexTemplateTestMixin
 class IndexTemplateTestCase(IndexTemplateTestMixin, GenericDocumentTestCase):
     auto_upload_test_document = False
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self._create_test_index_template()
 
         self._clear_events()
 
         self.assertTrue(
-            self._test_index_template.get_absolute_url()
+            self._test_index_template.get_absolute_re_path()
         )
 
         events = self._get_test_events()

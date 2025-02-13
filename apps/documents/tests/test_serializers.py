@@ -17,7 +17,7 @@ class SerializerTestMixin:
 class DocumentFileSerializerTestCase(
     SerializerTestMixin, GenericDocumentTestCase
 ):
-    def test_document_url(self):
+    def test_document_re_path(self):
         serializer = DocumentFileSerializer(
             context={'request': self._test_request},
             instance=self._test_document_file
@@ -35,7 +35,7 @@ class DocumentFileSerializerTestCase(
 class DocumentVersionSerializerTestCase(
     SerializerTestMixin, GenericDocumentTestCase
 ):
-    def test_document_url(self):
+    def test_document_re_path(self):
         serializer = DocumentVersionSerializer(
             context={'request': self._test_request},
             instance=self._test_document_version

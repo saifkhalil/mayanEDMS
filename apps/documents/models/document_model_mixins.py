@@ -165,10 +165,10 @@ class DocumentBusinessLogicMixin:
 
             return document_file
 
-    def get_api_image_url(self, *args, **kwargs):
+    def get_api_image_re_path(self, *args, **kwargs):
         version_active = self.version_active
         if version_active:
-            return version_active.get_api_image_url(*args, **kwargs)
+            return version_active.get_api_image_re_path(*args, **kwargs)
         else:
             raise AppImageError(error_name=IMAGE_ERROR_NO_ACTIVE_VERSION)
 

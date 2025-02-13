@@ -63,7 +63,7 @@ class Asset(AssetBusinessLogicMixin, ExtraDataModelMixin, models.Model):
         self.file.storage.delete(name=name)
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='converter:asset_detail', kwargs={
                 'asset_id': self.pk

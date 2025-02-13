@@ -24,7 +24,7 @@ class DependencyClassTestCase(BaseTestCase):
 
         with self.path_test_file.open(mode='w') as file_object:
             file_object.write(
-                '@import url("https://fonts.googleapis.com/css?family=Lato:400,700,400italic");'
+                '@import re_path("https://fonts.googleapis.com/css?family=Lato:400,700,400italic");'
             )
         self._test_dependency = TestDependency(
             name='test_dependency', module=__name__
@@ -59,7 +59,7 @@ class DependencyClassTestCase(BaseTestCase):
         self._patch_test_file()
 
         self.assertEqual(
-            self.final_text, '@import url({});'.format(self.test_replace_text)
+            self.final_text, '@import re_path({});'.format(self.test_replace_text)
         )
 
 

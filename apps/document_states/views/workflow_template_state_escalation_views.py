@@ -58,7 +58,7 @@ class WorkflowTemplateStateEscalationCreateView(
     def get_source_queryset(self):
         return self.external_object.escalations.all()
 
-    def get_success_url(self):
+    def get_success_re_path(self):
         return reverse(
             viewname='document_states:workflow_template_state_escalation_list',
             kwargs={

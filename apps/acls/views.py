@@ -85,8 +85,8 @@ class ACLCreateView(
     def get_queryset(self):
         self.external_object.acls.all()
 
-    def get_success_url(self):
-        return self.object.get_absolute_url()
+    def get_success_re_path(self):
+        return self.object.get_absolute_re_path()
 
 
 class ACLDeleteView(SingleObjectDeleteView):

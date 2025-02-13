@@ -144,11 +144,11 @@ class StagingFolderFile:
 
         return self.cache_filename
 
-    def get_api_image_url(
+    def get_api_image_re_path(
         self, maximum_layer_order=None, transformation_instance_list=None,
         request=None, user=None
     ):
-        final_url = furl()
+        final_url = fre_path()
         final_url.args = {'encoded_filename': self.encoded_filename}
         final_url.path = rest_framework_reverse(
             'rest_api:source-action', kwargs={
@@ -474,7 +474,7 @@ class SourceBackendStagingFolder(
                         }, request=request
                     ),
                     'encoded_filename': staging_folder_file.encoded_filename,
-                    'image-url': staging_folder_file.get_api_image_url(
+                    'image-url': staging_folder_file.get_api_image_re_path(
                         request=request
                     ),
                     'upload-url': rest_framework_reverse(

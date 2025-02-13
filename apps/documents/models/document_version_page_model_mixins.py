@@ -97,7 +97,7 @@ class DocumentVersionPageBusinessLogicMixin:
             finally:
                 content_object_lock.release()
 
-    def get_api_image_url(
+    def get_api_image_re_path(
         self, maximum_layer_order=None, transformation_instance_list=None,
         user=None, viewname=None, view_kwargs=None
     ):
@@ -142,7 +142,7 @@ class DocumentVersionPageBusinessLogicMixin:
                 'document_version_page_id': self.pk
             }
 
-            final_url = furl()
+            final_url = fre_path()
             final_url.path = reverse(
                 viewname=viewname or 'rest_api:documentversionpage-image',
                 kwargs=view_kwargs

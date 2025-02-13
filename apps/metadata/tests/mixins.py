@@ -291,7 +291,7 @@ class MetadataDocumentUploadWizardStepTestMixin:
     def _request_upload_interactive_document_create_view(
         self, metadata_value
     ):
-        url = URL(
+        url = re_path(
             path=reverse(viewname='sources:document_upload_interactive')
         )
         url.args['metadata0_metadata_type_id'] = self._test_metadata_type.pk

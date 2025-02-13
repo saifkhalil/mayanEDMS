@@ -267,7 +267,7 @@ class WorkflowTemplateStateCreateView(
     def get_source_queryset(self):
         return self.external_object.states.all()
 
-    def get_success_url(self):
+    def get_success_re_path(self):
         return reverse(
             viewname='document_states:workflow_template_state_list',
             kwargs={
@@ -297,7 +297,7 @@ class WorkflowTemplateStateDeleteView(SingleObjectDeleteView):
             '_event_actor': self.request.user
         }
 
-    def get_success_url(self):
+    def get_success_re_path(self):
         return reverse(
             viewname='document_states:workflow_template_state_list',
             kwargs={
@@ -328,7 +328,7 @@ class WorkflowTemplateStateEditView(SingleObjectEditView):
             '_event_actor': self.request.user
         }
 
-    def get_success_url(self):
+    def get_success_re_path(self):
         return reverse(
             viewname='document_states:workflow_template_state_list',
             kwargs={'workflow_template_id': self.object.workflow.pk}

@@ -63,7 +63,7 @@ class ObjectLinkMailView(MultipleObjectFormActionView):
             'content_type_id': content_type.pk,
             'object_id': instance.pk,
             'object_name': _('Document file'),
-            'organization_installation_url': get_organization_installation_url(
+            'organization_installation_url': get_organization_installation_re_path(
                 request=self.request
             ),
             'recipient': form.cleaned_data['email'],

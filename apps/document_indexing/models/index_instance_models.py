@@ -30,7 +30,7 @@ class IndexInstance(IndexInstanceBusinessLogicMixin, IndexTemplate):
         verbose_name = _('Index instance')
         verbose_name_plural = _('Index instances')
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         try:
             index_instance_root_node = self.index_instance_root_node
         except IndexInstanceNode.DoesNotExist:
@@ -75,7 +75,7 @@ class IndexInstanceNode(IndexInstanceNodeBusinessLogicMixin, MPTTModel):
     def __str__(self):
         return self.value
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='indexing:index_instance_node_view', kwargs={
                 'index_instance_node_id': self.pk

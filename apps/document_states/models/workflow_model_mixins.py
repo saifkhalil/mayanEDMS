@@ -81,8 +81,8 @@ class WorkflowBusinessLogicMixin:
 
         return cache_filename
 
-    def get_api_image_url(self, *args, **kwargs):
-        final_url = furl()
+    def get_api_image_re_path(self, *args, **kwargs):
+        final_url = fre_path()
         final_url.args = kwargs
         final_url.path = reverse(
             viewname='rest_api:workflow-template-image',

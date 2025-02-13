@@ -65,7 +65,7 @@ class DownloadFile(
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(viewname='storage:download_file_list')
 
     @method_event(

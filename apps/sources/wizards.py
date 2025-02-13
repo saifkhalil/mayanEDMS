@@ -132,7 +132,7 @@ class DocumentCreateWizard(ViewIconMixin, SessionWizardView):
                 step.done(wizard=self) or {}
             )
 
-        url = furl(
+        url = fre_path(
             reverse(viewname='sources:document_upload_interactive')
         )
         # Use equal and not .update() to get the same result as using

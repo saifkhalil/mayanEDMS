@@ -8,8 +8,8 @@ from .mixins import AuthenticationOTPTestMixin
 class UserOTPDataTestCase(AuthenticationOTPTestMixin, BaseTestCase):
     create_test_case_superuser = True
 
-    def test_method_get_absolute_url(self):
-        self._test_case_superuser.otp_data.get_absolute_url()
+    def test_method_get_absolute_re_path(self):
+        self._test_case_superuser.otp_data.get_absolute_re_path()
 
     def test_otp_disable(self):
         self._enable_test_otp()

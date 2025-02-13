@@ -78,7 +78,7 @@ class EndpointSerializer(Serializer):
         label=_('URL')
     )
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         if instance.viewname:
             return reverse(
                 kwargs=instance.kwargs, viewname=instance.viewname,

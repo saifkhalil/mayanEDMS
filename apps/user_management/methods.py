@@ -51,7 +51,7 @@ def get_method_group_save():
     return method_group_save
 
 
-def method_group_get_absolute_url(self):
+def method_group_get_absolute_re_path(self):
     return reverse(
         viewname='user_management:group_detail', kwargs={'group_id': self.pk}
     )
@@ -100,13 +100,13 @@ def get_method_user_init():
     return method_init
 
 
-def method_user_get_absolute_url(self):
+def method_user_get_absolute_re_path(self):
     return reverse(
         viewname='user_management:user_details', kwargs={'user_id': self.pk}
     )
 
 
-def method_user_get_absolute_api_url(self):
+def method_user_get_absolute_api_re_path(self):
     return reverse(
         viewname='rest_api:user-detail', kwargs={'user_id': self.pk}
     )

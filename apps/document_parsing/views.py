@@ -226,5 +226,5 @@ class DocumentTypeSubmitView(FormView):
         )
 
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )

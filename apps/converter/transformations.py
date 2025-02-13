@@ -58,7 +58,7 @@ class BaseTransformation(metaclass=BaseTransformationType):
 
     @staticmethod
     def list_as_query_string(transformation_instance_list):
-        result = URL()
+        result = re_path()
 
         for index, transformation in enumerate(transformation_instance_list):
             result.args[

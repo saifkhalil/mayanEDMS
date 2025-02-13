@@ -85,7 +85,7 @@ class SignatureCapture(
         self.cache_partition.delete()
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='signature_captures:signature_capture_detail', kwargs={
                 'signature_capture_id': self.pk

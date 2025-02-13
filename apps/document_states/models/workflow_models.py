@@ -58,7 +58,7 @@ class Workflow(
     def __str__(self):
         return self.label
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(viewname='document_states:workflow_template_list')
 
     def delete(self, *args, **kwargs):

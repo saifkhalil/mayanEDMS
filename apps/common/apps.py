@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from django import apps
-from django.conf.urls import include, url
+from django.urls import re_path import include, url
 from django.contrib import admin
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
@@ -81,7 +81,7 @@ class MayanAppConfig(apps.AppConfig):
                 app_namespace = self.name
 
             mayan_urlpatterns += (
-                url(
+                re_path(
                     regex=r'^{}'.format(top_url), view=include(
                         (app_urlpatterns, app_namespace)
                     )
@@ -108,7 +108,7 @@ class MayanAppConfig(apps.AppConfig):
                 raise exception
         else:
             mayan_urlpatterns += (
-                url(
+                re_path(
                     regex=r'^{}'.format(top_url), view=include(
                         passthru_urlpatterns
                     )

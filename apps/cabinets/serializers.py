@@ -66,7 +66,7 @@ class CabinetSerializer(serializers.ModelSerializer):
     def get_full_path(self, obj):
         return obj.get_full_path()
 
-    def get_parent_url(self, obj):
+    def get_parent_re_path(self, obj):
         if obj.parent:
             return reverse(
                 viewname='rest_api:cabinet-detail',

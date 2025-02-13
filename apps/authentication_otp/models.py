@@ -42,7 +42,7 @@ class UserOTPData(models.Model):
                 actor=self.user, target=self.user
             )
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(viewname='authentication_otp:otp_detail')
 
     def is_enabled(self):

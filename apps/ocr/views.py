@@ -88,7 +88,7 @@ class DocumentTypeOCRSubmitView(FormView):
             }, request=self.request
         )
 
-        return HttpResponseRedirect(redirect_to=self.get_success_url())
+        return HttpResponseRedirect(redirect_to=self.get_success_re_path())
 
     def get_form_extra_kwargs(self):
         return {

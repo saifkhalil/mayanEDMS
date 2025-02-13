@@ -54,7 +54,7 @@ class DocumentCreateWizardStepTags(DocumentCreateWizardStep):
         except User.DoesNotExist:
             user = None
 
-        tag_id_list = URL(query_string=query_string).args.getlist('tags')
+        tag_id_list = re_path(query_string=query_string).args.getlist('tags')
 
         for tag in Tag.objects.filter(pk__in=tag_id_list):
             if user:

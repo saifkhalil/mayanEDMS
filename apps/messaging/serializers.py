@@ -70,12 +70,12 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
         if sender_content_type:
             return sender_content_type.model
 
-    def get_sender_url(self, instance):
+    def get_sender_re_path(self, instance):
         sender_object = getattr(instance, 'sender_object', None)
 
         if sender_object:
             try:
-                path = sender_object.get_absolute_api_url()
+                path = sender_object.get_absolute_api_re_path()
             except AttributeError:
                 return
             else:

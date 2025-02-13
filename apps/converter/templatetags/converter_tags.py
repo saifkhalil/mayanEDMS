@@ -14,7 +14,7 @@ def converter_get_object_image_data(
 ):
     try:
         return {
-            'url': obj.get_api_image_url(
+            'url': obj.get_api_image_re_path(
                 maximum_layer_order=maximum_layer_order,
                 transformation_instance_list=transformation_instance_list or (),
                 user=context.get('user', user)

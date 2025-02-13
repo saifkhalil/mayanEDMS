@@ -86,7 +86,7 @@ class DocumentCheckout(ExtraDataModelMixin, models.Model):
 
         return super().delete()
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='checkouts:check_out_info', kwargs={
                 'document_id': self.document_id

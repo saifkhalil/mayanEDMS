@@ -52,7 +52,7 @@ class TrashedDocumentPageTestCase(GenericDocumentTestCase):
 
 
 class TrashedDocumentAPITestCase(GenericDocumentTestCase):
-    def test_trashed_document_api_image_url(self):
+    def test_trashed_document_api_image_re_path(self):
         self._test_document.delete()
         test_trashed_document = TrashedDocument.objects.get(
             pk=self._test_document.pk
@@ -61,7 +61,7 @@ class TrashedDocumentAPITestCase(GenericDocumentTestCase):
         self._clear_events()
 
         self.assertTrue(
-            test_trashed_document.get_api_image_url()
+            test_trashed_document.get_api_image_re_path()
         )
 
         events = self._get_test_events()

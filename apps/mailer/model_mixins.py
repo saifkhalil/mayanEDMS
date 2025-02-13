@@ -104,8 +104,8 @@ class UserMailerBusinessLogicMixin:
         Send an object file using this user mailing profile.
         """
         context_dictionary = {
-            'link': furl(organization_installation_url).join(
-                obj.get_absolute_url()
+            'link': fre_path(organization_installation_url).join(
+                obj.get_absolute_re_path()
             ).tostr(),
             'object': obj,
             'object_name': object_name

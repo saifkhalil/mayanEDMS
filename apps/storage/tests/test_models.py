@@ -22,11 +22,11 @@ class DownloadFileModelTestCase(DownloadFileTestMixin, BaseTestCase):
 
         self.assertEqual(DownloadFile.objects.stale().count(), 1)
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self._create_test_download_file()
 
         self.assertEqual(
-            self.test_download_file.get_absolute_url(),
+            self.test_download_file.get_absolute_re_path(),
             reverse(viewname='storage:download_file_list')
         )
 

@@ -37,7 +37,7 @@ class Tag(ExtraDataModelMixin, TagBusinessLogicMixin, models.Model):
     def __str__(self):
         return self.label
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='tags:tag_document_list', kwargs={'tag_id': self.pk}
         )

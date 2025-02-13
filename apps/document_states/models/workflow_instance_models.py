@@ -55,7 +55,7 @@ class WorkflowInstance(
     def __str__(self):
         return str(self.workflow)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='document_states:workflow_instance_detail', kwargs={
                 'workflow_instance_id': self.pk

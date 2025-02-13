@@ -172,10 +172,10 @@ class DocumentTestCase(GenericDocumentTestCase):
             self._test_document.label, TEST_FILE_SMALL_FILENAME
         )
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self._create_test_document_stub()
 
-        self.assertTrue(self._test_document.get_absolute_url())
+        self.assertTrue(self._test_document.get_absolute_re_path())
 
 
 class DocumentManagerTestCase(GenericDocumentTestCase):

@@ -35,7 +35,7 @@ class Quota(ExtraDataModelMixin, QuotaBusinessModelMixin, models.Model):
             self.backend_label()
         )
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(viewname='quotas:quota_list')
 
     @method_event(

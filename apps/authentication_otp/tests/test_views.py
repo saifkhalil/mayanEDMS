@@ -25,7 +25,7 @@ class LoginOTPTestCase(
 ):
     authenticated_url = reverse(viewname='common:home')
     authentication_url = urlunquote_plus(
-        furl(
+        fre_path(
             path=reverse(settings.LOGIN_URL), args={
                 'next': authenticated_url
             }
@@ -166,7 +166,7 @@ class LoginOTPTestCase(
         self.assertEqual(
             response.redirect_chain, [
                 (
-                    URL(
+                    re_path(
                         path=reverse(
                             viewname='authentication:multi_factor_authentication_view'
                         ), query={'next': TEST_REDIRECT_URL}

@@ -101,12 +101,12 @@ class ActionExporter:
         )
 
         if user:
-            download_list_url = furl(setting_project_url.value).join(
+            download_list_url = fre_path(setting_project_url.value).join(
                 reverse(
                     viewname='storage:download_file_list'
                 )
             ).tostr()
-            download_url = furl(setting_project_url.value).join(
+            download_url = fre_path(setting_project_url.value).join(
                 reverse(
                     viewname='storage:download_file_download',
                     kwargs={'download_file_id': download_file.pk}

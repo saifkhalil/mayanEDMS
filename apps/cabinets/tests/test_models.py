@@ -130,12 +130,12 @@ class CabinetTestCase(CabinetTestMixin, BaseTestCase):
         self.assertEqual(events[0].target, None)
         self.assertEqual(events[0].verb, event_cabinet_deleted.id)
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self._create_test_cabinet()
 
         self._clear_events()
 
-        self.assertTrue(self._test_cabinet.get_absolute_url())
+        self.assertTrue(self._test_cabinet.get_absolute_re_path())
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

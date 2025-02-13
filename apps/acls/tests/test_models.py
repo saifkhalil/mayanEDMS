@@ -166,11 +166,11 @@ class PermissionTestCase(ACLTestMixin, BaseTestCase):
         )
         self.assertTrue(self._test_object_child in result)
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self._create_acl_test_object()
         self._create_test_acl()
 
-        self.assertTrue(self._test_acl.get_absolute_url())
+        self.assertTrue(self._test_acl.get_absolute_re_path())
 
 
 class InheritedPermissionTestCase(ACLTestMixin, BaseTestCase):

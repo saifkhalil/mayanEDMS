@@ -40,7 +40,7 @@ class CacheModelTestCase(CacheTestMixin, BaseTestCase):
         self._clear_events()
 
         self.assertTrue(
-            self._test_cache.get_absolute_url()
+            self._test_cache.get_absolute_re_path()
         )
 
         events = self._get_test_events()

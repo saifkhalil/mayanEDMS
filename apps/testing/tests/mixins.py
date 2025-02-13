@@ -12,7 +12,7 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 
 from django.apps import apps
 from django.conf import settings
-from django.conf.urls import url
+from django.urls import re_path import url
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, connections, models
 from django.db.models.signals import post_save, pre_save
@@ -44,7 +44,7 @@ class ClientMethodsTestCaseMixin:
         if viewname:
             path = reverse(viewname=viewname, *args, **kwargs)
 
-        path = furl(url=path)
+        path = fre_path(url=path)
         path.args.update(query)
 
         result = {
@@ -394,7 +394,7 @@ class SeleniumTestMixin:
             self.skipTest(reason='Skipping selenium test')
         super().setUp()
 
-    def _open_url(self, fragment=None, path=None, viewname=None):
+    def _open_re_path(self, fragment=None, path=None, viewname=None):
         url = '{}{}{}'.format(
             self.live_server_url, path or reverse(viewname=viewname),
             fragment or ''
@@ -667,7 +667,7 @@ class TestServerTestCaseMixin:
     def setUp(self):
         super().setUp()
         self.testserver_prefix = self.get_testserver_prefix()
-        self.testserver_url = self.get_testserver_url()
+        self.testserver_url = self.get_testserver_re_path()
         self.test_view_request = None
 
     def _test_view_factory(self, test_object=None):
@@ -678,12 +678,12 @@ class TestServerTestCaseMixin:
         return test_view
 
     def get_testserver_prefix(self):
-        return furl(
+        return fre_path(
             scheme=TEST_SERVER_SCHEME, host=TEST_SERVER_HOST,
         ).tostr()
 
-    def get_testserver_url(self):
-        return furl(
+    def get_testserver_re_path(self):
+        return fre_path(
             scheme=TEST_SERVER_SCHEME, host=TEST_SERVER_HOST,
             path=self.test_view_url
         ).tostr()
@@ -772,7 +772,7 @@ class TestViewTestCaseMixin:
             )
 
         self._get_test_view_urlpatterns().insert(
-            0, url(
+            0, re_path(
                 regex=test_view_url or self.test_view_url, view=view,
                 name=self._test_view_name
             )

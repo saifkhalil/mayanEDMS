@@ -80,7 +80,7 @@ class AccessControlList(
     def delete(self, *args, **kwargs):
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='acls:acl_permissions', kwargs={'acl_id': self.pk}
         )

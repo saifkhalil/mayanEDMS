@@ -290,7 +290,7 @@ class MetadataTypeTestCase(
             )
         )
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self._create_test_metadata_type()
 
-        self.assertTrue(self._test_metadata_type.get_absolute_url())
+        self.assertTrue(self._test_metadata_type.get_absolute_re_path())

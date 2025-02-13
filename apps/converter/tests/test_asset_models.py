@@ -14,7 +14,7 @@ class AssetModelTestCase(
 
         self._clear_events()
 
-        self._test_asset.get_absolute_url()
+        self._test_asset.get_absolute_re_path()
 
         events = self._get_test_events()
         self.assertEqual(events.count(), 0)

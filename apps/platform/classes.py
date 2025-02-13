@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from django.conf import settings
-from django.conf.urls import include, url
+from django.urls import re_path import include, url
 from django.template import loader
 from django.template.base import Template
 from django.template.context import Context
@@ -88,7 +88,7 @@ class ClientBackend(BaseBackend):
             )
 
             urlpatterns += (
-                url(
+                re_path(
                     regex=r'^{}'.format(top_url), view=include(
                         backend_instance.get_url_patterns()
                     )

@@ -78,7 +78,7 @@ class MultiFormView(DjangoFormView):
         self.all_forms_valid(forms=forms)
 
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )
 
     def get_context_data(self, **kwargs):
@@ -418,7 +418,7 @@ class AddRemoveView(
     def get_secondary_object_source_queryset(self):
         return self.secondary_object_source_queryset
 
-    def get_success_url(self):
+    def get_success_re_path(self):
         # Redirect to the same view.
         return reverse(
             viewname=self.request.resolver_match.view_name,
@@ -448,7 +448,7 @@ class ConfirmView(
     def post(self, request, *args, **kwargs):
         self.view_action()
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )
 
 
@@ -550,7 +550,7 @@ class MultipleObjectConfirmActionView(
     def post(self, request, *args, **kwargs):
         self.view_action()
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )
 
 
@@ -680,7 +680,7 @@ class SingleObjectCreateView(
             )
 
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )
 
     def get_error_message_duplicate(self):
@@ -920,7 +920,7 @@ class SingleObjectEditView(
             )
 
         return HttpResponseRedirect(
-            redirect_to=self.get_success_url()
+            redirect_to=self.get_success_re_path()
         )
 
     def get_object(self, queryset=None):

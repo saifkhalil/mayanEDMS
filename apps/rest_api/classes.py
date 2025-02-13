@@ -138,7 +138,7 @@ class BatchRequest:
         else:
             rendered_content = self.render_content()
 
-            url_parts = furl(rendered_content.url)
+            url_parts = fre_path(rendered_content.url)
 
             try:
                 resolver_match = resolve(path=url_parts.pathstr)

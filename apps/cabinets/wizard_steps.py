@@ -50,7 +50,7 @@ class DocumentCreateWizardStepCabinets(DocumentCreateWizardStep):
         Cabinet = apps.get_model(app_label='cabinets', model_name='Cabinet')
         User = get_user_model()
 
-        cabinet_id_list = URL(
+        cabinet_id_list = re_path(
             query_string=query_string
         ).args.getlist('cabinets')
         try:

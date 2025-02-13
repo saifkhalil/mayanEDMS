@@ -101,7 +101,7 @@ class LinkClassTestCase(GenericViewTestCase):
         self.assertEqual(resolved_link.url, reverse(viewname=self._test_view_name))
 
     def test_link_with_unicode_querystring_request(self):
-        url = furl(reverse(self._test_view_name))
+        url = fre_path(reverse(self._test_view_name))
         url.args['unicode_key'] = TEST_UNICODE_STRING
 
         self.link.keep_query = True

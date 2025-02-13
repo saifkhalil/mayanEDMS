@@ -70,7 +70,7 @@ class ResolvedWebLinkSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'navigation_url', 'url')
         model = ResolvedWebLink
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         return reverse(
             viewname='rest_api:resolved_web_link-detail',
             kwargs={
@@ -80,7 +80,7 @@ class ResolvedWebLinkSerializer(serializers.HyperlinkedModelSerializer):
             format=self.context['format']
         )
 
-    def get_navigation_url(self, instance):
+    def get_navigation_re_path(self, instance):
         return reverse(
             viewname='rest_api:resolved_web_link-navigate',
             kwargs={

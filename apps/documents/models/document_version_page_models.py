@@ -69,7 +69,7 @@ class DocumentVersionPage(
         self.cache_partition.delete()
         super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='documents:document_version_page_view', kwargs={
                 'document_version_page_id': self.pk

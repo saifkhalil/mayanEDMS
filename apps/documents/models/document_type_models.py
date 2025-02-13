@@ -101,7 +101,7 @@ class DocumentType(
 
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='documents:document_type_document_list', kwargs={
                 'document_type_id': self.pk

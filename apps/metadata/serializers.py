@@ -66,7 +66,7 @@ class DocumentTypeMetadataTypeSerializer(
         model = DocumentTypeMetadataType
         read_only_field = ('document_type', 'id', 'metadata_type', 'url')
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         return reverse(
             viewname='rest_api:documenttypemetadatatype-detail', kwargs={
                 'document_type_id': instance.document_type.pk,
@@ -120,7 +120,7 @@ class DocumentMetadataSerializer(
         model = DocumentMetadata
         read_only_fields = ('document', 'id', 'metadata_type', 'url')
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         return reverse(
             viewname='rest_api:documentmetadata-detail', kwargs={
                 'document_id': instance.document.pk,

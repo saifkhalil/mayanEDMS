@@ -23,7 +23,7 @@ from ..permissions import permission_users_impersonate
 
 class UserImpersonateEndView(RedirectionViewMixin, View):
     def get(self, request, *args, **kwargs):
-        url = URL(
+        url = re_path(
             viewname=setting_home_view.value, query={
                 USER_IMPERSONATE_VARIABLE_DISABLE: ''
             }
@@ -42,7 +42,7 @@ class UserImpersonateFormStartView(FormView):
         if form.cleaned_data['permanent']:
             query[USER_IMPERSONATE_VARIABLE_PERMANENT] = ''
 
-        url = URL(
+        url = re_path(
             viewname=setting_home_view.value, query=query
         )
         return HttpResponseRedirect(redirect_to=url.to_string())
@@ -70,7 +70,7 @@ class UserImpersonateStartView(ExternalObjectViewMixin, FormView):
         if form.cleaned_data['permanent']:
             query[USER_IMPERSONATE_VARIABLE_PERMANENT] = ''
 
-        url = URL(
+        url = re_path(
             query=query, viewname=setting_home_view.value
         )
         return HttpResponseRedirect(redirect_to=url.to_string())

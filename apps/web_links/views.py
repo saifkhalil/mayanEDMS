@@ -57,7 +57,7 @@ class ResolvedWebLinkView(ExternalObjectViewMixin, RedirectView):
     external_object_permission = permission_web_link_instance_view
     external_object_queryset = Document.valid.all()
 
-    def get_redirect_url(self, *args, **kwargs):
+    def get_redirect_re_path(self, *args, **kwargs):
         return self.get_web_link().get_redirect(
             document=self.external_object, user=self.request.user
         ).url

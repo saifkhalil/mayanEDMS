@@ -139,7 +139,7 @@ class WorkflowTemplateTransitionSerializer(
             validated_data=validated_data
         )
 
-    def get_field_list_url(self, instance):
+    def get_field_list_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-template-transition-field-list',
             kwargs={
@@ -148,7 +148,7 @@ class WorkflowTemplateTransitionSerializer(
             }, request=self.context['request'], format=self.context['format']
         )
 
-    def get_trigger_list_url(self, instance):
+    def get_trigger_list_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-template-transition-trigger-list',
             kwargs={
@@ -157,7 +157,7 @@ class WorkflowTemplateTransitionSerializer(
             }, request=self.context['request'], format=self.context['format']
         )
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-template-transition-detail', kwargs={
                 'workflow_template_id': instance.workflow.pk,
@@ -168,7 +168,7 @@ class WorkflowTemplateTransitionSerializer(
     def get_workflow_template_state_queryset(self):
         return self.context['workflow_template'].states.all()
 
-    def get_workflow_template_url(self, instance):
+    def get_workflow_template_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-template-detail', kwargs={
                 'workflow_template_id': instance.workflow.pk,

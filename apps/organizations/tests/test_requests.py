@@ -7,7 +7,7 @@ from mayan.apps.views.http import URL
 TEST_INSTALLATION_SCHEME = 'https'
 TEST_INSTALLATION_NETLOC = 'example.com:9999'
 
-TEST_INSTALLATION_URL = URL(
+TEST_INSTALLATION_URL = re_path(
     netloc=TEST_INSTALLATION_NETLOC, scheme=TEST_INSTALLATION_SCHEME
 ).to_string()
 
@@ -20,7 +20,7 @@ class RequestTestCase(GenericViewTestCase):
 
         absolute_url = context['request'].build_absolute_uri()
 
-        url = URL(url=absolute_url)
+        url = re_path(url=absolute_url)
 
         self.assertEqual(url._split_result.netloc, TEST_INSTALLATION_NETLOC)
         self.assertEqual(url._split_result.scheme, TEST_INSTALLATION_SCHEME)
@@ -31,7 +31,7 @@ class RequestTestCase(GenericViewTestCase):
 
         absolute_url = context['request'].build_absolute_uri()
 
-        url = URL(url=absolute_url)
+        url = re_path(url=absolute_url)
 
         self.assertNotEqual(url._split_result.netloc, TEST_INSTALLATION_NETLOC)
         self.assertNotEqual(url._split_result.scheme, TEST_INSTALLATION_SCHEME)

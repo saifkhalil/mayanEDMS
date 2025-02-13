@@ -306,7 +306,7 @@ class DocumentMetadataViewTestCase(
 
         response = self._request_test_document_multiple_metadata_add_post_view()
 
-        url = furl(response.url)
+        url = fre_path(response.url)
 
         self.assertEqual(
             url.path, reverse(viewname='metadata:metadata_multiple_edit')
@@ -624,7 +624,7 @@ class DocumentMetadataViewTestCase(
         response = self._request_test_document_multiple_metadata_edit_post_view()
         self.assertEqual(response.status_code, 302)
 
-        url = furl(response.url)
+        url = fre_path(response.url)
         self.assertEqual(
             url.path, reverse(viewname='metadata:metadata_multiple_edit')
         )

@@ -73,7 +73,7 @@ class SignatureBaseModel(SignatureBaseModelBusinessLogicMixin, models.Model):
             self.date_time, self.key_id
         )
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='signatures:document_file_signature_detail',
             kwargs={'signature_id': self.pk}

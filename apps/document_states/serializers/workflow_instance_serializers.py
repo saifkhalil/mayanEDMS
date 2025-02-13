@@ -165,7 +165,7 @@ class WorkflowInstanceSerializer(serializers.ModelSerializer):
         model = WorkflowInstance
         read_only_fields = fields
 
-    def get_document_url(self, instance):
+    def get_document_re_path(self, instance):
         return reverse(
             viewname='rest_api:document-detail', kwargs={
                 'document_id': instance.document.pk
@@ -175,7 +175,7 @@ class WorkflowInstanceSerializer(serializers.ModelSerializer):
     def get_context(self, instance):
         return {'workflow_instance_context': instance.loads()}
 
-    def get_log_entries_url(self, instance):
+    def get_log_entries_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-instance-log-entry-list', kwargs={
                 'document_id': instance.document.pk,
@@ -183,7 +183,7 @@ class WorkflowInstanceSerializer(serializers.ModelSerializer):
             }, request=self.context['request'], format=self.context['format']
         )
 
-    def get_log_entry_transitions_url(self, instance):
+    def get_log_entry_transitions_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-instance-log-entry-transition-list',
             kwargs={
@@ -192,7 +192,7 @@ class WorkflowInstanceSerializer(serializers.ModelSerializer):
             }, request=self.context['request'], format=self.context['format']
         )
 
-    def get_url(self, instance):
+    def get_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-instance-detail', kwargs={
                 'document_id': instance.document.pk,
@@ -200,7 +200,7 @@ class WorkflowInstanceSerializer(serializers.ModelSerializer):
             }, request=self.context['request'], format=self.context['format']
         )
 
-    def get_workflow_template_url(self, instance):
+    def get_workflow_template_re_path(self, instance):
         return reverse(
             viewname='rest_api:workflow-template-detail', kwargs={
                 'workflow_template_id': instance.workflow.pk

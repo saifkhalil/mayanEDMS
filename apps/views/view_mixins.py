@@ -59,7 +59,7 @@ class ExtraDataDeleteViewMixin:
             for key, value in self.get_instance_extra_data().items():
                 setattr(self.object, key, value)
 
-        success_url = self.get_success_url()
+        success_url = self.get_success_re_path()
         if hasattr(self, 'get_delete_extra_data'):
             self.object.delete(
                 **self.get_delete_extra_data()
@@ -465,7 +465,7 @@ class ObjectActionViewMixin:
 
         return context
 
-    def get_post_object_action_url(self):
+    def get_post_object_action_re_path(self):
         return self.post_object_action_url
 
     def get_success_message(self, count):
@@ -509,7 +509,7 @@ class ObjectActionViewMixin:
 
         # Allow get_post_object_action_url to override the redirect URL with a
         # calculated URL after all objects are processed.
-        success_url = self.get_post_object_action_url()
+        success_url = self.get_post_object_action_re_path()
         if success_url:
             self.success_url = success_url
 
@@ -547,8 +547,8 @@ class RedirectionViewMixin:
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                'next': self.get_next_url(),
-                'previous': self.get_previous_url()
+                'next': self.get_next_re_path(),
+                'previous': self.get_previous_re_path()
             }
         )
 
@@ -557,7 +557,7 @@ class RedirectionViewMixin:
     def get_post_action_redirect(self):
         return self.post_action_redirect
 
-    def get_next_url(self):
+    def get_next_re_path(self):
         if self.next_url:
             return self.next_url
         else:
@@ -571,7 +571,7 @@ class RedirectionViewMixin:
                 )
             )
 
-    def get_previous_url(self):
+    def get_previous_re_path(self):
         if self.previous_url:
             return self.previous_url
         else:
@@ -585,8 +585,8 @@ class RedirectionViewMixin:
                 )
             )
 
-    def get_success_url(self):
-        return self.success_url or self.get_next_url() or self.get_previous_url()
+    def get_success_re_path(self):
+        return self.success_url or self.get_next_re_path() or self.get_previous_re_path()
 
 
 class RestrictedQuerysetViewMixin:

@@ -99,7 +99,7 @@ class DocumentMetadataAddView(
 
         return result
 
-    def get_post_object_action_url(self):
+    def get_post_object_action_re_path(self):
         if self.action_count == 1:
             return reverse(
                 viewname='metadata:metadata_edit', kwargs={
@@ -107,7 +107,7 @@ class DocumentMetadataAddView(
                 }
             )
         elif self.action_count > 1:
-            url = furl(
+            url = fre_path(
                 path=reverse(
                     viewname='metadata:metadata_multiple_edit'
                 ), args={
@@ -278,7 +278,7 @@ class DocumentMetadataEditView(
 
         return initial
 
-    def get_post_object_action_url(self):
+    def get_post_object_action_re_path(self):
         if self.action_count == 1:
             return reverse(
                 viewname='metadata:metadata_list', kwargs={
@@ -286,7 +286,7 @@ class DocumentMetadataEditView(
                 }
             )
         elif self.action_count > 1:
-            url = furl(
+            url = fre_path(
                 path=reverse(
                     viewname='metadata:metadata_multiple_edit'
                 ), args={
@@ -451,7 +451,7 @@ class DocumentMetadataRemoveView(
             )
         return initial
 
-    def get_post_object_action_url(self):
+    def get_post_object_action_re_path(self):
         if self.action_count == 1:
             return reverse(
                 viewname='metadata:metadata_list', kwargs={

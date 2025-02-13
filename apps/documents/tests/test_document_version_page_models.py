@@ -42,9 +42,9 @@ class DocumentVersionPageTestCase(
             list(self._test_document.file_latest.pages.all())
         )
 
-    def test_method_get_absolute_url(self):
+    def test_method_get_absolute_re_path(self):
         self.assertTrue(
-            self._test_document.version_active.pages.first().get_absolute_url()
+            self._test_document.version_active.pages.first().get_absolute_re_path()
         )
 
     def test_version_page_cache_update_on_transformation(self):
@@ -54,7 +54,7 @@ class DocumentVersionPageTestCase(
 
         test_combined_cache_filename_1 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_1 = self._test_document_version_page.generate_image()
-        test_api_image_url_1 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_1 = self._test_document_version_page.get_api_image_re_path()
         test_image_1 = self._get_test_document_version_page_cached_image()
 
         self._test_layer.add_transformation_to(
@@ -64,7 +64,7 @@ class DocumentVersionPageTestCase(
 
         test_combined_cache_filename_2 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_2 = self._test_document_version_page.generate_image()
-        test_api_image_url_2 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_2 = self._test_document_version_page.get_api_image_re_path()
         test_image_2 = self._get_test_document_version_page_cached_image()
 
         self.assertNotEqual(test_combined_cache_filename_1, test_combined_cache_filename_2)
@@ -82,7 +82,7 @@ class DocumentVersionPageTestCase(
         # Original.
         test_combined_cache_filename_1 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_1 = self._test_document_version_page.generate_image()
-        test_api_image_url_1 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_1 = self._test_document_version_page.get_api_image_re_path()
         # Source is at 0 deg, version is at 0 deg = image is at 0 deg.
         test_image_1 = self._get_test_document_version_page_cached_image()
 
@@ -94,7 +94,7 @@ class DocumentVersionPageTestCase(
 
         test_combined_cache_filename_2 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_2 = self._test_document_version_page.generate_image()
-        test_api_image_url_2 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_2 = self._test_document_version_page.get_api_image_re_path()
         # Source is at 90 deg, version is at 0 deg = image is at 90 deg.
         test_image_2 = self._get_test_document_version_page_cached_image()
 
@@ -111,7 +111,7 @@ class DocumentVersionPageTestCase(
 
         test_combined_cache_filename_3 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_3 = self._test_document_version_page.generate_image()
-        test_api_image_url_3 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_3 = self._test_document_version_page.get_api_image_re_path()
         # Source is at 90 deg, version is at 90 deg = image is at 180 deg.
         test_image_3 = self._get_test_document_version_page_cached_image()
 
@@ -132,7 +132,7 @@ class DocumentVersionPageTestCase(
 
         test_combined_cache_filename_4 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_4 = self._test_document_version_page.generate_image()
-        test_api_image_url_4 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_4 = self._test_document_version_page.get_api_image_re_path()
         # Source is at 0 deg, version is at 90 deg = image is at 90 deg.
         test_image_4 = self._get_test_document_version_page_cached_image()
 
@@ -158,7 +158,7 @@ class DocumentVersionPageTestCase(
 
         test_combined_cache_filename_5 = self._test_document_version_page.get_combined_cache_filename()
         test_generate_image_5 = self._test_document_version_page.generate_image()
-        test_api_image_url_5 = self._test_document_version_page.get_api_image_url()
+        test_api_image_url_5 = self._test_document_version_page.get_api_image_re_path()
         # Source is at 0 deg, version is at 0 deg = image is at 0 deg.
         test_image_5 = self._get_test_document_version_page_cached_image()
 

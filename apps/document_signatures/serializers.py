@@ -41,7 +41,7 @@ class BaseSignatureSerializer(serializers.HyperlinkedModelSerializer):
             'public_key_fingerprint', 'signature_id', 'url'
         )
 
-    def get_key_url(self, instance):
+    def get_key_re_path(self, instance):
         key = instance.key
 
         if key:

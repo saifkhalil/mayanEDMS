@@ -14,7 +14,7 @@ def get_instance_link(index_instance_node):
         s='<a href="{url}">{text}</a>'.format(
             text=escape(
                 index_instance_node.get_full_path()
-            ), url=index_instance_node.get_absolute_url()
+            ), url=index_instance_node.get_absolute_re_path()
         )
     )
 
@@ -35,7 +35,7 @@ def index_instance_item_link(index_instance_item):
     return mark_safe(
         s='{icon}&nbsp;<a href="{url}">{text}</a>'.format(
             icon=icon, text=index_instance_item,
-            url=index_instance_item.get_absolute_url()
+            url=index_instance_item.get_absolute_re_path()
         )
     )
 
@@ -73,7 +73,7 @@ def node_tree(node, user):
 
         result.append(
             '<a href="{url}" class="list-group-item {active}"><span class="badge">{count}</span>{icon} {text}</a>'.format(
-                url=element.get_absolute_url(),
+                url=element.get_absolute_re_path(),
                 active='active' if element == node or node.get_ancestors(include_self=True).count() == 1 else '',
                 count=element.get_descendants_document_count(user=user),
                 icon=icon.render(),

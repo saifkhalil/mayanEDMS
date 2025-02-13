@@ -30,7 +30,7 @@ class AboutView(SimpleView):
 class FaviconRedirectView(RedirectView):
     permanent = True
 
-    def get_redirect_url(self, *args, **kwargs):
+    def get_redirect_re_path(self, *args, **kwargs):
         """
         Hide the static tag import to avoid errors with static file
         processors.

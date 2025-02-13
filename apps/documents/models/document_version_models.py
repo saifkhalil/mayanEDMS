@@ -67,7 +67,7 @@ class DocumentVersion(
 
         return super().delete(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='documents:document_version_preview', kwargs={
                 'document_version_id': self.pk

@@ -70,7 +70,7 @@ class MultiKwargHyperlinkedIdentityField(HyperlinkedIdentityField):
         )
         super().__init__(*args, **kwargs)
 
-    def get_url(self, obj, view_name, request, format):
+    def get_re_path(self, obj, view_name, request, format):
         """
         Extends HyperlinkedRelatedField to allow passing more than one view
         keyword argument.

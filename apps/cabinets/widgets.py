@@ -15,7 +15,7 @@ def jstree_data(node, selected_node):
     )
     result.append(
         '"data": {{ "href": "{}" }},'.format(
-            node.get_absolute_url()
+            node.get_absolute_re_path()
         )
     )
 

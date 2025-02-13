@@ -232,7 +232,7 @@ class Link(TemplateObjectMixin):
         # Lets a new link keep the same URL query string of the current URL.
         if self.keep_query:
             # Sometimes we are required to remove a key from the URL query.
-            parsed_url = furl(
+            parsed_url = fre_path(
                 force_str(
                     request.get_full_path() or request.META.get(
                         'HTTP_REFERER', reverse(setting_home_view.value)
@@ -247,12 +247,12 @@ class Link(TemplateObjectMixin):
                     pass
 
             # Use the link's URL but with the previous URL querystring.
-            new_url = furl(url=resolved_link.url)
+            new_url = fre_path(url=resolved_link.url)
             new_url.args = parsed_url.querystr
             resolved_link.url = new_url.url
 
         if self.query:
-            new_url = furl(url=resolved_link.url)
+            new_url = fre_path(url=resolved_link.url)
             for key, value in self.query.items():
                 try:
                     resolved_variable = Variable(
@@ -956,16 +956,16 @@ class SourceColumn(TemplateObjectMixin):
     def add_exclude(self, source):
         self.excludes.add(source)
 
-    def get_absolute_url(self, obj):
+    def get_absolute_re_path(self, obj):
         if self.is_object_absolute_url:
-            return obj.get_absolute_url()
+            return obj.get_absolute_re_path()
         elif self.is_attribute_absolute_url:
             result = resolve_attribute(
                 attribute=self.attribute, kwargs=self.kwargs,
                 obj=obj
             )
             if result:
-                return result.get_absolute_url()
+                return result.get_absolute_re_path()
 
     def get_previous_sort_fields(self, context):
         previous_sort_fields = context.get(
@@ -1036,7 +1036,7 @@ class SourceColumn(TemplateObjectMixin):
         else:
             result = context['object']
 
-        self.absolute_url = self.get_absolute_url(
+        self.absolute_url = self.get_absolute_re_path(
             obj=context['object']
         )
         if self.widget:

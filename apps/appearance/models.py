@@ -34,7 +34,7 @@ class Theme(models.Model):
     def __str__(self):
         return force_str(s=self.label)
 
-    def get_absolute_url(self):
+    def get_absolute_re_path(self):
         return reverse(
             viewname='appearance:theme_edit', kwargs={
                 'theme_id': self.pk
